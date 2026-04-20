@@ -6,5 +6,7 @@
     "semi": true,
     "printWidth": 100,
     "singleAttributePerLine": true,
-    "arrowParens": "always"
+    "arrowParens": "always",
+    "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
+    "tailwindStylesheet": "./apps/mobile/src/app/global.css"
 }
