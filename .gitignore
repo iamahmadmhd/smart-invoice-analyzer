@@ -36,3 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+Editor directories and files
+.vscode/
+.idea/
