@@ -5,6 +5,10 @@
         "build": {
             "outputs": ["dist/**", "cdk.out/**"]
         },
+        "lint": {},
+        "check-types": {
+            "dependsOn": ["^build"]
+        },
         "synth": {
             "dependsOn": ["build"],
             "outputs": ["cdk.out/**"]
