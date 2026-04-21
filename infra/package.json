@@ -8,7 +8,9 @@
         "watch": "tsc -w",
         "cdk": "cdk",
         "deploy:pipeline": "cdk deploy PipelineStack --require-approval never",
-        "synth": "cdk synth"
+        "synth": "cdk synth",
+        "lint": "echo 'No lint for infra'",
+        "check-types": "tsc --noEmit"
     },
     "devDependencies": {
         "@types/jest": "^30",
