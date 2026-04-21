@@ -2,7 +2,7 @@
     "name": "@smart-invoice-analyzer/infra",
     "version": "1.0.0",
     "private": true,
-    "main": "bin/infra.js",
+    "main": "bin/app.js",
     "scripts": {
         "build": "tsc",
         "watch": "tsc -w",

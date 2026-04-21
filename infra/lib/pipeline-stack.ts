@@ -34,7 +34,7 @@ export class PipelineStack extends cdk.Stack {
         pipeline.addStage(
             new AppStage(this, 'Dev', {
                 env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'eu-central-1' },
-                stageName: 'dev',
+                stage: 'dev',
             })
         );
 
@@ -42,7 +42,7 @@ export class PipelineStack extends cdk.Stack {
         pipeline.addStage(
             new AppStage(this, 'Staging', {
                 env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'eu-central-1' },
-                stageName: 'staging',
+                stage: 'staging',
             }),
             {
                 pre: [
@@ -57,7 +57,7 @@ export class PipelineStack extends cdk.Stack {
         pipeline.addStage(
             new AppStage(this, 'Prod', {
                 env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'eu-central-1' },
-                stageName: 'prod',
+                stage: 'prod',
             }),
             {
                 pre: [new pipelines.ManualApprovalStep('PromoteToProd')],

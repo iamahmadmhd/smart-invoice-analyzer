@@ -1,22 +1,22 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
-interface ApiStackProps {
+interface ApiProps {
     prefix: string;
     userPool: cognito.UserPool;
-    invoiceTable: dynamodb.Table;
-    processingFunction: lambda.Function;
+    orchestratorFn: lambda.Function;
 }
 
-export class ApiStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props: ApiStackProps) {
+export class Api extends Construct {
+    public readonly apiUrl: string;
+
+    constructor(scope: Construct, id: string, props: ApiProps) {
         super(scope, id);
 
-        const api = new apigw.RestApi(this, 'Api', {
+        const api = new apigw.RestApi(this, 'RestApi', {
             restApiName: `${props.prefix}-api`,
             defaultCorsPreflightOptions: {
                 allowOrigins: apigw.Cors.ALL_ORIGINS,
@@ -33,10 +33,10 @@ export class ApiStack extends cdk.Stack {
             authorizationType: apigw.AuthorizationType.COGNITO,
         };
 
-        // Stub: /invoices endpoint
         const invoices = api.root.addResource('invoices');
         invoices.addMethod('GET', new apigw.MockIntegration(), authOptions);
 
-        new cdk.CfnOutput(this, 'ApiUrl', { value: api.url });
+        this.apiUrl = api.url;
+        new cdk.CfnOutput(scope, 'ApiUrl', { value: api.url });
     }
 }
