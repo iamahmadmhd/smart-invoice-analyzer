@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import React, { forwardRef } from 'react';
 import { TextInput, View } from 'react-native';
 import { Input, InputProps } from '../atoms/input';
@@ -22,7 +23,7 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(function FormFiel
     const state = error ? 'error' : controlledState;
 
     return (
-        <View className='gap-1.5'>
+        <View className={cn('gap-1.5', inputProps.className)}>
             {/* Label */}
             {label && (
                 <View className='flex-row items-center gap-1'>

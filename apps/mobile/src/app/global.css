@@ -2,6 +2,23 @@
 @import 'uniwind';
 @source '../**/*.{ts,tsx}';
 
+@utility font-jakarta {
+    font-family: 'PlusJakartaSans_400Regular';
+}
+
+@utility font-jakarta-medium {
+    font-family: 'PlusJakartaSans_500Medium';
+}
+
+@utility font-jakarta-semibold {
+    font-family: 'PlusJakartaSans_600SemiBold';
+}
+
+@utility font-jakarta-bold {
+    font-family: 'PlusJakartaSans_700Bold';
+}
+
+
 @theme {
     /* ─── Typography ────────────────────────────────────────────────────── */
     --font-sans: 'PlusJakartaSans_400Regular', system-ui, sans-serif;

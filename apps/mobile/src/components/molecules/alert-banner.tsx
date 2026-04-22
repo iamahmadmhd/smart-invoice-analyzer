@@ -1,93 +1,74 @@
+import { cn } from '@/lib/utils';
+import { cva, VariantProps } from 'class-variance-authority';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { Icon } from '../atoms/icon';
 import { Text } from '../atoms/text';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const alertVariants = cva('flex-row items-start gap-3 rounded-lg p-4 border', {
+    variants: {
+        variant: {
+            error: 'bg-crimson-subtle dark:bg-crimson-night-subtle border-crimson-border dark:border-crimson-border/30',
+            success:
+                'bg-jade-subtle dark:bg-jade-night-subtle border-jade-border dark:border-jade-border/30',
+            warning:
+                'bg-amber-subtle dark:bg-amber-night-subtle border-amber-border dark:border-amber-border/30',
+            info: 'bg-azure-subtle dark:bg-azure-night-subtle border-azure-border dark:border-azure-border/30',
+        },
+    },
+    defaultVariants: { variant: 'info' },
+});
 
-type AlertVariant = 'error' | 'success' | 'warning' | 'info';
+type AlertVariant = NonNullable<VariantProps<typeof alertVariants>['variant']>;
 
-export interface AlertBannerProps {
-    variant: AlertVariant;
+const iconConfig: Record<
+    AlertVariant,
+    {
+        iconColor: 'error' | 'success' | 'warning' | 'brand';
+        iconName: 'error' | 'success' | 'warning' | 'info';
+        textColor: 'error' | 'success' | 'warning' | 'brand';
+    }
+> = {
+    error: { iconColor: 'error', iconName: 'error', textColor: 'error' },
+    success: { iconColor: 'success', iconName: 'success', textColor: 'success' },
+    warning: { iconColor: 'warning', iconName: 'warning', textColor: 'warning' },
+    info: { iconColor: 'brand', iconName: 'info', textColor: 'brand' },
+};
+
+export interface AlertBannerProps extends VariantProps<typeof alertVariants> {
     title?: string;
     message: string;
     onDismiss?: () => void;
     className?: string;
 }
 
-// ─── Style maps ───────────────────────────────────────────────────────────────
-
-const variantConfig: Record<
-    AlertVariant,
-    {
-        container: string;
-        border: string;
-        iconColor: 'error' | 'success' | 'warning' | 'brand';
-        iconName: 'error' | 'success' | 'warning' | 'info';
-        textColor: 'error' | 'success' | 'warning' | 'brand';
-    }
-> = {
-    error: {
-        container: 'bg-crimson-subtle dark:bg-crimson-night-subtle',
-        border: 'border border-crimson-border dark:border-crimson-border/30',
-        iconColor: 'error',
-        iconName: 'error',
-        textColor: 'error',
-    },
-    success: {
-        container: 'bg-jade-subtle dark:bg-jade-night-subtle',
-        border: 'border border-jade-border dark:border-jade-border/30',
-        iconColor: 'success',
-        iconName: 'success',
-        textColor: 'success',
-    },
-    warning: {
-        container: 'bg-amber-subtle dark:bg-amber-night-subtle',
-        border: 'border border-amber-border dark:border-amber-border/30',
-        iconColor: 'warning',
-        iconName: 'warning',
-        textColor: 'warning',
-    },
-    info: {
-        container: 'bg-azure-subtle dark:bg-azure-night-subtle',
-        border: 'border border-azure-border dark:border-azure-border/30',
-        iconColor: 'brand',
-        iconName: 'info',
-        textColor: 'brand',
-    },
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function AlertBanner({
-    variant,
+    variant = 'info',
     title,
     message,
     onDismiss,
-    className = '',
+    className,
 }: AlertBannerProps) {
-    const config = variantConfig[variant];
+    const { iconColor, iconName, textColor } = iconConfig[variant ?? 'info'];
 
     return (
         <View
-            className={`flex-row items-start gap-3 rounded-lg p-4 ${config.container} ${config.border} ${className} `}
+            className={cn(alertVariants({ variant }), className)}
             accessibilityRole='alert'
         >
-            {/* Icon */}
             <View className='mt-0.5'>
                 <Icon
-                    name={config.iconName}
+                    name={iconName}
                     size={16}
-                    color={config.iconColor}
+                    color={iconColor}
                 />
             </View>
 
-            {/* Content */}
             <View className='flex-1 gap-0.5'>
                 {title && (
                     <Text
                         variant='label'
-                        color={config.textColor}
+                        color={textColor}
                     >
                         {title}
                     </Text>
@@ -100,7 +81,6 @@ export function AlertBanner({
                 </Text>
             </View>
 
-            {/* Dismiss button */}
             {onDismiss && (
                 <Pressable
                     onPress={onDismiss}

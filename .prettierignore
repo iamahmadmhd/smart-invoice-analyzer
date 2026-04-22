@@ -4,5 +4,7 @@ coverage
 cdk.out
 dist
 node_modules
+ios
+android
 # Ignore all dotfiles
 .*

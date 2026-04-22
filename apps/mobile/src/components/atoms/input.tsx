@@ -1,48 +1,41 @@
 import { colors } from '@/constants/theme';
+import { cn } from '@/lib/utils';
+import { cva, VariantProps } from 'class-variance-authority';
 import { SymbolView } from 'expo-symbols';
 import React, { forwardRef, useState } from 'react';
 import { Pressable, TextInput, TextInputProps, View } from 'react-native';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const inputVariants = cva('flex-row items-center bg-canvas dark:bg-night-inset', {
+    variants: {
+        size: {
+            sm: 'h-9 rounded-md px-3',
+            md: 'h-11 rounded-lg px-4',
+            lg: 'h-14 rounded-xl px-4',
+        },
+        state: {
+            default: 'border border-wire dark:border-wire-night',
+            focused: 'border-2 border-brand',
+            error: 'border-2 border-crimson',
+            success: 'border-2 border-jade',
+            disabled: 'border border-wire dark:border-wire-night opacity-50',
+        },
+    },
+    defaultVariants: {
+        size: 'md',
+        state: 'default',
+    },
+});
 
-type InputSize = 'sm' | 'md' | 'lg';
-type InputState = 'default' | 'focused' | 'error' | 'success' | 'disabled';
+const textSizes = { sm: 'text-sm', md: 'text-base', lg: 'text-lg' } as const;
 
-export interface InputProps extends Omit<TextInputProps, 'editable'> {
-    size?: InputSize;
-    state?: InputState;
+export interface InputProps
+    extends Omit<TextInputProps, 'editable'>, Omit<VariantProps<typeof inputVariants>, 'state'> {
+    state?: 'default' | 'focused' | 'error' | 'success' | 'disabled';
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
-    /** Automatically adds password toggle icon */
     isPassword?: boolean;
     disabled?: boolean;
 }
-
-// ─── Style maps ───────────────────────────────────────────────────────────────
-
-const containerSizes: Record<InputSize, string> = {
-    sm: 'h-9  rounded-md  px-3',
-    md: 'h-11 rounded-lg  px-4',
-    lg: 'h-14 rounded-xl  px-4',
-};
-
-const containerStates: Record<InputState, string> = {
-    default: 'border border-wire dark:border-wire-night',
-    focused: 'border-2 border-brand',
-    error: 'border-2 border-crimson',
-    success: 'border-2 border-jade',
-    disabled: 'border border-wire      dark:border-wire-night opacity-50',
-};
-
-const containerBase = 'flex-row items-center bg-canvas dark:bg-night-inset';
-
-const textSizes: Record<InputSize, string> = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export const Input = forwardRef<TextInput, InputProps>(function Input(
     {
@@ -54,7 +47,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         disabled = false,
         onFocus,
         onBlur,
-        className = '',
+        className,
         style,
         ...props
     },
@@ -63,32 +56,20 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     const [focused, setFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    // Derive current state (controlled state takes priority)
-    const currentState: InputState = disabled
+    const currentState = disabled
         ? 'disabled'
         : (controlledState ?? (focused ? 'focused' : 'default'));
-
-    const containerClasses = [
-        containerBase,
-        containerSizes[size],
-        containerStates[currentState],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
 
     const iconSize = size === 'sm' ? 14 : size === 'lg' ? 20 : 16;
     const iconColor = focused ? colors.brand : colors.inkFaint;
 
     return (
-        <View className={containerClasses}>
-            {/* Left icon */}
+        <View className={cn(inputVariants({ size, state: currentState }), className)}>
             {leftIcon && <View className='mr-2.5 opacity-60'>{leftIcon}</View>}
 
-            {/* Text input */}
             <TextInput
                 ref={ref}
-                className={`web: web:user-select-auto flex-1 text-ink focus:outline-none dark:text-cloud dark:focus:outline-none web:cursor-text web:caret-brand web:select-auto ${textSizes[size]}`}
+                className={`web:user-select-auto flex-1 text-ink focus:outline-none dark:text-cloud dark:focus:outline-none web:cursor-text web:caret-brand web:select-auto ${textSizes[size ?? 'md']}`}
                 placeholderTextColor={colors.inkFaint}
                 editable={!disabled}
                 secureTextEntry={isPassword && !showPassword}
@@ -107,7 +88,6 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
                 {...props}
             />
 
-            {/* Password toggle */}
             {isPassword && (
                 <Pressable
                     onPress={() => setShowPassword((v) => !v)}
@@ -115,34 +95,24 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
                     className='ml-2.5'
                     accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                 >
-                    {showPassword ? (
-                        <SymbolView
-                            name={{
-                                ios: 'eye.slash',
-                                android: 'visibility_off',
-                                web: 'visibility_off',
-                            }}
-                            size={iconSize}
-                            tintColor={iconColor}
-                        />
-                    ) : (
-                        <SymbolView
-                            name={{
-                                ios: 'eye',
-                                android: 'visibility',
-                                web: 'visibility',
-                            }}
-                            size={iconSize}
-                            tintColor={iconColor}
-                        />
-                    )}
+                    <SymbolView
+                        name={
+                            showPassword
+                                ? {
+                                      ios: 'eye.slash',
+                                      android: 'visibility_off',
+                                      web: 'visibility_off',
+                                  }
+                                : { ios: 'eye', android: 'visibility', web: 'visibility' }
+                        }
+                        size={iconSize}
+                        tintColor={iconColor}
+                    />
                 </Pressable>
             )}
 
-            {/* Right icon (shown only when no password toggle) */}
             {rightIcon && !isPassword && <View className='ml-2.5 opacity-60'>{rightIcon}</View>}
 
-            {/* State indicator icon */}
             {currentState === 'error' && !rightIcon && !isPassword && (
                 <SymbolView
                     name={{ ios: 'exclamationmark.circle.fill', android: 'error', web: 'error' }}

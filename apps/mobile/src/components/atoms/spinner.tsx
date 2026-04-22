@@ -1,4 +1,5 @@
 import { colors } from '@/constants/theme';
+import { cn } from '@/lib/utils';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Text } from './text';
@@ -26,7 +27,7 @@ const spinnerColorMap: Record<SpinnerColor, string> = {
     muted: colors.inkFaint,
 };
 
-export function Spinner({ size = 'md', color = 'brand', className = '' }: SpinnerProps) {
+export function Spinner({ size = 'md', color = 'brand', className }: SpinnerProps) {
     return (
         <ActivityIndicator
             size={spinnerSizeMap[size]}
@@ -43,19 +44,18 @@ type DividerOrientation = 'horizontal' | 'vertical';
 
 export interface DividerProps {
     orientation?: DividerOrientation;
-    /** Optional centred label (horizontal only) */
     label?: string;
     className?: string;
 }
 
-export function Divider({ orientation = 'horizontal', label, className = '' }: DividerProps) {
+export function Divider({ orientation = 'horizontal', label, className }: DividerProps) {
     if (orientation === 'vertical') {
-        return <View className={`w-px self-stretch bg-wire dark:bg-wire-night ${className}`} />;
+        return <View className={cn('w-px self-stretch bg-wire dark:bg-wire-night', className)} />;
     }
 
     if (label) {
         return (
-            <View className={`flex-row items-center gap-3 ${className}`}>
+            <View className={cn('flex-row items-center gap-3', className)}>
                 <View className='h-px flex-1 bg-wire dark:bg-wire-night' />
                 <Text
                     variant='caption'
@@ -68,5 +68,5 @@ export function Divider({ orientation = 'horizontal', label, className = '' }: D
         );
     }
 
-    return <View className={`h-px w-full bg-wire dark:bg-wire-night ${className}`} />;
+    return <View className={cn('h-px w-full bg-wire dark:bg-wire-night', className)} />;
 }
