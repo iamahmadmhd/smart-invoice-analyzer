@@ -8,6 +8,9 @@ export type { ButtonProps } from './atoms/button';
 export { Input } from './atoms/input';
 export type { InputProps } from './atoms/input';
 
+export { OtpInput } from './atoms/otp-input';
+export type { OtpInputProps } from './atoms/otp-input';
+
 export { Badge, InvoiceStatusBadge } from './atoms/badge';
 export type { BadgeProps } from './atoms/badge';
 

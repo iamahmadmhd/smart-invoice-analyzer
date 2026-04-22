@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { forwardRef } from 'react';
+import { TextInput, View } from 'react-native';
 import { Input, InputProps } from '../atoms/input';
 import { Text } from '../atoms/text';
 
@@ -14,14 +14,10 @@ export interface FormFieldProps extends InputProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function FormField({
-    label,
-    helper,
-    error,
-    required = false,
-    state: controlledState,
-    ...inputProps
-}: FormFieldProps) {
+export const FormField = forwardRef<TextInput, FormFieldProps>(function FormField(
+    { label, helper, error, required = false, state: controlledState, ...inputProps },
+    ref
+) {
     // Automatically set error state if error message is provided
     const state = error ? 'error' : controlledState;
 
@@ -49,6 +45,7 @@ export function FormField({
 
             {/* Input */}
             <Input
+                ref={ref}
                 state={state}
                 {...inputProps}
             />
@@ -71,4 +68,4 @@ export function FormField({
             ) : null}
         </View>
     );
-}
+});

@@ -1,3 +1,4 @@
+import '@aws-amplify/react-native';
 import { Amplify } from 'aws-amplify';
 
 Amplify.configure({

@@ -93,7 +93,7 @@ export function AlertBanner({
                     </Text>
                 )}
                 <Text
-                    variant='bodySmall'
+                    variant='body-small'
                     color='secondary'
                 >
                     {message}

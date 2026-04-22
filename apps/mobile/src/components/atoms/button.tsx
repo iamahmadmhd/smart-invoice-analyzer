@@ -98,7 +98,7 @@ export function Button({
                 <>
                     {leftIcon && <View>{leftIcon}</View>}
                     <Text
-                        variant={size === 'sm' ? 'label' : 'bodySemibold'}
+                        variant={size === 'sm' ? 'label' : 'body-semibold'}
                         color={labelVariants[variant]}
                         className={labelSizeClasses[size]}
                     >

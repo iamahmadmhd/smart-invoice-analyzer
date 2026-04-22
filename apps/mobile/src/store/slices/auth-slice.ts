@@ -19,8 +19,42 @@ interface AuthState {
     user: AuthUser | null;
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
-    // Tracks the username between sign-up and confirmation screens
     pendingUsername: string | null;
+}
+
+// ─── Error extraction ─────────────────────────────────────────────────────────
+// Amplify v6 throws typed error classes (e.g. UserNotFoundException,
+// NotAuthorizedException). RTK's miniSerializeError only reads `message` from
+// plain Error objects — on iOS the JSI bridge may lose the property entirely,
+// producing "An unknown error occurred". We catch explicitly and map known
+// Cognito error names to user-friendly strings before calling rejectWithValue,
+// so the slice always receives a plain serialisable string.
+
+const COGNITO_MESSAGES: Record<string, string> = {
+    NotAuthorizedException: 'Incorrect email or password.',
+    UserNotFoundException: 'No account found for this email.',
+    UserNotConfirmedException: 'Please verify your email before signing in.',
+    UsernameExistsException: 'An account with this email already exists.',
+    CodeMismatchException: 'Invalid verification code. Please try again.',
+    ExpiredCodeException: 'The verification code has expired. Please request a new one.',
+    LimitExceededException: 'Too many attempts. Please wait a moment and try again.',
+    TooManyRequestsException: 'Too many requests. Please slow down and try again.',
+    InvalidPasswordException: 'Password does not meet the requirements.',
+    InvalidParameterException: 'Invalid input. Please check your details.',
+    NetworkError: 'Network error. Please check your connection.',
+};
+
+function extractErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+        // Amplify errors carry the Cognito error code in `name`
+        const mapped = COGNITO_MESSAGES[error.name];
+        if (mapped) return mapped;
+        // Fall back to the raw message if it's a real string
+        if (error.message && error.message !== 'An unknown error occurred') {
+            return error.message;
+        }
+    }
+    return 'Something went wrong. Please try again.';
 }
 
 // ─── Thunks ──────────────────────────────────────────────────────────────────
@@ -33,34 +67,50 @@ export const initAuth = createAsyncThunk('auth/init', async () => {
 
 export const signInThunk = createAsyncThunk(
     'auth/signIn',
-    async ({ username, password }: { username: string; password: string }) => {
-        await signIn({ username, password });
-        const user = await getCurrentUser();
-        return { username: user.username, userId: user.userId };
+    async ({ username, password }: { username: string; password: string }, { rejectWithValue }) => {
+        try {
+            await signIn({ username, password });
+            const user = await getCurrentUser();
+            return { username: user.username, userId: user.userId };
+        } catch (error) {
+            return rejectWithValue(extractErrorMessage(error));
+        }
     }
 );
 
 export const signUpThunk = createAsyncThunk(
     'auth/signUp',
-    async ({ username, password }: { username: string; password: string }) => {
-        await signUp({
-            username,
-            password,
-            options: { userAttributes: { email: username } },
-        });
-        return username;
+    async ({ username, password }: { username: string; password: string }, { rejectWithValue }) => {
+        try {
+            await signUp({
+                username,
+                password,
+                options: { userAttributes: { email: username } },
+            });
+            return username;
+        } catch (error) {
+            return rejectWithValue(extractErrorMessage(error));
+        }
     }
 );
 
 export const confirmSignUpThunk = createAsyncThunk(
     'auth/confirm',
-    async ({ username, code }: { username: string; code: string }) => {
-        await confirmSignUp({ username, confirmationCode: code });
+    async ({ username, code }: { username: string; code: string }, { rejectWithValue }) => {
+        try {
+            await confirmSignUp({ username, confirmationCode: code });
+        } catch (error) {
+            return rejectWithValue(extractErrorMessage(error));
+        }
     }
 );
 
-export const signOutThunk = createAsyncThunk('auth/signOut', async () => {
-    await signOut();
+export const signOutThunk = createAsyncThunk('auth/signOut', async (_, { rejectWithValue }) => {
+    try {
+        await signOut();
+    } catch (error) {
+        return rejectWithValue(extractErrorMessage(error));
+    }
 });
 
 // ─── Slice ───────────────────────────────────────────────────────────────────
@@ -108,7 +158,7 @@ const authSlice = createSlice({
             })
             .addCase(signInThunk.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message ?? 'Sign in failed';
+                state.error = action.payload as string;
             });
 
         // ── signUp ────────────────────────────────────────────────────────
@@ -123,7 +173,7 @@ const authSlice = createSlice({
             })
             .addCase(signUpThunk.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message ?? 'Sign up failed';
+                state.error = action.payload as string;
             });
 
         // ── confirmSignUp ─────────────────────────────────────────────────
@@ -138,15 +188,22 @@ const authSlice = createSlice({
             })
             .addCase(confirmSignUpThunk.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.error.message ?? 'Confirmation failed';
+                state.error = action.payload as string;
             });
 
         // ── signOut ───────────────────────────────────────────────────────
-        builder.addCase(signOutThunk.fulfilled, (state) => {
-            state.user = null;
-            state.status = 'idle';
-            state.error = null;
-        });
+        builder
+            .addCase(signOutThunk.fulfilled, (state) => {
+                state.user = null;
+                state.status = 'idle';
+                state.error = null;
+            })
+            .addCase(signOutThunk.rejected, (state, action) => {
+                // Sign-out failure is rare — clear the user locally regardless
+                state.user = null;
+                state.status = 'idle';
+                state.error = action.payload as string;
+            });
     },
 });
 

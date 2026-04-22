@@ -10,11 +10,11 @@ type TextVariant =
     | 'heading3' // 20px semibold — card headings
     | 'heading4' // 17px semibold — subsection headings
     | 'body' // 15px regular  — default body text
-    | 'bodyMedium' // 15px medium   — emphasised body
-    | 'bodySemibold' // 15px semibold — strong body
-    | 'bodySmall' // 13px regular  — secondary body
+    | 'body-medium' // 15px medium   — emphasised body
+    | 'body-semibold' // 15px semibold — strong body
+    | 'body-small' // 13px regular  — secondary body
     | 'label' // 13px semibold — form labels, list labels
-    | 'labelSmall' // 11px semibold — caps labels, metadata
+    | 'label-small' // 11px semibold — caps labels, metadata
     | 'caption' // 11px regular  — helper text, timestamps
     | 'mono'; // 13px mono     — amounts, codes
 
@@ -32,17 +32,17 @@ type TextColor =
 // ─── Style maps ──────────────────────────────────────────────────────────────
 
 const variantClasses: Record<TextVariant, string> = {
-    display: 'text-4xl font-[PlusJakartaSans_700Bold] tracking-tight',
-    heading1: 'text-3xl font-[PlusJakartaSans_700Bold] tracking-tight',
-    heading2: 'text-2xl font-[PlusJakartaSans_700Bold]',
-    heading3: 'text-xl  font-[PlusJakartaSans_600SemiBold]',
-    heading4: 'text-lg  font-[PlusJakartaSans_600SemiBold]',
+    display: 'text-4xl font-bold font-[PlusJakartaSans_700Bold] tracking-tight',
+    heading1: 'text-3xl font-bold font-[PlusJakartaSans_700Bold] tracking-tight',
+    heading2: 'text-2xl font-bold font-[PlusJakartaSans_700Bold]',
+    heading3: 'text-xl  font-bold font-[PlusJakartaSans_600SemiBold]',
+    heading4: 'text-lg  font-bold font-[PlusJakartaSans_600SemiBold]',
     body: 'text-base font-[PlusJakartaSans_400Regular]',
-    bodyMedium: 'text-base font-[PlusJakartaSans_500Medium]',
-    bodySemibold: 'text-base font-[PlusJakartaSans_600SemiBold]',
-    bodySmall: 'text-sm  font-[PlusJakartaSans_400Regular]',
+    'body-medium': 'text-base font-[PlusJakartaSans_500Medium]',
+    'body-semibold': 'text-base font-[PlusJakartaSans_600SemiBold]',
+    'body-small': 'text-sm  font-[PlusJakartaSans_400Regular]',
     label: 'text-sm  font-[PlusJakartaSans_600SemiBold]',
-    labelSmall: 'text-xs  font-[PlusJakartaSans_600SemiBold] tracking-wider uppercase',
+    'label-small': 'text-xs  font-[PlusJakartaSans_600SemiBold] tracking-wider uppercase',
     caption: 'text-xs  font-[PlusJakartaSans_400Regular]',
     mono: 'text-sm  font-[PlusJakartaSans_500Medium]',
 };
@@ -53,7 +53,7 @@ const colorClasses: Record<TextColor, string> = {
     tertiary: 'text-ink-faint  dark:text-cloud-faint',
     inverse: 'text-ink-inverse dark:text-ink',
     brand: 'text-brand',
-    error: 'text-crimson',
+    error: 'text-ink',
     success: 'text-jade',
     warning: 'text-amber',
     disabled: 'text-ink-faint dark:text-cloud-faint opacity-50',

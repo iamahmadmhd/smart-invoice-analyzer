@@ -88,7 +88,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             {/* Text input */}
             <TextInput
                 ref={ref}
-                className={`flex-1 text-ink dark:text-cloud ${textSizes[size]}`}
+                className={`web: web:user-select-auto flex-1 text-ink focus:outline-none dark:text-cloud dark:focus:outline-none web:cursor-text web:caret-brand web:select-auto ${textSizes[size]}`}
                 placeholderTextColor={colors.inkFaint}
                 editable={!disabled}
                 secureTextEntry={isPassword && !showPassword}
@@ -100,7 +100,10 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
                     setFocused(false);
                     onBlur?.(e);
                 }}
-                style={[{ fontFamily: 'PlusJakartaSans_400Regular' }, style as object]}
+                style={[
+                    { fontFamily: 'PlusJakartaSans_400Regular', lineHeight: 0 },
+                    style as object,
+                ]}
                 {...props}
             />
 
