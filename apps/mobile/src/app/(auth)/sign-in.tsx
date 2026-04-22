@@ -110,22 +110,44 @@ export default function SignInScreen() {
                         onSubmitEditing={() => passwordRef.current?.focus()}
                     />
 
-                    <FormField
-                        ref={passwordRef}
-                        label='Password'
-                        placeholder='Enter your password'
-                        value={password}
-                        onChangeText={(v) => {
-                            setPassword(v);
-                            clearFieldError('password');
-                        }}
-                        error={fieldErrors.password}
-                        isPassword
-                        autoComplete='current-password'
-                        textContentType='password'
-                        returnKeyType='done'
-                        onSubmitEditing={handleSignIn}
-                    />
+                    <View className='gap-1.5'>
+                        <FormField
+                            ref={passwordRef}
+                            label='Password'
+                            placeholder='Enter your password'
+                            value={password}
+                            onChangeText={(v) => {
+                                setPassword(v);
+                                clearFieldError('password');
+                            }}
+                            error={fieldErrors.password}
+                            isPassword
+                            autoComplete='current-password'
+                            textContentType='password'
+                            returnKeyType='done'
+                            onSubmitEditing={handleSignIn}
+                        />
+
+                        {/* ── Forgot password link ──────────────────────── */}
+                        <Pressable
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/(auth)/forgot-password',
+                                    params: { email: email.trim().toLowerCase() },
+                                })
+                            }
+                            hitSlop={{ top: 4, right: 4, bottom: 4, left: 4 }}
+                            accessibilityRole='link'
+                            className='self-end'
+                        >
+                            <Text
+                                variant='caption'
+                                color='brand'
+                            >
+                                Forgot password?
+                            </Text>
+                        </Pressable>
+                    </View>
                 </View>
 
                 {/* ── CTA ────────────────────────────────────────────────── */}

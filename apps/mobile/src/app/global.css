@@ -18,7 +18,6 @@
     font-family: 'PlusJakartaSans_700Bold';
 }
 
-
 @theme {
     /* ─── Typography ────────────────────────────────────────────────────── */
     --font-sans: 'PlusJakartaSans_400Regular', system-ui, sans-serif;

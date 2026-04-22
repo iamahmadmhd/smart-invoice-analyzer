@@ -1,8 +1,10 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {
+    confirmResetPassword,
     confirmSignUp,
     fetchAuthSession,
     getCurrentUser,
+    resetPassword,
     signIn,
     signOut,
     signUp,
@@ -23,12 +25,6 @@ interface AuthState {
 }
 
 // ─── Error extraction ─────────────────────────────────────────────────────────
-// Amplify v6 throws typed error classes (e.g. UserNotFoundException,
-// NotAuthorizedException). RTK's miniSerializeError only reads `message` from
-// plain Error objects — on iOS the JSI bridge may lose the property entirely,
-// producing "An unknown error occurred". We catch explicitly and map known
-// Cognito error names to user-friendly strings before calling rejectWithValue,
-// so the slice always receives a plain serialisable string.
 
 const COGNITO_MESSAGES: Record<string, string> = {
     NotAuthorizedException: 'Incorrect email or password.',
@@ -46,8 +42,6 @@ const COGNITO_MESSAGES: Record<string, string> = {
 
 function extractErrorMessage(error: unknown): string {
     if (error instanceof Error) {
-        // Amplify v6 on React Native iOS exposes the Cognito code in `.code`,
-        // while web uses `.name`. Check both.
         const code = (error as any).code ?? error.name;
         const mapped = COGNITO_MESSAGES[code];
         if (mapped) return mapped;
@@ -115,6 +109,31 @@ export const signOutThunk = createAsyncThunk('auth/signOut', async (_, { rejectW
     }
 });
 
+export const forgotPasswordThunk = createAsyncThunk(
+    'auth/forgotPassword',
+    async ({ username }: { username: string }, { rejectWithValue }) => {
+        try {
+            await resetPassword({ username });
+        } catch (error) {
+            return rejectWithValue(extractErrorMessage(error));
+        }
+    }
+);
+
+export const confirmResetPasswordThunk = createAsyncThunk(
+    'auth/confirmResetPassword',
+    async (
+        { username, code, newPassword }: { username: string; code: string; newPassword: string },
+        { rejectWithValue }
+    ) => {
+        try {
+            await confirmResetPassword({ username, confirmationCode: code, newPassword });
+        } catch (error) {
+            return rejectWithValue(extractErrorMessage(error));
+        }
+    }
+);
+
 // ─── Slice ───────────────────────────────────────────────────────────────────
 
 const initialState: AuthState = {
@@ -143,7 +162,6 @@ const authSlice = createSlice({
                 state.user = action.payload;
             })
             .addCase(initAuth.rejected, (state) => {
-                // No active session — not an error, just unauthenticated
                 state.status = 'idle';
                 state.user = null;
             });
@@ -201,9 +219,36 @@ const authSlice = createSlice({
                 state.error = null;
             })
             .addCase(signOutThunk.rejected, (state, action) => {
-                // Sign-out failure is rare — clear the user locally regardless
                 state.user = null;
                 state.status = 'idle';
+                state.error = action.payload as string;
+            });
+
+        // ── forgotPassword ────────────────────────────────────────────────
+        builder
+            .addCase(forgotPasswordThunk.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(forgotPasswordThunk.fulfilled, (state) => {
+                state.status = 'idle';
+            })
+            .addCase(forgotPasswordThunk.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload as string;
+            });
+
+        // ── confirmResetPassword ──────────────────────────────────────────
+        builder
+            .addCase(confirmResetPasswordThunk.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(confirmResetPasswordThunk.fulfilled, (state) => {
+                state.status = 'idle';
+            })
+            .addCase(confirmResetPasswordThunk.rejected, (state, action) => {
+                state.status = 'failed';
                 state.error = action.payload as string;
             });
     },
