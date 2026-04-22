@@ -46,10 +46,11 @@ const COGNITO_MESSAGES: Record<string, string> = {
 
 function extractErrorMessage(error: unknown): string {
     if (error instanceof Error) {
-        // Amplify errors carry the Cognito error code in `name`
-        const mapped = COGNITO_MESSAGES[error.name];
+        // Amplify v6 on React Native iOS exposes the Cognito code in `.code`,
+        // while web uses `.name`. Check both.
+        const code = (error as any).code ?? error.name;
+        const mapped = COGNITO_MESSAGES[code];
         if (mapped) return mapped;
-        // Fall back to the raw message if it's a real string
         if (error.message && error.message !== 'An unknown error occurred') {
             return error.message;
         }
@@ -73,6 +74,7 @@ export const signInThunk = createAsyncThunk(
             const user = await getCurrentUser();
             return { username: user.username, userId: user.userId };
         } catch (error) {
+            console.log(JSON.stringify(error, Object.getOwnPropertyNames(error)));
             return rejectWithValue(extractErrorMessage(error));
         }
     }

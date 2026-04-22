@@ -1,5 +1,4 @@
 import './global.css';
-import '../lib/amplify';
 import { Spinner } from '@/components';
 import { store, useAppDispatch, useAppSelector } from '@/store';
 import { initAuth } from '@/store/slices/auth-slice';

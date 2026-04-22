@@ -27,7 +27,7 @@ const containerSizes: Record<InputSize, string> = {
 };
 
 const containerStates: Record<InputState, string> = {
-    default: 'border border-wire      dark:border-wire-night',
+    default: 'border border-wire dark:border-wire-night',
     focused: 'border-2 border-brand',
     error: 'border-2 border-crimson',
     success: 'border-2 border-jade',
@@ -115,11 +115,27 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
                     className='ml-2.5'
                     accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                 >
-                    <SymbolView
-                        name={showPassword ? 'eye.slash' : 'eye'}
-                        size={iconSize}
-                        tintColor={iconColor}
-                    />
+                    {showPassword ? (
+                        <SymbolView
+                            name={{
+                                ios: 'eye.slash',
+                                android: 'visibility_off',
+                                web: 'visibility_off',
+                            }}
+                            size={iconSize}
+                            tintColor={iconColor}
+                        />
+                    ) : (
+                        <SymbolView
+                            name={{
+                                ios: 'eye',
+                                android: 'visibility',
+                                web: 'visibility',
+                            }}
+                            size={iconSize}
+                            tintColor={iconColor}
+                        />
+                    )}
                 </Pressable>
             )}
 
@@ -129,7 +145,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             {/* State indicator icon */}
             {currentState === 'error' && !rightIcon && !isPassword && (
                 <SymbolView
-                    name='exclamationmark.circle.fill'
+                    name={{ ios: 'exclamationmark.circle.fill', android: 'error', web: 'error' }}
                     size={iconSize}
                     tintColor={colors.crimson}
                     style={{ marginLeft: 8 }}
@@ -137,7 +153,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             )}
             {currentState === 'success' && !rightIcon && !isPassword && (
                 <SymbolView
-                    name='checkmark.circle.fill'
+                    name={{
+                        ios: 'checkmark.circle.fill',
+                        android: 'check_circle',
+                        web: 'check_circle',
+                    }}
                     size={iconSize}
                     tintColor={colors.jade}
                     style={{ marginLeft: 8 }}

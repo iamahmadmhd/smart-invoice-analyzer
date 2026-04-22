@@ -58,7 +58,7 @@ export default function SignInScreen() {
             className='flex-1 bg-canvas-subtle dark:bg-night'
         >
             <ScrollView
-                contentContainerClassName='grow justify-center'
+                contentContainerClassName='grow justify-center max-w-lg mx-auto w-full'
                 className='px-6'
                 keyboardShouldPersistTaps='handled'
                 showsVerticalScrollIndicator={false}
