@@ -37,6 +37,9 @@ yarn-error.log*
 .DS_Store
 *.pem
 
-Editor directories and files
+# Editor directories and files
 .vscode/
 .idea/
+
+# Agent rules
+.amazonq/
