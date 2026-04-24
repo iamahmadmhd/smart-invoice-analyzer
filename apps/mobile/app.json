@@ -8,7 +8,8 @@
         "scheme": "smart-invoice-analyzer",
         "userInterfaceStyle": "automatic",
         "ios": {
-            "icon": "./assets/expo.icon"
+            "icon": "./assets/expo.icon",
+            "bundleIdentifier": "com.anonymous.smartinvoiceanalyzer"
         },
         "android": {
             "adaptiveIcon": {
@@ -17,7 +18,8 @@
                 "backgroundImage": "./assets/images/android-icon-background.png",
                 "monochromeImage": "./assets/images/android-icon-monochrome.png"
             },
-            "predictiveBackGestureEnabled": false
+            "predictiveBackGestureEnabled": false,
+            "package": "com.anonymous.smartinvoiceanalyzer"
         },
         "web": {
             "output": "server",
@@ -34,11 +36,19 @@
                         "imageWidth": 76
                     }
                 }
-            ]
+            ],
+            "expo-image"
         ],
         "experiments": {
             "typedRoutes": true,
             "reactCompiler": true
-        }
+        },
+        "extra": {
+            "router": {},
+            "eas": {
+                "projectId": "ddd559a3-2259-4aa3-945f-d2ffabc4223a"
+            }
+        },
+        "owner": "iamahmadmhd"
     }
 }

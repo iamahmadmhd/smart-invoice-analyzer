@@ -1,13 +1,21 @@
 import * as cdk from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 interface ApiProps {
     prefix: string;
     userPool: cognito.UserPool;
     orchestratorFn: lambda.Function;
+    invoiceBucket: s3.IBucket;
+    invoiceTable: dynamodb.ITable;
+    processingJobTable: dynamodb.ITable;
+    exportBatchTable: dynamodb.ITable;
+    insightTable: dynamodb.ITable;
+    userTable: dynamodb.ITable;
 }
 
 export class Api extends Construct {
