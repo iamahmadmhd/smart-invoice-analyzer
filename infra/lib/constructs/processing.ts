@@ -10,6 +10,10 @@ interface ProcessingProps {
     prod: boolean;
     invoiceTable: dynamodb.ITable;
     invoiceBucket: s3.IBucket;
+    processingJobTable: dynamodb.ITable;
+    exportBatchTable: dynamodb.ITable;
+    insightTable: dynamodb.ITable;
+    userTable: dynamodb.ITable;
 }
 
 export class Processing extends Construct {

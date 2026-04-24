@@ -21,16 +21,28 @@ export class AppStack extends cdk.Stack {
         const auth = new Auth(this, 'Auth', { prefix, prod });
         const database = new Database(this, 'Database', { prefix, prod });
         const storage = new Storage(this, 'Storage', { prefix, prod });
+
         const processing = new Processing(this, 'Processing', {
             prefix,
             prod,
-            invoiceTable: database.invoiceTable,
             invoiceBucket: storage.invoiceBucket,
+            invoiceTable: database.invoiceTable,
+            processingJobTable: database.processingJobTable,
+            exportBatchTable: database.exportBatchTable,
+            insightTable: database.insightTable,
+            userTable: database.userTable,
         });
+
         new Api(this, 'Api', {
             prefix,
             userPool: auth.userPool,
             orchestratorFn: processing.orchestratorFn,
+            invoiceBucket: storage.invoiceBucket,
+            invoiceTable: database.invoiceTable,
+            processingJobTable: database.processingJobTable,
+            exportBatchTable: database.exportBatchTable,
+            insightTable: database.insightTable,
+            userTable: database.userTable,
         });
     }
 }
