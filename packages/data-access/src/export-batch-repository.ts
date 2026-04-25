@@ -11,17 +11,17 @@ import {
     ValidationReport,
 } from '@smart-invoice-analyzer/contracts';
 import { NotFoundError } from '@smart-invoice-analyzer/observability';
-import { dynamo } from './dynamodb-client';
+import { dbClient } from './dynamodb-client';
 
 export class ExportBatchRepository {
     constructor(private readonly tableName: string) {}
 
     async put(batch: ExportBatch): Promise<void> {
-        await dynamo.send(new PutCommand({ TableName: this.tableName, Item: batch }));
+        await dbClient.send(new PutCommand({ TableName: this.tableName, Item: batch }));
     }
 
     async getById(userId: string, exportBatchId: string): Promise<ExportBatch> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new GetCommand({ TableName: this.tableName, Key: { userId, exportBatchId } })
         );
         if (!result.Item) throw new NotFoundError('ExportBatch', exportBatchId);
@@ -30,7 +30,7 @@ export class ExportBatchRepository {
 
     /** Look up by batch ID alone (used by workers that don't have userId) */
     async getByBatchId(exportBatchId: string): Promise<ExportBatch> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 IndexName: 'exportBatchId-index',
@@ -44,7 +44,7 @@ export class ExportBatchRepository {
     }
 
     async listByUser(userId: string): Promise<ExportBatch[]> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 IndexName: 'userId-createdAt-index',
@@ -79,7 +79,7 @@ export class ExportBatchRepository {
             values[':vr'] = extra.validationReport;
         }
 
-        await dynamo.send(
+        await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
                 Key: { userId, exportBatchId },
@@ -101,7 +101,7 @@ export class ExportBatchRepository {
     async deleteAllForUser(userId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
-            const result = await dynamo.send(
+            const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
                     KeyConditionExpression: 'userId = :uid',
@@ -111,7 +111,7 @@ export class ExportBatchRepository {
                 })
             );
             for (const item of result.Items ?? []) {
-                await dynamo.send(
+                await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
                         Key: { userId: item['userId'], exportBatchId: item['exportBatchId'] },

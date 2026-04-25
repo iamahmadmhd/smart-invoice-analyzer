@@ -1,16 +1,16 @@
 import { DeleteCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { Insight, InsightType } from '@smart-invoice-analyzer/contracts';
-import { dynamo } from './dynamodb-client';
+import { dbClient } from './dynamodb-client';
 
 export class InsightRepository {
     constructor(private readonly tableName: string) {}
 
     async put(insight: Insight): Promise<void> {
-        await dynamo.send(new PutCommand({ TableName: this.tableName, Item: insight }));
+        await dbClient.send(new PutCommand({ TableName: this.tableName, Item: insight }));
     }
 
     async listByInvoice(invoiceId: string): Promise<Insight[]> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 IndexName: 'invoiceId-index',
@@ -22,7 +22,7 @@ export class InsightRepository {
     }
 
     async listByUserAndType(userId: string, type: InsightType): Promise<Insight[]> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 IndexName: 'userId-type-index',
@@ -37,7 +37,7 @@ export class InsightRepository {
     async deleteAllForUser(userId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
-            const result = await dynamo.send(
+            const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
                     KeyConditionExpression: 'userId = :uid',
@@ -47,7 +47,7 @@ export class InsightRepository {
                 })
             );
             for (const item of result.Items ?? []) {
-                await dynamo.send(
+                await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
                         Key: { userId: item['userId'], insightId: item['insightId'] },

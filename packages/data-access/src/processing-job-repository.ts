@@ -7,7 +7,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { ProcessingJob, ProcessingJobStatus } from '@smart-invoice-analyzer/contracts';
 import { NotFoundError } from '@smart-invoice-analyzer/observability';
-import { dynamo } from './dynamodb-client';
+import { dbClient } from './dynamodb-client';
 
 const TTL_DAYS = 90;
 
@@ -16,11 +16,11 @@ export class ProcessingJobRepository {
 
     async put(job: ProcessingJob): Promise<void> {
         const ttl = Math.floor(Date.now() / 1000) + TTL_DAYS * 86400;
-        await dynamo.send(new PutCommand({ TableName: this.tableName, Item: { ...job, ttl } }));
+        await dbClient.send(new PutCommand({ TableName: this.tableName, Item: { ...job, ttl } }));
     }
 
     async getById(invoiceId: string, jobId: string): Promise<ProcessingJob> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new GetCommand({ TableName: this.tableName, Key: { invoiceId, jobId } })
         );
         if (!result.Item) throw new NotFoundError('ProcessingJob', jobId);
@@ -28,7 +28,7 @@ export class ProcessingJobRepository {
     }
 
     async listByInvoice(invoiceId: string): Promise<ProcessingJob[]> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 KeyConditionExpression: 'invoiceId = :id',
@@ -46,7 +46,7 @@ export class ProcessingJobRepository {
         error?: { code: string; message: string }
     ): Promise<void> {
         const isTerminal = status === 'COMPLETED' || status === 'FAILED';
-        await dynamo.send(
+        await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
                 Key: { invoiceId, jobId },
@@ -70,7 +70,7 @@ export class ProcessingJobRepository {
     async deleteAllForUser(userId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
-            const result = await dynamo.send(
+            const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
                     IndexName: 'userId-index',
@@ -81,7 +81,7 @@ export class ProcessingJobRepository {
                 })
             );
             for (const item of result.Items ?? []) {
-                await dynamo.send(
+                await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
                         Key: { invoiceId: item['invoiceId'], jobId: item['jobId'] },

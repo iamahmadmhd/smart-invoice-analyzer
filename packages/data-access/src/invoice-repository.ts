@@ -13,13 +13,13 @@ import {
     ListInvoicesQuery,
 } from '@smart-invoice-analyzer/contracts';
 import { NotFoundError } from '@smart-invoice-analyzer/observability';
-import { dynamo } from './dynamodb-client';
+import { dbClient } from './dynamodb-client';
 
 export class InvoiceRepository {
     constructor(private readonly tableName: string) {}
 
     async put(invoice: Invoice): Promise<void> {
-        await dynamo.send(
+        await dbClient.send(
             new PutCommand({
                 TableName: this.tableName,
                 Item: invoice,
@@ -28,7 +28,7 @@ export class InvoiceRepository {
     }
 
     async getById(userId: string, invoiceId: string): Promise<Invoice> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new GetCommand({
                 TableName: this.tableName,
                 Key: { userId, invoiceId },
@@ -84,7 +84,7 @@ export class InvoiceRepository {
                         : undefined,
                 };
 
-        const result = await dynamo.send(new QueryCommand(params));
+        const result = await dbClient.send(new QueryCommand(params));
 
         let items = (result.Items ?? []) as Invoice[];
 
@@ -114,7 +114,7 @@ export class InvoiceRepository {
     }
 
     async updateStatus(userId: string, invoiceId: string, status: InvoiceStatus): Promise<void> {
-        await dynamo.send(
+        await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
                 Key: { userId, invoiceId },
@@ -129,7 +129,7 @@ export class InvoiceRepository {
     }
 
     async markExported(userId: string, invoiceId: string, exportBatchId: string): Promise<void> {
-        await dynamo.send(
+        await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
                 Key: { userId, invoiceId },
@@ -145,7 +145,7 @@ export class InvoiceRepository {
     }
 
     async listByExportBatch(exportBatchId: string): Promise<Invoice[]> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 IndexName: 'exportBatchId-index',
@@ -162,7 +162,7 @@ export class InvoiceRepository {
         periodStart: string,
         periodEnd: string
     ): Promise<Invoice[]> {
-        const result = await dynamo.send(
+        const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
                 IndexName: 'userId-invoiceDate-index',
@@ -185,7 +185,7 @@ export class InvoiceRepository {
         // Query all invoices for user, then batch delete
         let lastKey: Record<string, unknown> | undefined;
         do {
-            const result = await dynamo.send(
+            const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
                     KeyConditionExpression: 'userId = :uid',
@@ -196,7 +196,7 @@ export class InvoiceRepository {
             );
 
             for (const item of result.Items ?? []) {
-                await dynamo.send(
+                await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
                         Key: { userId: item['userId'], invoiceId: item['invoiceId'] },
