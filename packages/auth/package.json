@@ -1,0 +1,18 @@
+{
+    "name": "@smart-invoice-analyzer/auth",
+    "version": "1.0.0",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "check-types": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@smart-invoice-analyzer/observability": "*",
+        "zod": "^3.25.76"
+    },
+    "devDependencies": {
+        "typescript": "~5.9.2"
+    }
+}
