@@ -36,7 +36,7 @@ export class AppStack extends cdk.Stack {
         new Api(this, 'Api', {
             prefix,
             userPool: auth.userPool,
-            orchestratorFn: processing.orchestratorFn,
+            orchestratorFunction: processing.orchestratorFunction,
             invoiceBucket: storage.invoiceBucket,
             invoiceTable: database.invoiceTable,
             processingJobTable: database.processingJobTable,

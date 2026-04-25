@@ -17,12 +17,12 @@ interface ProcessingProps {
 }
 
 export class Processing extends Construct {
-    public readonly orchestratorFn: lambda.Function;
+    public readonly orchestratorFunction: lambda.Function;
 
     constructor(scope: Construct, id: string, props: ProcessingProps) {
         super(scope, id);
 
-        this.orchestratorFn = new lambda.Function(this, 'OrchestratorFn', {
+        this.orchestratorFunction = new lambda.Function(this, 'OrchestratorFn', {
             functionName: `${props.prefix}-orchestrator`,
             runtime: lambda.Runtime.NODEJS_22_X,
             handler: 'index.handler',
@@ -36,11 +36,11 @@ export class Processing extends Construct {
 
         props.invoiceBucket.addEventNotification(
             s3.EventType.OBJECT_CREATED,
-            new s3n.LambdaDestination(this.orchestratorFn),
+            new s3n.LambdaDestination(this.orchestratorFunction),
             { prefix: 'uploads/' }
         );
 
-        props.invoiceBucket.grantRead(this.orchestratorFn);
-        props.invoiceTable.grantReadWriteData(this.orchestratorFn);
+        props.invoiceBucket.grantRead(this.orchestratorFunction);
+        props.invoiceTable.grantReadWriteData(this.orchestratorFunction);
     }
 }
