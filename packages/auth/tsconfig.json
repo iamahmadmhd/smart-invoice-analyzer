@@ -1,15 +1,14 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "lib": ["es2022"],
         "declaration": true,
         "outDir": "./dist",
         "rootDir": "./src",
         "strict": true,
         "skipLibCheck": true,
-        "typeRoots": ["../../node_modules/@types"],
         "types": ["node"]
     },
     "include": ["src/**/*.ts"],
