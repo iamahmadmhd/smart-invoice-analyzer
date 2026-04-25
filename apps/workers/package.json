@@ -1,0 +1,25 @@
+{
+    "name": "@smart-invoice-analyzer/workers",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "build": "node esbuild.mjs",
+        "check-types": "tsc --noEmit",
+        "lint": "echo 'No lint configured'"
+    },
+    "dependencies": {
+        "@aws-sdk/client-sqs": "^3.0.0",
+        "@aws-sdk/client-textract": "^3.0.0",
+        "@smart-invoice-analyzer/ai": "*",
+        "@smart-invoice-analyzer/config": "*",
+        "@smart-invoice-analyzer/contracts": "*",
+        "@smart-invoice-analyzer/data-access": "*",
+        "@smart-invoice-analyzer/domain": "*",
+        "@smart-invoice-analyzer/export": "*",
+        "@smart-invoice-analyzer/observability": "*"
+    },
+    "devDependencies": {
+        "esbuild": "^0.24.0",
+        "typescript": "~5.9.2"
+    }
+}
