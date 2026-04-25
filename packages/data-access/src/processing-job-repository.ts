@@ -27,6 +27,25 @@ export class ProcessingJobRepository {
         return result.Item as ProcessingJob;
     }
 
+    /**
+     * Look up a single job by jobId alone using the jobId-index GSI.
+     * Used by GET /jobs/:id where only the job ID is available.
+     */
+    async getByJobId(jobId: string): Promise<ProcessingJob> {
+        const result = await dbClient.send(
+            new QueryCommand({
+                TableName: this.tableName,
+                IndexName: 'jobId-index',
+                KeyConditionExpression: 'jobId = :jid',
+                ExpressionAttributeValues: { ':jid': jobId },
+                Limit: 1,
+            })
+        );
+        const item = result.Items?.[0];
+        if (!item) throw new NotFoundError('ProcessingJob', jobId);
+        return item as ProcessingJob;
+    }
+
     async listByInvoice(invoiceId: string): Promise<ProcessingJob[]> {
         const result = await dbClient.send(
             new QueryCommand({
