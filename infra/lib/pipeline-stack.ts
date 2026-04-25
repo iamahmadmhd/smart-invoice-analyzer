@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import { GitHubTrigger } from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
@@ -18,7 +19,7 @@ export class PipelineStack extends cdk.Stack {
         const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
             pipelineName: `SmartInvoiceAnalyzer-${stage}`,
             selfMutation: true,
-            synth: new pipelines.ShellStep('Synth', {
+            synth: new pipelines.CodeBuildStep('Synth', {
                 input: pipelines.CodePipelineSource.gitHub(
                     'iamahmadmhd/smart-invoice-analyzer',
                     branch,
@@ -27,6 +28,9 @@ export class PipelineStack extends cdk.Stack {
                         trigger: GitHubTrigger.WEBHOOK,
                     }
                 ),
+                buildEnvironment: {
+                    buildImage: codebuild.LinuxBuildImage.fromDockerRegistry('node:22'),
+                },
                 commands: [
                     'npm ci',
                     'npm run lint',
