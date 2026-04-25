@@ -1,7 +1,9 @@
+import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
@@ -16,7 +18,10 @@ export interface ApiProps {
     exportBatchTable: dynamodb.ITable;
     insightTable: dynamodb.ITable;
     userTable: dynamodb.ITable;
+    exportQueueUrl: string;
 }
+
+const API_DIST = path.join(__dirname, '../../../apps/api/dist');
 
 export class Api extends Construct {
     public readonly apiUrl: string;
@@ -24,7 +29,7 @@ export class Api extends Construct {
     constructor(scope: Construct, id: string, props: ApiProps) {
         super(scope, id);
 
-        // ── Shared env passed to every handler ─────────────────────────────
+        // ── Shared env ──────────────────────────────────────────────────────
         const commonEnv: Record<string, string> = {
             INVOICE_TABLE: props.invoiceTable.tableName,
             PROCESSING_JOB_TABLE: props.processingJobTable.tableName,
@@ -32,23 +37,24 @@ export class Api extends Construct {
             INSIGHT_TABLE: props.insightTable.tableName,
             USER_TABLE: props.userTable.tableName,
             BUCKET_NAME: props.invoiceBucket.bucketName,
+            EXPORT_QUEUE_URL: props.exportQueueUrl,
         };
 
-        // ── Helper: create a Lambda handler ────────────────────────────────
+        // ── Helper ──────────────────────────────────────────────────────────
         const createFunction = (name: string, extraEnv?: Record<string, string>) =>
             new lambda.Function(this, `${name}Function`, {
                 functionName: `${props.prefix}-api-${name}`,
                 runtime: lambda.Runtime.NODEJS_22_X,
                 handler: 'index.handler',
-                code: lambda.Code.fromInline(
-                    'exports.handler = async () => ({ statusCode: 200, body: "{}" })'
-                ),
+                code: lambda.Code.fromAsset(path.join(API_DIST, name)),
                 timeout: cdk.Duration.seconds(30),
                 environment: { ...commonEnv, ...extraEnv },
             });
 
         // ── Lambda handlers ─────────────────────────────────────────────────
-        const presignFunction = createFunction('presign');
+        const presignFunction = createFunction('presign', {
+            INVOICE_PREFIX: 'invoices/original/',
+        });
         const createInvoiceFunction = createFunction('create-invoice');
         const listInvoicesFunction = createFunction('list-invoices');
         const getInvoiceFunction = createFunction('get-invoice');
@@ -56,6 +62,7 @@ export class Api extends Construct {
         const queryFunction = createFunction('query');
         const validateExportFunction = createFunction('validate-export');
         const createExportFunction = createFunction('create-export');
+        const listExportsFunction = createFunction('list-exports');
         const getExportFunction = createFunction('get-export');
         const downloadExportFunction = createFunction('download-export');
         const getExportReportFunction = createFunction('get-export-report');
@@ -63,32 +70,50 @@ export class Api extends Construct {
         const deleteUserFunction = createFunction('delete-user');
 
         // ── Grants ──────────────────────────────────────────────────────────
-        // Presign: write access to issue upload URLs
         props.invoiceBucket.grantPut(presignFunction);
+
         props.invoiceTable.grantWriteData(createInvoiceFunction);
 
         props.invoiceTable.grantReadData(listInvoicesFunction);
         props.invoiceTable.grantReadData(getInvoiceFunction);
+
+        props.invoiceTable.grantReadData(getInsightsFunction);
         props.insightTable.grantReadData(getInsightsFunction);
-        props.insightTable.grantReadData(queryFunction);
+
         props.invoiceTable.grantReadData(queryFunction);
+        props.insightTable.grantReadData(queryFunction);
 
-        props.exportBatchTable.grantReadWriteData(validateExportFunction);
         props.invoiceTable.grantReadData(validateExportFunction);
+        props.exportBatchTable.grantReadWriteData(validateExportFunction);
 
-        props.exportBatchTable.grantReadWriteData(createExportFunction);
         props.invoiceTable.grantReadData(createExportFunction);
+        props.exportBatchTable.grantReadWriteData(createExportFunction);
+        // create-export enqueues to the export SQS queue
+        createExportFunction.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: ['sqs:SendMessage'],
+                resources: [
+                    cdk.Fn.join('', [
+                        'arn:aws:sqs:',
+                        cdk.Stack.of(this).region,
+                        ':',
+                        cdk.Stack.of(this).account,
+                        ':',
+                        cdk.Fn.select(4, cdk.Fn.split('/', props.exportQueueUrl)),
+                    ]),
+                ],
+            })
+        );
 
+        props.exportBatchTable.grantReadData(listExportsFunction);
         props.exportBatchTable.grantReadData(getExportFunction);
         props.exportBatchTable.grantReadData(getExportReportFunction);
 
-        // Download: read the archive from S3 and return a signed URL
-        props.invoiceBucket.grantRead(downloadExportFunction);
         props.exportBatchTable.grantReadData(downloadExportFunction);
+        props.invoiceBucket.grantRead(downloadExportFunction);
 
         props.processingJobTable.grantReadData(getJobFunction);
 
-        // Hard delete: remove all user data across every table
         props.userTable.grantReadWriteData(deleteUserFunction);
         props.invoiceTable.grantReadWriteData(deleteUserFunction);
         props.processingJobTable.grantReadWriteData(deleteUserFunction);
@@ -123,67 +148,46 @@ export class Api extends Construct {
             authorizationType: apigw.AuthorizationType.COGNITO,
         };
 
-        const integration = (fn: lambda.Function) =>
-            new apigw.LambdaIntegration(fn, { proxy: true });
+        const fn = (f: lambda.Function) => new apigw.LambdaIntegration(f, { proxy: true });
 
         // ── /uploads ────────────────────────────────────────────────────────
-        // POST /uploads/presign  → return a presigned S3 upload URL
         const uploads = api.root.addResource('uploads');
-        const presign = uploads.addResource('presign');
-        presign.addMethod('POST', integration(presignFunction), auth);
+        uploads.addResource('presign').addMethod('POST', fn(presignFunction), auth);
 
         // ── /invoices ───────────────────────────────────────────────────────
-        // POST /invoices         → create invoice record after upload
-        // GET  /invoices         → list invoices (supports filter/sort query params)
         const invoices = api.root.addResource('invoices');
-        invoices.addMethod('POST', integration(createInvoiceFunction), auth);
-        invoices.addMethod('GET', integration(listInvoicesFunction), auth);
+        invoices.addMethod('POST', fn(createInvoiceFunction), auth);
+        invoices.addMethod('GET', fn(listInvoicesFunction), auth);
 
-        // GET /invoices/:id
         const invoiceById = invoices.addResource('{invoiceId}');
-        invoiceById.addMethod('GET', integration(getInvoiceFunction), auth);
-
-        // GET /invoices/:id/insights
-        const insights = invoiceById.addResource('insights');
-        insights.addMethod('GET', integration(getInsightsFunction), auth);
+        invoiceById.addMethod('GET', fn(getInvoiceFunction), auth);
+        invoiceById.addResource('insights').addMethod('GET', fn(getInsightsFunction), auth);
 
         // ── /queries ────────────────────────────────────────────────────────
-        // POST /queries  → natural-language spending query
-        const queries = api.root.addResource('queries');
-        queries.addMethod('POST', integration(queryFunction), auth);
+        api.root.addResource('queries').addMethod('POST', fn(queryFunction), auth);
 
         // ── /exports ────────────────────────────────────────────────────────
-        // POST /exports/validate → run validation, return report (no archive yet)
-        // POST /exports          → confirm and kick off archive generation
-        // GET  /exports/:id
-        // GET  /exports/:id/download  → signed S3 URL for the ZIP archive
-        // GET  /exports/:id/report    → validation report only
         const exports = api.root.addResource('exports');
-        const validateExport = exports.addResource('validate');
-        validateExport.addMethod('POST', integration(validateExportFunction), auth);
-
-        exports.addMethod('POST', integration(createExportFunction), auth);
+        exports.addResource('validate').addMethod('POST', fn(validateExportFunction), auth);
+        exports.addMethod('POST', fn(createExportFunction), auth);
+        exports.addMethod('GET', fn(listExportsFunction), auth); // GET /exports
 
         const exportById = exports.addResource('{exportBatchId}');
-        exportById.addMethod('GET', integration(getExportFunction), auth);
-
-        const exportDownload = exportById.addResource('download');
-        exportDownload.addMethod('GET', integration(downloadExportFunction), auth);
-
-        const exportReport = exportById.addResource('report');
-        exportReport.addMethod('GET', integration(getExportReportFunction), auth);
+        exportById.addMethod('GET', fn(getExportFunction), auth);
+        exportById.addResource('download').addMethod('GET', fn(downloadExportFunction), auth);
+        exportById.addResource('report').addMethod('GET', fn(getExportReportFunction), auth);
 
         // ── /jobs ───────────────────────────────────────────────────────────
-        // GET /jobs/:id  → poll processing job status
-        const jobs = api.root.addResource('jobs');
-        const jobById = jobs.addResource('{jobId}');
-        jobById.addMethod('GET', integration(getJobFunction), auth);
+        api.root
+            .addResource('jobs')
+            .addResource('{jobId}')
+            .addMethod('GET', fn(getJobFunction), auth);
 
         // ── /users ──────────────────────────────────────────────────────────
-        // DELETE /users/me  → hard delete all user data
-        const users = api.root.addResource('users');
-        const me = users.addResource('me');
-        me.addMethod('DELETE', integration(deleteUserFunction), auth);
+        api.root
+            .addResource('users')
+            .addResource('me')
+            .addMethod('DELETE', fn(deleteUserFunction), auth);
 
         // ── Outputs ─────────────────────────────────────────────────────────
         this.apiUrl = api.url;

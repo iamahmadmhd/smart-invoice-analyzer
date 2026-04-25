@@ -32,7 +32,7 @@ export const handler = async (event: S3Event): Promise<void> => {
 
         logger.info('Ingestion started', { s3Key, s3Bucket, fileSizeBytes });
 
-        // Extract userId and fileObjectId from key: invoices/original/{userId}/{fileObjectId}
+        // Key format: invoices/original/{userId}/{fileObjectId}
         const parts = s3Key.split('/');
         const userId = parts[2];
         const fileObjectId = parts[3];
@@ -42,7 +42,6 @@ export const handler = async (event: S3Event): Promise<void> => {
             continue;
         }
 
-        // Derive content type from file extension
         const ext = fileObjectId.split('.').pop()?.toLowerCase();
         const contentTypeMap: Record<string, string> = {
             pdf: 'application/pdf',
@@ -57,10 +56,10 @@ export const handler = async (event: S3Event): Promise<void> => {
             continue;
         }
 
-        // Find the invoice that references this fileObjectId
         const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-        const { items } = await invoiceRepo.list(userId, { limit: 100 });
-        const invoice = items.find((i) => i.sourceFileId === fileObjectId);
+
+        // Use the sourceFileId-index GSI — O(1) lookup, no scan or limit risk
+        const invoice = await invoiceRepo.getBySourceFileId(fileObjectId);
 
         if (!invoice) {
             logger.warn('No invoice found for fileObjectId', { fileObjectId, userId });
