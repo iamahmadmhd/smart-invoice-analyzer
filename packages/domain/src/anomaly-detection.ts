@@ -2,9 +2,9 @@ import { Invoice } from '@smart-invoice-analyzer/contracts';
 
 // ── Thresholds ────────────────────────────────────────────────────────────────
 
-const VALID_GERMAN_VAT_RATES = [0, 7, 19];          // %
-const MAX_AMOUNT_MULTIPLIER = 5;                     // flag if 5× the user's average
-const MIN_INVOICES_FOR_BASELINE = 5;                 // need at least this many to compute average
+const VALID_GERMAN_VAT_RATES = [0, 7, 19]; // %
+const MAX_AMOUNT_MULTIPLIER = 5; // flag if 5× the user's average
+const MIN_INVOICES_FOR_BASELINE = 5; // need at least this many to compute average
 
 // ── Result type ───────────────────────────────────────────────────────────────
 
@@ -15,10 +15,7 @@ export interface AnomalyCheckResult {
 
 // ── Core logic ────────────────────────────────────────────────────────────────
 
-export function checkForAnomalies(
-    invoice: Invoice,
-    recentInvoices: Invoice[]
-): AnomalyCheckResult {
+export function checkForAnomalies(invoice: Invoice, recentInvoices: Invoice[]): AnomalyCheckResult {
     const reasons: string[] = [];
 
     // 1. Unexpected VAT rate
