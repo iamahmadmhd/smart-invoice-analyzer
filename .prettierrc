@@ -7,6 +7,14 @@
     "printWidth": 100,
     "singleAttributePerLine": true,
     "arrowParens": "always",
-    "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
-    "tailwindStylesheet": "./apps/mobile/src/app/global.css"
+    "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+    "overrides": [
+        {
+            "files": ["apps/mobile/**/*.{js,jsx,ts,tsx,css}", "apps/mobile/src/app/global.css"],
+            "options": {
+                "plugins": ["prettier-plugin-tailwindcss"],
+                "tailwindStylesheet": "./apps/mobile/src/app/global.css"
+            }
+        }
+    ]
 }
