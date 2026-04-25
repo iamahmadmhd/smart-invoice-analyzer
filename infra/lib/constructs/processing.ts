@@ -1,5 +1,7 @@
+import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -18,9 +20,14 @@ export interface ProcessingProps {
     userTable: dynamodb.ITable;
 }
 
+// Resolved at synth time — points to the monorepo root regardless of where cdk is invoked from
+const WORKERS_DIST = path.join(__dirname, '../../../apps/workers/dist');
+
 export class Processing extends Construct {
     /** Exposed so Api construct can wire it to S3 event notifications */
     public readonly orchestratorFunction: lambda.Function;
+    /** Exposed so AppStack can pass the URL to the Api construct */
+    public readonly exportQueueUrl: string;
 
     constructor(scope: Construct, id: string, props: ProcessingProps) {
         super(scope, id);
@@ -48,7 +55,8 @@ export class Processing extends Construct {
             BUCKET_NAME: invoiceBucket.bucketName,
         };
 
-        // ── Helper: create a worker Lambda ──────────────────────────────────
+        // ── Helper: create a worker Lambda from a built asset ───────────────
+        // Each handler is bundled by esbuild into dist/<name>/index.mjs
         const makeWorker = (
             name: string,
             timeout = cdk.Duration.seconds(60),
@@ -58,9 +66,7 @@ export class Processing extends Construct {
                 functionName: `${prefix}-worker-${name}`,
                 runtime: lambda.Runtime.NODEJS_22_X,
                 handler: 'index.handler',
-                code: lambda.Code.fromInline(
-                    'exports.handler = async (event) => { console.log(JSON.stringify(event)); }'
-                ),
+                code: lambda.Code.fromAsset(path.join(WORKERS_DIST, name)),
                 timeout,
                 environment: { ...commonEnv, ...extraEnv },
             });
@@ -115,7 +121,16 @@ export class Processing extends Construct {
         ocrWorker.addEventSource(new lambdaEventSources.SqsEventSource(ocrQueue, { batchSize: 1 }));
         invoiceBucket.grantReadWrite(ocrWorker);
         processingJobTable.grantReadWriteData(ocrWorker);
+        invoiceTable.grantReadWriteData(ocrWorker);
         normalizationQueue.grantSendMessages(ocrWorker);
+
+        // Grant Textract permission to read from the invoice bucket
+        ocrWorker.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: ['textract:DetectDocumentText', 'textract:AnalyzeDocument'],
+                resources: ['*'], // Textract does not support resource-level restrictions
+            })
+        );
 
         // 3. Normalization — converts OCR output to structured invoice fields
         const normalizationWorker = makeWorker('normalization', cdk.Duration.seconds(60), {
@@ -130,7 +145,6 @@ export class Processing extends Construct {
         enrichmentQueue.grantSendMessages(normalizationWorker);
 
         // 4. AI enrichment — calls Bedrock to fill gaps, categorise, summarise
-        //    Bedrock access is granted via IAM policy added separately (model ARN required)
         const enrichmentWorker = makeWorker('enrichment', cdk.Duration.seconds(120), {
             DUPLICATE_QUEUE_URL: duplicateQueue.queueUrl,
         });
@@ -142,8 +156,24 @@ export class Processing extends Construct {
         processingJobTable.grantReadWriteData(enrichmentWorker);
         duplicateQueue.grantSendMessages(enrichmentWorker);
 
+        // Grant Bedrock InvokeModel — scoped to the configured foundation model
+        // The model ID env var is validated at runtime; here we grant the known default
+        // plus a wildcard suffix to handle cross-region inference profiles (e.g. eu.*).
+        enrichmentWorker.addToRolePolicy(
+            new iam.PolicyStatement({
+                sid: 'BedrockInvokeModel',
+                actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
+                resources: [
+                    // Exact model ARN for the default
+                    `arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0`,
+                    // Cross-region inference profile wildcard (eu prefix)
+                    `arn:aws:bedrock:eu-central-1:*:inference-profile/eu.anthropic.claude-3-5-sonnet*`,
+                ],
+            })
+        );
+
         // 5. Duplicate detection — compares vendor/date/amount similarity
-        const duplicateWorker = makeWorker('duplicate', cdk.Duration.seconds(60), {
+        const duplicateWorker = makeWorker('duplicate-detection', cdk.Duration.seconds(60), {
             ANOMALY_QUEUE_URL: anomalyQueue.queueUrl,
         });
         duplicateWorker.addEventSource(
@@ -155,7 +185,7 @@ export class Processing extends Construct {
         anomalyQueue.grantSendMessages(duplicateWorker);
 
         // 6. Anomaly detection — flags unusual tax rates, amounts, vendor patterns
-        const anomalyWorker = makeWorker('anomaly', cdk.Duration.seconds(60));
+        const anomalyWorker = makeWorker('anomaly-detection', cdk.Duration.seconds(60));
         anomalyWorker.addEventSource(
             new lambdaEventSources.SqsEventSource(anomalyQueue, { batchSize: 1 })
         );
@@ -177,6 +207,7 @@ export class Processing extends Construct {
         processingJobTable.grantReadWriteData(exportWorker);
 
         // Expose export queue URL so the API create-export handler can enqueue jobs
+        this.exportQueueUrl = exportQueue.queueUrl;
         new cdk.CfnOutput(scope, 'ExportQueueUrl', { value: exportQueue.queueUrl });
     }
 }

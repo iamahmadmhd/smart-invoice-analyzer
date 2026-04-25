@@ -43,6 +43,7 @@ export class AppStack extends cdk.Stack {
             exportBatchTable: database.exportBatchTable,
             insightTable: database.insightTable,
             userTable: database.userTable,
+            exportQueueUrl: processing.exportQueueUrl,
         });
     }
 }

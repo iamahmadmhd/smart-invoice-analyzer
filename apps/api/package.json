@@ -1,0 +1,24 @@
+{
+    "name": "@smart-invoice-analyzer/api",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "build": "node esbuild.mjs",
+        "check-types": "tsc --noEmit",
+        "lint": "echo 'No lint configured'"
+    },
+    "dependencies": {
+        "@aws-sdk/client-sqs": "^3.1037.0",
+        "@smart-invoice-analyzer/ai": "*",
+        "@smart-invoice-analyzer/auth": "*",
+        "@smart-invoice-analyzer/config": "*",
+        "@smart-invoice-analyzer/contracts": "*",
+        "@smart-invoice-analyzer/data-access": "*",
+        "@smart-invoice-analyzer/domain": "*",
+        "@smart-invoice-analyzer/observability": "*"
+    },
+    "devDependencies": {
+        "esbuild": "^0.24.0",
+        "typescript": "~5.9.2"
+    }
+}
