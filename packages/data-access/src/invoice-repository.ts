@@ -38,11 +38,29 @@ export class InvoiceRepository {
         return result.Item as Invoice;
     }
 
+    /**
+     * Look up a single invoice by its source file ID using the sourceFileId-index GSI.
+     * Used by the ingestion worker immediately after an S3 upload event.
+     * Returns null if no invoice references the given file yet.
+     */
+    async getBySourceFileId(sourceFileId: string): Promise<Invoice | null> {
+        const result = await dbClient.send(
+            new QueryCommand({
+                TableName: this.tableName,
+                IndexName: 'sourceFileId-index',
+                KeyConditionExpression: 'sourceFileId = :fid',
+                ExpressionAttributeValues: { ':fid': sourceFileId },
+                Limit: 1,
+            })
+        );
+        const item = result.Items?.[0];
+        return item ? (item as Invoice) : null;
+    }
+
     async list(
         userId: string,
         query: ListInvoicesQuery
     ): Promise<{ items: Invoice[]; nextToken?: string }> {
-        // Choose the most specific GSI based on filter params
         const useDate = query.dateFrom || query.dateTo;
         const useStatus = query.status && !useDate;
 
@@ -156,7 +174,6 @@ export class InvoiceRepository {
         return (result.Items ?? []) as Invoice[];
     }
 
-    /** Returns all invoices for a user in a date range that are not yet exported */
     async listEligibleForExport(
         userId: string,
         periodStart: string,
@@ -182,7 +199,6 @@ export class InvoiceRepository {
     }
 
     async deleteAllForUser(userId: string): Promise<void> {
-        // Query all invoices for user, then batch delete
         let lastKey: Record<string, unknown> | undefined;
         do {
             const result = await dbClient.send(
