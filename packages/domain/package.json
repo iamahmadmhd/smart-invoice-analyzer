@@ -1,0 +1,19 @@
+{
+    "name": "@smart-invoice-analyzer/domain",
+    "version": "1.0.0",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "check-types": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@smart-invoice-analyzer/contracts": "*",
+        "@smart-invoice-analyzer/data-access": "*",
+        "@smart-invoice-analyzer/observability": "*"
+    },
+    "devDependencies": {
+        "typescript": "~5.9.2"
+    }
+}
