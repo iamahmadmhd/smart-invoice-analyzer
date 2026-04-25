@@ -1,0 +1,21 @@
+{
+    "name": "@smart-invoice-analyzer/ai",
+    "version": "1.0.0",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "check-types": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@aws-sdk/client-bedrock-runtime": "^3.0.0",
+        "@smart-invoice-analyzer/config": "*",
+        "@smart-invoice-analyzer/contracts": "*",
+        "@smart-invoice-analyzer/observability": "*",
+        "zod": "^3.25.76"
+    },
+    "devDependencies": {
+        "typescript": "~5.9.2"
+    }
+}
