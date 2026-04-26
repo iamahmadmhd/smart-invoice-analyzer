@@ -37,7 +37,15 @@
                     }
                 }
             ],
-            "expo-image"
+            "expo-image",
+            [
+                "expo-image-picker",
+                {
+                    "cameraPermission": "This app uses the camera to scan and upload invoices and receipts.",
+                    "microphonePermission": false,
+                    "photosPermission": "This app accesses your photos to let you upload invoices and receipts."
+                }
+            ]
         ],
         "experiments": {
             "typedRoutes": true,

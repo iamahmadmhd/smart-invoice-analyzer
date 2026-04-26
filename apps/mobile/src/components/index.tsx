@@ -20,6 +20,9 @@ export type { IconProps, IconName } from './atoms/icon';
 export { Spinner, Divider } from './atoms/spinner';
 export type { SpinnerProps, DividerProps } from './atoms/spinner';
 
+export { InvoiceCard } from './atoms/invoice-card';
+export type { InvoiceCardProps } from './atoms/invoice-card';
+
 // ─── Molecules ────────────────────────────────────────────────────────────────
 export { FormField } from './molecules/form-field';
 export type { FormFieldProps } from './molecules/form-field';

@@ -12,8 +12,16 @@ export default function AppLayout() {
         <Stack
             screenOptions={{
                 headerShown: false,
-                contentStyle: { backgroundColor: '#020617' },
+                //contentStyle: { backgroundColor: 'transparent' },
+                animation: 'slide_from_right',
             }}
-        />
+        >
+            <Stack.Screen name='index' />
+            <Stack.Screen
+                name='upload'
+                options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen name='invoice/[id]' />
+        </Stack>
     );
 }
