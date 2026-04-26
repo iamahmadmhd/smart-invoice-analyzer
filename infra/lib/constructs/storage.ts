@@ -20,6 +20,15 @@ export class Storage extends Construct {
             versioned: true,
             removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: !props.prod,
+            cors: [
+                {
+                    allowedMethods: [s3.HttpMethods.PUT],
+                    allowedOrigins: ['*'],
+                    allowedHeaders: ['*'],
+                    exposedHeaders: ['ETag'],
+                    maxAge: 3000,
+                },
+            ],
         });
     }
 }
