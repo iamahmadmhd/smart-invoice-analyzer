@@ -37,11 +37,11 @@ const configSchema = z.object({
     ENABLE_ANOMALY_DETECTION: z
         .string()
         .transform((v) => v === 'true')
-        .default('true'),
+        .default(true),
     ENABLE_DUPLICATE_DETECTION: z
         .string()
         .transform((v) => v === 'true')
-        .default('true'),
+        .default(true),
 });
 
 export type Config = z.infer<typeof configSchema>;

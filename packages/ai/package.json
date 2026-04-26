@@ -13,7 +13,7 @@
         "@smart-invoice-analyzer/config": "*",
         "@smart-invoice-analyzer/contracts": "*",
         "@smart-invoice-analyzer/observability": "*",
-        "zod": "^3.25.76"
+        "zod": "^4.3.6"
     },
     "devDependencies": {
         "typescript": "~5.9.2"

@@ -8,7 +8,7 @@ export const InsightSchema = z.object({
     userId: z.string().min(1),
     invoiceId: z.string().min(1),
     type: InsightTypeSchema,
-    payload: z.record(z.unknown()),
+    payload: z.record(z.string(), z.unknown()),
     createdAt: z.string(),
 });
 export type Insight = z.infer<typeof InsightSchema>;

@@ -16,7 +16,8 @@
         "@smart-invoice-analyzer/data-access": "*",
         "@smart-invoice-analyzer/domain": "*",
         "@smart-invoice-analyzer/export": "*",
-        "@smart-invoice-analyzer/observability": "*"
+        "@smart-invoice-analyzer/observability": "*",
+        "zod": "^4.3.6"
     },
     "devDependencies": {
         "esbuild": "^0.24.0",
