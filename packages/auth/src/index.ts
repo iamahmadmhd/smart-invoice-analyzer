@@ -1,29 +1,24 @@
+import { AppError } from '@smart-invoice-analyzer/observability';
 import { z } from 'zod';
 
 // ── Cognito JWT claims ────────────────────────────────────────────────────────
-// API Gateway with a Cognito authorizer injects the decoded claims into
-// event.requestContext.authorizer.claims — no signature verification needed
-// at the Lambda level (API Gateway already verified the token).
+// API Gateway injects all claims as strings — even booleans and numbers.
+// We only parse the three fields getUserContext actually reads; everything
+// else (iss, aud, exp, iat, token_use, …) is ignored via .passthrough().
 
-const cognitoClaimsSchema = z.object({
-    sub: z.string().min(1),
-    email: z.string().email(),
-    'cognito:username': z.string().optional(),
-    email_verified: z
-        .union([z.boolean(), z.string()])
-        .transform((v) => v === true || v === 'true')
-        .optional(),
-    iat: z.coerce.number().optional(),
-    exp: z.coerce.number().optional(),
-});
+const cognitoClaimsSchema = z
+    .object({
+        sub: z.string().min(1),
+        email: z.string().optional(),
+        'cognito:username': z.string().optional(),
+    })
+    .catchall(z.unknown());
 
 export type CognitoClaims = z.infer<typeof cognitoClaimsSchema>;
 
 // ── User context ──────────────────────────────────────────────────────────────
-// Canonical user object passed through the app layer.
 
 export interface UserContext {
-    /** DynamoDB userId — same as Cognito sub */
     userId: string;
     email: string;
     username: string;
@@ -58,7 +53,13 @@ export function extractClaims(event: AuthorizedEvent): CognitoClaims {
     const result = cognitoClaimsSchema.safeParse(raw);
 
     if (!result.success) {
-        throw new UnauthorizedError('Invalid authorizer claims');
+        const receivedKeys = Object.keys(raw).join(', ');
+        const zodIssues = result.error.issues
+            .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
+            .join('; ');
+        throw new UnauthorizedError(
+            `Invalid authorizer claims — keys: [${receivedKeys}] — issues: ${zodIssues}`
+        );
     }
 
     return result.data;
@@ -71,8 +72,8 @@ export function getUserContext(event: AuthorizedEvent): UserContext {
 
     return {
         userId: claims.sub,
-        email: claims.email,
-        username: claims['cognito:username'] ?? claims.email,
+        email: claims.email ?? claims['cognito:username'] ?? claims.sub,
+        username: claims['cognito:username'] ?? claims.email ?? claims.sub,
     };
 }
 
@@ -113,24 +114,18 @@ export function parseBody<T>(event: AuthorizedEvent, schema: z.ZodType<T>): T {
     return result.data;
 }
 
-// ── Local error classes (avoiding circular dep with observability) ────────────
+// ── Error classes ─────────────────────────────────────────────────────────────
 
-export class UnauthorizedError extends Error {
-    readonly code = 'UNAUTHORIZED';
-    readonly statusCode = 401;
-
+export class UnauthorizedError extends AppError {
     constructor(message = 'Unauthorized') {
-        super(message);
+        super(message, 'UNAUTHORIZED', 401);
         this.name = 'UnauthorizedError';
     }
 }
 
-export class ValidationError extends Error {
-    readonly code = 'VALIDATION_ERROR';
-    readonly statusCode = 400;
-
+export class ValidationError extends AppError {
     constructor(message: string) {
-        super(message);
+        super(message, 'VALIDATION_ERROR', 400);
         this.name = 'ValidationError';
     }
 }
