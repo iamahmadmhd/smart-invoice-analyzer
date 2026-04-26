@@ -177,7 +177,7 @@ export default function UploadScreen() {
     return (
         <SafeAreaView className='flex-1 bg-canvas-subtle dark:bg-night'>
             {/* ── Header ─────────────────────────────────────────────────────── */}
-            <View className='flex-1 flex-row items-center px-4 py-3'>
+            <View className='flex-row items-center px-4 py-3'>
                 <Pressable
                     onPress={() => router.back()}
                     hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
