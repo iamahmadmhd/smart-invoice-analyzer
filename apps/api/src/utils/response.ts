@@ -7,6 +7,10 @@ export interface ApiResponse {
 const baseHeaders = {
     'Content-Type': 'application/json',
     'X-Content-Type-Options': 'nosniff',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers':
+        'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
 };
 
 export function ok(data: unknown): ApiResponse {

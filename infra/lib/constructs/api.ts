@@ -23,6 +23,15 @@ export interface ApiProps {
 
 const API_DIST = path.join(__dirname, '../../../apps/api/dist');
 
+// Headers injected by API Gateway itself on auth failures and other gateway
+// errors — Lambda never runs for these, so they must live here.
+const GATEWAY_CORS_HEADERS: Record<string, string> = {
+    'Access-Control-Allow-Origin': "'*'",
+    'Access-Control-Allow-Headers':
+        "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'",
+    'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+};
+
 export class Api extends Construct {
     public readonly apiUrl: string;
 
@@ -88,7 +97,6 @@ export class Api extends Construct {
 
         props.invoiceTable.grantReadData(createExportFunction);
         props.exportBatchTable.grantReadWriteData(createExportFunction);
-        // create-export enqueues to the export SQS queue
         createExportFunction.addToRolePolicy(
             new iam.PolicyStatement({
                 actions: ['sqs:SendMessage'],
@@ -138,6 +146,23 @@ export class Api extends Construct {
             },
         });
 
+        // ── Gateway responses (Cognito 401/403 and other gateway errors) ────
+        // These responses are emitted by API Gateway before Lambda is invoked,
+        // so CORS headers must be injected here — Lambda cannot do it.
+        const gatewayResponseTypes = [
+            apigw.ResponseType.UNAUTHORIZED, // 401 — missing/invalid token
+            apigw.ResponseType.ACCESS_DENIED, // 403 — Cognito authorizer denied
+            apigw.ResponseType.DEFAULT_4XX, // catch-all 4xx from gateway
+            apigw.ResponseType.DEFAULT_5XX, // catch-all 5xx from gateway
+        ];
+
+        for (const responseType of gatewayResponseTypes) {
+            api.addGatewayResponse(`GatewayResponse${responseType.responseType}`, {
+                type: responseType,
+                responseHeaders: GATEWAY_CORS_HEADERS,
+            });
+        }
+
         const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, 'Authorizer', {
             cognitoUserPools: [props.userPool],
             authorizerName: `${props.prefix}-authorizer`,
@@ -170,7 +195,7 @@ export class Api extends Construct {
         const exports = api.root.addResource('exports');
         exports.addResource('validate').addMethod('POST', fn(validateExportFunction), auth);
         exports.addMethod('POST', fn(createExportFunction), auth);
-        exports.addMethod('GET', fn(listExportsFunction), auth); // GET /exports
+        exports.addMethod('GET', fn(listExportsFunction), auth);
 
         const exportById = exports.addResource('{exportBatchId}');
         exportById.addMethod('GET', fn(getExportFunction), auth);

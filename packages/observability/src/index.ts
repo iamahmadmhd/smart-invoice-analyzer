@@ -1,8 +1,6 @@
 import { getConfig } from '@smart-invoice-analyzer/config';
 
 // ── Correlation context ───────────────────────────────────────────────────────
-// Stored per-invocation in a module-level variable (safe in Lambda — one
-// invocation at a time per instance).
 
 let _correlationId: string = 'unset';
 let _userId: string | undefined;
@@ -18,6 +16,23 @@ export function setUserId(id: string): void {
 export function getCorrelationId(): string {
     return _correlationId;
 }
+
+// ── Shared HTTP headers ───────────────────────────────────────────────────────
+// Single source of truth consumed by both withObservability (error paths)
+// and apps/api/src/utils/response.ts (success paths).
+
+export const CORS_HEADERS: Record<string, string> = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers':
+        'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+};
+
+const defaultHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Content-Type-Options': 'nosniff',
+    ...CORS_HEADERS,
+};
 
 // ── Log levels ────────────────────────────────────────────────────────────────
 
@@ -132,8 +147,6 @@ export function serializeError(error: unknown): Record<string, unknown> {
 }
 
 // ── Lambda handler wrapper ────────────────────────────────────────────────────
-// Injects a correlation ID from the API Gateway request ID (or generates one),
-// logs invocation start/end, and normalises unhandled errors into API responses.
 
 interface ApiGatewayEvent {
     requestContext?: { requestId?: string };
@@ -149,11 +162,6 @@ interface LambdaResponse {
 }
 
 type ApiHandler = (event: ApiGatewayEvent) => Promise<LambdaResponse>;
-
-const defaultHeaders = {
-    'Content-Type': 'application/json',
-    'X-Content-Type-Options': 'nosniff',
-};
 
 export function withObservability(handler: ApiHandler): ApiHandler {
     return async (event: ApiGatewayEvent): Promise<LambdaResponse> => {
@@ -208,8 +216,6 @@ export function withObservability(handler: ApiHandler): ApiHandler {
 }
 
 // ── Metrics helpers (CloudWatch EMF) ─────────────────────────────────────────
-// Emits structured CloudWatch Embedded Metric Format lines.
-// CloudWatch Logs picks these up automatically — no SDK call needed.
 
 interface MetricOptions {
     unit?: 'Count' | 'Milliseconds' | 'Bytes' | 'None';
