@@ -32,7 +32,9 @@ export const NormalizationEventSchema = BaseWorkerEventSchema.extend({
 });
 export type NormalizationEvent = z.infer<typeof NormalizationEventSchema>;
 
-export const EnrichmentEventSchema = BaseWorkerEventSchema.extend({});
+export const EnrichmentEventSchema = BaseWorkerEventSchema.extend({
+    rawOutputS3Key: z.string().min(1), // passed through so enrichment can make a single AI call
+});
 export type EnrichmentEvent = z.infer<typeof EnrichmentEventSchema>;
 
 export const DuplicateEventSchema = BaseWorkerEventSchema.extend({});

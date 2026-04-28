@@ -25,7 +25,7 @@ const configSchema = z.object({
     EXPORT_QUEUE_URL: z.string().url().optional(),
 
     // AWS Bedrock
-    BEDROCK_MODEL_ID: z.string().default('anthropic.claude-3-5-sonnet-20241022-v2:0'),
+    BEDROCK_MODEL_ID: z.string().default('eu.anthropic.claude-haiku-4-5-20251001-v1:0'),
     BEDROCK_REGION: z.string().default('eu-central-1'),
 
     // S3 prefixes

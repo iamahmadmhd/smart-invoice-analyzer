@@ -153,6 +153,7 @@ export class Processing extends Construct {
         );
         invoiceTable.grantReadWriteData(enrichmentWorker);
         insightTable.grantReadWriteData(enrichmentWorker);
+        invoiceBucket.grantRead(enrichmentWorker);
         processingJobTable.grantReadWriteData(enrichmentWorker);
         duplicateQueue.grantSendMessages(enrichmentWorker);
 
@@ -164,10 +165,8 @@ export class Processing extends Construct {
                 sid: 'BedrockInvokeModel',
                 actions: ['bedrock:InvokeModel', 'bedrock:InvokeModelWithResponseStream'],
                 resources: [
-                    // Exact model ARN for the default
-                    `arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0`,
-                    // Cross-region inference profile wildcard (eu prefix)
-                    `arn:aws:bedrock:eu-central-1:*:inference-profile/eu.anthropic.claude-3-5-sonnet*`,
+                    `arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0`,
+                    `arn:aws:bedrock:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:inference-profile/eu.anthropic.claude-haiku-4-5-20251001-v1:0`,
                 ],
             })
         );

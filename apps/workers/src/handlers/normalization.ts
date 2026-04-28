@@ -1,4 +1,3 @@
-import { extractInvoiceFields, mergeExtractionIntoInvoice } from '@smart-invoice-analyzer/ai';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { NormalizationEventSchema } from '@smart-invoice-analyzer/contracts';
 import {
@@ -6,6 +5,7 @@ import {
     ProcessingJobRepository,
     S3Repository,
 } from '@smart-invoice-analyzer/data-access';
+import { mergeOcrParseIntoInvoice, parseOcrText } from '@smart-invoice-analyzer/domain';
 import { logger, setCorrelationId } from '@smart-invoice-analyzer/observability';
 import { parseWorkerEvent, SQSEvent } from '../utils/parse-event';
 import { sendToQueue } from '../utils/sqs';
@@ -28,21 +28,24 @@ export const handler = async (event: SQSEvent): Promise<void> => {
         const { rawText } = JSON.parse(ocrJson) as { rawText: string };
 
         const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
-        const extraction = await extractInvoiceFields(rawText);
-        const patch = mergeExtractionIntoInvoice(invoice, extraction);
 
-        // Apply patch by putting updated invoice
+        // Deterministic regex-based extraction — no Bedrock call
+        const parsed = parseOcrText(rawText);
+        const patch = mergeOcrParseIntoInvoice(invoice, parsed);
+
         const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
         await invoiceRepo.put(updated);
         await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'EXTRACTED');
         await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
+        // Pass rawOutputS3Key forward so enrichment can make a single combined AI call
         await sendToQueue(config.ENRICHMENT_QUEUE_URL!, {
             invoiceId: payload.invoiceId,
             userId: payload.userId,
             jobId: payload.jobId,
             correlationId: payload.correlationId,
             attempt: payload.attempt,
+            rawOutputS3Key: payload.rawOutputS3Key,
         });
 
         logger.info('Normalization completed', { invoiceId: payload.invoiceId, patch });

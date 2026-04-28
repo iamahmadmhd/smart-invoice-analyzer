@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { HeadObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { ProcessingJob } from '@smart-invoice-analyzer/contracts';
 import { InvoiceRepository, ProcessingJobRepository } from '@smart-invoice-analyzer/data-access';
@@ -7,6 +8,8 @@ import { logger, setCorrelationId } from '@smart-invoice-analyzer/observability'
 import { sendToQueue } from '../utils/sqs';
 
 const ALLOWED_CONTENT_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png']);
+
+const s3 = new S3Client({});
 
 interface S3EventRecord {
     s3: {
@@ -42,14 +45,17 @@ export const handler = async (event: S3Event): Promise<void> => {
             continue;
         }
 
-        const ext = fileObjectId.split('.').pop()?.toLowerCase();
-        const contentTypeMap: Record<string, string> = {
-            pdf: 'application/pdf',
-            jpg: 'image/jpeg',
-            jpeg: 'image/jpeg',
-            png: 'image/png',
-        };
-        const contentType = contentTypeMap[ext ?? ''] ?? 'application/octet-stream';
+        // Read content type from S3 object metadata — the client sets it
+        // correctly on upload via the presigned URL. Never infer from the key
+        // because fileObjectId has no extension (e.g. file_<uuid>).
+        let contentType: string;
+        try {
+            const head = await s3.send(new HeadObjectCommand({ Bucket: s3Bucket, Key: s3Key }));
+            contentType = head.ContentType ?? 'application/octet-stream';
+        } catch (err) {
+            logger.error('HeadObject failed', { s3Key, error: String(err) });
+            continue;
+        }
 
         if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
             logger.warn('Unsupported file type, skipping', { s3Key, contentType });
@@ -57,8 +63,6 @@ export const handler = async (event: S3Event): Promise<void> => {
         }
 
         const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-
-        // Use the sourceFileId-index GSI — O(1) lookup, no scan or limit risk
         const invoice = await invoiceRepo.getBySourceFileId(fileObjectId);
 
         if (!invoice) {
@@ -99,6 +103,7 @@ export const handler = async (event: S3Event): Promise<void> => {
         logger.info('Ingestion completed, dispatched to OCR', {
             invoiceId: invoice.invoiceId,
             jobId,
+            contentType,
         });
     }
 };

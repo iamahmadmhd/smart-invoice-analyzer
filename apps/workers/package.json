@@ -8,8 +8,9 @@
         "lint": "echo 'No lint configured'"
     },
     "dependencies": {
-        "@aws-sdk/client-sqs": "^3.0.0",
-        "@aws-sdk/client-textract": "^3.0.0",
+        "@aws-sdk/client-s3": "^3.1037.0",
+        "@aws-sdk/client-sqs": "^3.1037.0",
+        "@aws-sdk/client-textract": "^3.1037.0",
         "@smart-invoice-analyzer/ai": "*",
         "@smart-invoice-analyzer/config": "*",
         "@smart-invoice-analyzer/contracts": "*",

@@ -44,6 +44,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
                 })
             );
             blocks = response.Blocks ?? [];
+            console.log({ blocks });
         } else {
             const response = await textract.send(
                 new DetectDocumentTextCommand({
@@ -51,6 +52,7 @@ export const handler = async (event: SQSEvent): Promise<void> => {
                 })
             );
             blocks = response.Blocks ?? [];
+            console.log({ blocks });
         }
 
         // Extract raw text from LINE blocks

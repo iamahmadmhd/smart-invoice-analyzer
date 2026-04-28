@@ -20,6 +20,7 @@ export interface BedrockCallOptions {
     system?: string;
     maxTokens?: number;
     temperature?: number;
+    prefill?: string;
 }
 
 /**
@@ -32,9 +33,10 @@ export async function callBedrock(
     fallback?: string
 ): Promise<string> {
     const { modelId } = getBedrockConfig(getConfig());
-    const { system, maxTokens = 1024, temperature = 0.0 } = options;
+    const { system, maxTokens = 1024, temperature = 0.0, prefill } = options;
 
     const messages: Message[] = [{ role: 'user', content: [{ text: userMessage }] }];
+    if (prefill) messages.push({ role: 'assistant', content: [{ text: prefill }] });
 
     try {
         const response = await getClient().send(
