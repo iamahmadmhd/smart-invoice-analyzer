@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { cva, VariantProps } from 'class-variance-authority';
 import { SymbolView } from 'expo-symbols';
 import React, { forwardRef, useState } from 'react';
-import { Pressable, TextInput, TextInputProps, View } from 'react-native';
+import { Platform, Pressable, TextInput, TextInputProps, View } from 'react-native';
 
 const inputVariants = cva('flex-row items-center bg-canvas dark:bg-night-inset', {
     variants: {
@@ -69,8 +69,14 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
 
             <TextInput
                 ref={ref}
-                className={`web:user-select-auto flex-1 text-ink focus:outline-none dark:text-cloud dark:focus:outline-none web:cursor-text web:caret-brand web:select-auto ${textSizes[size ?? 'md']}`}
-                placeholderTextColor={colors.inkFaint}
+                className={cn(
+                    textSizes[size ?? 'md'],
+                    'web:user-select-auto flex-1 text-ink focus:outline-none dark:text-cloud dark:focus:outline-none web:cursor-text web:caret-brand web:select-auto'
+                )}
+                placeholderTextColorClassName='accent-ink-faint'
+                cursorColorClassName='accent-ink-faint'
+                selectionColorClassName='accent-cloud-faint dark:accent-ink-faint'
+                underlineColorAndroidClassName='accent-transparent'
                 editable={!disabled}
                 secureTextEntry={isPassword && !showPassword}
                 onFocus={(e) => {
@@ -82,7 +88,14 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
                     onBlur?.(e);
                 }}
                 style={[
-                    { fontFamily: 'PlusJakartaSans_400Regular', lineHeight: 0 },
+                    {
+                        fontFamily: 'PlusJakartaSans_400Regular',
+                        lineHeight: Platform.select({
+                            android: size === 'sm' ? 18 : size === 'lg' ? 24 : 20,
+                            ios: size === 'sm' ? 16 : size === 'lg' ? 22 : 18,
+                            default: size === 'sm' ? 16 : size === 'lg' ? 22 : 18,
+                        }),
+                    },
                     style as object,
                 ]}
                 {...props}

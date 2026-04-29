@@ -1,7 +1,7 @@
 import { colors } from '@/constants/theme';
 import { cn } from '@/lib/utils';
 import React, { forwardRef } from 'react';
-import { Pressable, TextInput, TextInputProps, View } from 'react-native';
+import { Platform, Pressable, TextInput, TextInputProps, View } from 'react-native';
 import { Icon } from '../atoms/icon';
 
 export interface SearchBarProps extends Omit<TextInputProps, 'style'> {
@@ -37,8 +37,19 @@ export const SearchBar = forwardRef<TextInput, SearchBarProps>(function SearchBa
                 returnKeyType='search'
                 autoCapitalize='none'
                 autoCorrect={false}
-                className='flex-1 text-sm text-ink dark:text-cloud'
-                style={{ fontFamily: 'PlusJakartaSans_400Regular', lineHeight: 0 }}
+                className='web:user-select-auto flex-1 text-sm text-ink focus:outline-none dark:text-cloud dark:focus:outline-none web:cursor-text web:caret-brand web:select-auto'
+                placeholderTextColorClassName='accent-ink-faint'
+                cursorColorClassName='accent-ink-faint'
+                selectionColorClassName='accent-cloud-faint dark:accent-ink-faint'
+                underlineColorAndroidClassName='accent-transparent'
+                style={{
+                    fontFamily: 'PlusJakartaSans_400Regular',
+                    lineHeight: Platform.select({
+                        android: 20,
+                        ios: 18,
+                        default: 18,
+                    }),
+                }}
                 {...props}
             />
             {value.length > 0 && (

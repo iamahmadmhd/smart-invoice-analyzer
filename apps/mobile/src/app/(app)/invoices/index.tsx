@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -67,10 +67,6 @@ export default function InvoicesScreen() {
     const handleUploadPress = useCallback(() => {
         router.push('/(app)/invoices/upload');
     }, [router]);
-
-    useEffect(() => {
-        console.log({ top });
-    }, [top]);
 
     return (
         <ScreenContainer className='flex-1'>

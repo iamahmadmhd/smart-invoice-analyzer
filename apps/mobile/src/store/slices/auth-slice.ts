@@ -68,7 +68,6 @@ export const signInThunk = createAsyncThunk(
             const user = await getCurrentUser();
             return { username: user.username, userId: user.userId };
         } catch (error) {
-            console.log(JSON.stringify(error, Object.getOwnPropertyNames(error)));
             return rejectWithValue(extractErrorMessage(error));
         }
     }

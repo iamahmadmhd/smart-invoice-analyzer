@@ -242,8 +242,6 @@ export function emitMetric(name: string, value: number, options: MetricOptions =
             ...dimensions,
             [name]: value,
         };
-
-        console.log(JSON.stringify(emfPayload));
     } catch {
         // Never let metric emission crash a handler
     }

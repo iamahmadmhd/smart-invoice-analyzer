@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
 export const signInSchema = z.object({
-    email: z.string().email('Enter a valid email address'),
+    email: z.email('Enter a valid email address'),
     password: z.string().min(1, 'Password is required'),
 });
 
 export const signUpSchema = z
     .object({
-        email: z.string().email('Enter a valid email address'),
+        email: z.email('Enter a valid email address'),
         password: z
             .string()
             .min(8, 'Password must be at least 8 characters')
@@ -21,7 +21,7 @@ export const signUpSchema = z
     });
 
 export const forgotPasswordSchema = z.object({
-    email: z.string().email('Enter a valid email address'),
+    email: z.email('Enter a valid email address'),
 });
 
 export const resetPasswordSchema = z
@@ -49,7 +49,7 @@ export type ResetPasswordFields = z.infer<typeof resetPasswordSchema>;
 export function flattenZodErrors<T>(
     error: z.ZodError<T>
 ): Partial<Record<keyof T & string, string>> {
-    return Object.fromEntries(error.errors.map((e) => [e.path.join('.'), e.message])) as Partial<
+    return Object.fromEntries(error.issues.map((i) => [i.path.join('.'), i.message])) as Partial<
         Record<keyof T & string, string>
     >;
 }
