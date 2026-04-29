@@ -70,7 +70,7 @@ export function Button({
             className={cn(
                 buttonVariants({ variant, size }),
                 isDisabled && 'opacity-40',
-                fullWidth ? 'w-full' : 'self-start',
+                fullWidth ? 'w-full' : '',
                 className
             )}
             disabled={isDisabled}

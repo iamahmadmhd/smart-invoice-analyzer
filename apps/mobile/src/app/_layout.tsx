@@ -12,8 +12,9 @@ import {
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { Provider } from 'react-redux';
+import { useResolveClassNames } from 'uniwind';
 
 // Keep the splash screen visible while fonts + auth session load
 SplashScreen.preventAutoHideAsync();
@@ -24,7 +25,11 @@ function AuthGate() {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const segments = useSegments();
+    const theme = useColorScheme();
     const { user, status } = useAppSelector((state) => state.auth);
+
+    const bgColorClassNames = theme === 'dark' ? 'bg-night' : 'bg-canvas-subtle';
+    const bgColor = useResolveClassNames(bgColorClassNames);
 
     useEffect(() => {
         dispatch(initAuth());
@@ -50,7 +55,15 @@ function AuthGate() {
         );
     }
 
-    return <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />;
+    return (
+        <Stack
+            screenOptions={{
+                headerShown: false,
+                animation: 'fade',
+                contentStyle: bgColor,
+            }}
+        />
+    );
 }
 
 // ─── Root Layout ──────────────────────────────────────────────────────────────

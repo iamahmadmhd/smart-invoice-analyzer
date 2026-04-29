@@ -26,7 +26,7 @@ const textVariants = cva('', {
             tertiary: 'text-ink-faint dark:text-cloud-faint',
             inverse: 'text-ink-inverse dark:text-ink',
             brand: 'text-brand',
-            error: 'text-ink',
+            error: 'text-crimson',
             success: 'text-jade',
             warning: 'text-amber',
             disabled: 'text-ink-faint dark:text-cloud-faint opacity-50',

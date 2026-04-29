@@ -8,3 +8,6 @@ ios
 android
 # Ignore all dotfiles
 .*
+# Generated files
+**/uniwind-types.d.ts
+**/expo-env.d.ts
