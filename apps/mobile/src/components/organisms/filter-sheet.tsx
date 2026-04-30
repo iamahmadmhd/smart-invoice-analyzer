@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Modal, Pressable, ScrollView, useColorScheme, View } from 'react-native';
+import { BlurTargetView, BlurView } from 'expo-blur';
 import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
 import { InvoiceFilters } from '@/store/slices/invoices-slice';
 import { Button } from '../atoms/button';
@@ -28,19 +29,20 @@ const CATEGORY_OPTIONS = [
 ];
 
 export interface FilterSheetProps {
-    visible: boolean;
+    isVisible: boolean;
     currentFilters: InvoiceFilters;
     onApply: (filters: InvoiceFilters) => void;
     onClose: () => void;
 }
 
-export function FilterSheet({ visible, currentFilters, onApply, onClose }: FilterSheetProps) {
-    // ── Fix #2: sync draft whenever the sheet opens ───────────────────────────
+export function FilterSheet({ isVisible, currentFilters, onApply, onClose }: FilterSheetProps) {
+    const scheme = useColorScheme();
+    const blurRef = useRef(null);
     const [draft, setDraft] = useState<InvoiceFilters>(currentFilters);
     useEffect(() => {
-        if (visible) setDraft(currentFilters);
+        if (isVisible) setDraft(currentFilters);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [visible]); // intentionally omit currentFilters — only sync on open
+    }, [isVisible]); // intentionally omit currentFilters — only sync on open
 
     function toggle<K extends keyof InvoiceFilters>(key: K, value: InvoiceFilters[K]) {
         setDraft((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
@@ -55,9 +57,15 @@ export function FilterSheet({ visible, currentFilters, onApply, onClose }: Filte
 
     return (
         <React.Fragment>
-            {visible && <View className='absolute inset-0 bg-black/50' />}
+            {isVisible && (
+                <BlurView
+                    intensity={50}
+                    tint={scheme === 'dark' ? 'dark' : 'light'}
+                    className='absolute inset-0 z-0'
+                />
+            )}
             <Modal
-                visible={visible}
+                visible={isVisible}
                 transparent
                 animationType='slide'
                 onRequestClose={onClose}

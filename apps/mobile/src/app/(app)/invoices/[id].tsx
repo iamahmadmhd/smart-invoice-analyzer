@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text } from '@/components/atoms/text';
@@ -34,11 +34,18 @@ export default function InvoiceDetailScreen() {
                     </Text>
                 </View>
 
-                <EmptyState
-                    icon='invoice'
-                    title='Detail view coming soon'
-                    body={`Invoice ID: ${id}`}
-                    action={{ label: 'Go back', onPress: () => router.back() }}
+                <SectionList
+                    sections={[
+                        { title: 'Section 1', data: ['Item 1', 'Item 2'] },
+                        { title: 'Section 2', data: ['Item 3', 'Item 4'] },
+                    ]}
+                    renderItem={({ item }) => <Text className='p-4'>{item}</Text>}
+                    renderSectionHeader={({ section }) => (
+                        <Text className='p-2 font-bold'>{section.title}</Text>
+                    )}
+                    className='flex-1'
+                    contentContainerClassName='p-4'
+                    endFillColorClassName='accent-white'
                 />
             </ScreenContainer>
         </SafeAreaView>

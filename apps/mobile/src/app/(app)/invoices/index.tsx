@@ -33,7 +33,7 @@ function buildActiveFilters(filters: InvoiceFilters): ActiveFilter[] {
 export default function InvoicesScreen() {
     const router = useRouter();
     const { top } = useSafeAreaInsets();
-    const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+    const [filterSheetIsVisible, setFilterSheetIsVisible] = useState(false);
 
     const {
         invoices,
@@ -69,66 +69,67 @@ export default function InvoicesScreen() {
     }, [router]);
 
     return (
-        <ScreenContainer className='flex-1'>
-            <View
-                className='py-4'
-                style={{ paddingTop: top + 16 }}
-            >
-                {/* Header */}
-                <View className='gap-3 px-4 pb-2'>
-                    <View className='flex-row items-center justify-between'>
-                        <Text
-                            variant='heading2'
-                            color='primary'
-                        >
-                            Invoices
-                        </Text>
-                        <Pressable
-                            onPress={handleUploadPress}
-                            className='h-9 w-9 items-center justify-center rounded-xl bg-brand active:opacity-80'
-                            accessibilityLabel='Upload invoice'
-                        >
-                            <Icon
-                                name='plus'
-                                size={18}
-                                tintColor='#fff'
-                            />
-                        </Pressable>
+        <View className='flex-1'>
+            <ScreenContainer className='flex-1'>
+                <View
+                    className='py-4'
+                    style={{ paddingTop: top + 16 }}
+                >
+                    {/* Header */}
+                    <View className='gap-3 px-4 pb-2'>
+                        <View className='flex-row items-center justify-between'>
+                            <Text
+                                variant='heading2'
+                                color='primary'
+                            >
+                                Invoices
+                            </Text>
+                            <Pressable
+                                onPress={handleUploadPress}
+                                className='h-9 w-9 items-center justify-center rounded-xl bg-brand active:opacity-80'
+                                accessibilityLabel='Upload invoice'
+                            >
+                                <Icon
+                                    name='plus'
+                                    size={18}
+                                    tintColor='#fff'
+                                />
+                            </Pressable>
+                        </View>
+                        <SearchBar
+                            value={searchQuery}
+                            onChangeText={updateSearch}
+                            onClear={() => updateSearch('')}
+                        />
                     </View>
-                    <SearchBar
-                        value={searchQuery}
-                        onChangeText={updateSearch}
-                        onClear={() => updateSearch('')}
+
+                    {/* Filters */}
+                    <FilterChipGroup
+                        activeFilters={activeFilters}
+                        onRemoveFilter={removeFilter}
+                        onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
                     />
                 </View>
 
-                {/* Filters */}
-                <FilterChipGroup
-                    activeFilters={activeFilters}
-                    onRemoveFilter={removeFilter}
-                    onOpenFilterSheet={() => setFilterSheetOpen(true)}
+                {/* List */}
+                <InvoiceList
+                    invoices={invoices}
+                    loading={loading}
+                    loadingMore={loadingMore}
+                    hasMore={hasMore}
+                    onRefresh={refresh}
+                    onLoadMore={loadMore}
+                    onPressInvoice={handlePressInvoice}
+                    onUploadPress={handleUploadPress}
                 />
-            </View>
-
-            {/* List */}
-            <InvoiceList
-                invoices={invoices}
-                loading={loading}
-                loadingMore={loadingMore}
-                hasMore={hasMore}
-                onRefresh={refresh}
-                onLoadMore={loadMore}
-                onPressInvoice={handlePressInvoice}
-                onUploadPress={handleUploadPress}
-            />
-
+            </ScreenContainer>
             {/* Filter sheet */}
             <FilterSheet
-                visible={filterSheetOpen}
+                isVisible={filterSheetIsVisible}
                 currentFilters={filters}
                 onApply={applyFilters}
-                onClose={() => setFilterSheetOpen(false)}
+                onClose={() => setFilterSheetIsVisible(false)}
             />
-        </ScreenContainer>
+        </View>
     );
 }
