@@ -1,53 +1,241 @@
+import {
+    AlertBanner,
+    ConfidenceBar,
+    Container,
+    EmptyState,
+    InvoiceBadges,
+    InvoiceDetailCardSkeleton,
+    InvoiceHero,
+    RowDivider,
+    SectionCard,
+} from '@/components';
+import { DetailRow } from '@/components/molecules/detail-row';
+import { InsightCard } from '@/components/molecules/insight-card';
+import { SectionHeader } from '@/components/molecules/section-header';
+import { useInvoiceDetail } from '@/hooks/use-invoice-detail';
+import { formatAmount, formatDate, formatTaxRate } from '@/lib/formatters';
+import { getStatusLabel } from '@/lib/invoice-utils';
+import { capitalize } from '@/lib/string-utils';
+import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Pressable, SectionList, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Text } from '@/components/atoms/text';
-import { Icon } from '@/components/atoms/icon';
-import { ScreenContainer } from '@/components/atoms/screen-container';
-import { EmptyState } from '@/components/molecules/empty-state';
+import { RefreshControl, ScrollView, View } from 'react-native';
 
 export default function InvoiceDetailScreen() {
-    const router = useRouter();
     const { id } = useLocalSearchParams<{ id: string }>();
+    const { invoice, insights, loading, error, refresh } = useInvoiceDetail(id ?? '');
+
+    const summaryInsight = insights.find((i) => i.type === 'SUMMARY');
+    const flagInsights = insights.filter((i) => i.type !== 'SUMMARY');
+
+    if (loading) {
+        return (
+            <View className='flex-1'>
+                <Container>
+                    <InvoiceDetailCardSkeleton />
+                </Container>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View className='flex-1'>
+                <Container>
+                    <AlertBanner
+                        variant='error'
+                        title='Could not load invoice'
+                        message={error}
+                    />
+                </Container>
+            </View>
+        );
+    }
+
+    if (!invoice) {
+        return (
+            <View className='flex-1'>
+                <Container>
+                    <EmptyState
+                        icon='invoice'
+                        title='Invoice not found'
+                        body='The requested invoice could not be found.'
+                    />
+                </Container>
+            </View>
+        );
+    }
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-            <ScreenContainer className='flex-1'>
-                <View className='flex-row items-center gap-3 px-4 pt-4 pb-3'>
-                    <Pressable
-                        onPress={() => router.back()}
-                        hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
-                        accessibilityLabel='Go back'
-                    >
-                        <Icon
-                            name='back'
-                            size={20}
-                            color='primary'
+        <View className='flex-1'>
+            <Container>
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerClassName='gap-4 pt-2 pb-10'
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={loading}
+                            onRefresh={refresh}
                         />
-                    </Pressable>
-                    <Text
-                        variant='heading4'
-                        color='primary'
-                    >
-                        Invoice Detail
-                    </Text>
-                </View>
+                    }
+                >
+                    <InvoiceHero
+                        vendorName={invoice.vendorName}
+                        invoiceNumber={invoice.invoiceNumber}
+                    />
 
-                <SectionList
-                    sections={[
-                        { title: 'Section 1', data: ['Item 1', 'Item 2'] },
-                        { title: 'Section 2', data: ['Item 3', 'Item 4'] },
-                    ]}
-                    renderItem={({ item }) => <Text className='p-4'>{item}</Text>}
-                    renderSectionHeader={({ section }) => (
-                        <Text className='p-2 font-bold'>{section.title}</Text>
+                    <InvoiceBadges
+                        status={invoice.status}
+                        duplicateFlag={invoice.duplicateFlag}
+                        anomalyFlag={invoice.anomalyFlag}
+                        exportStatus={invoice.exportStatus}
+                    />
+
+                    {invoice.confidenceScore !== undefined && (
+                        <ConfidenceBar score={invoice.confidenceScore} />
                     )}
-                    className='flex-1'
-                    contentContainerClassName='p-4'
-                    endFillColorClassName='accent-white'
-                />
-            </ScreenContainer>
-        </SafeAreaView>
+
+                    <View className='gap-2'>
+                        {summaryInsight && <InsightCard insight={summaryInsight} />}
+                        {flagInsights.map((insight) => (
+                            <InsightCard
+                                key={insight.insightId}
+                                insight={insight}
+                            />
+                        ))}
+                    </View>
+
+                    <View className='gap-1'>
+                        <SectionHeader title='Financial' />
+                        <SectionCard>
+                            <DetailRow
+                                label='Total'
+                                value={formatAmount(invoice.totalAmount, invoice.currency)}
+                            />
+                            {invoice.netAmount !== undefined && (
+                                <>
+                                    <RowDivider />
+                                    <DetailRow
+                                        label='Net amount'
+                                        value={formatAmount(invoice.netAmount, invoice.currency)}
+                                    />
+                                </>
+                            )}
+                            {invoice.taxAmount !== undefined && (
+                                <>
+                                    <RowDivider />
+                                    <DetailRow
+                                        label='Tax amount'
+                                        value={formatAmount(invoice.taxAmount, invoice.currency)}
+                                    />
+                                </>
+                            )}
+                            <RowDivider />
+                            <DetailRow
+                                label='VAT rate'
+                                value={formatTaxRate(invoice.taxRate)}
+                            />
+                            <RowDivider />
+                            <DetailRow
+                                label='Currency'
+                                value={invoice.currency}
+                            />
+                        </SectionCard>
+                    </View>
+
+                    <View className='gap-1'>
+                        <SectionHeader title='Details' />
+                        <SectionCard>
+                            <DetailRow
+                                label='Invoice date'
+                                value={formatDate(invoice.invoiceDate)}
+                            />
+                            {invoice.dueDate && (
+                                <>
+                                    <RowDivider />
+                                    <DetailRow
+                                        label='Due date'
+                                        value={formatDate(invoice.dueDate)}
+                                    />
+                                </>
+                            )}
+                            <RowDivider />
+                            <DetailRow
+                                label='Category'
+                                value={capitalize(invoice.category)}
+                            />
+                            {invoice.vatIdOrTaxNumber && (
+                                <>
+                                    <RowDivider />
+                                    <DetailRow
+                                        label='VAT / Tax ID'
+                                        value={invoice.vatIdOrTaxNumber}
+                                        valueMono
+                                    />
+                                </>
+                            )}
+                            <RowDivider />
+                            <DetailRow
+                                label='Status'
+                                value={getStatusLabel(invoice.status)}
+                            />
+                        </SectionCard>
+                    </View>
+
+                    <View className='gap-1'>
+                        <SectionHeader title='Export' />
+                        <SectionCard>
+                            <DetailRow
+                                label='Export status'
+                                value={
+                                    invoice.exportStatus === 'EXPORTED'
+                                        ? 'Exported'
+                                        : 'Not exported'
+                                }
+                            />
+                            {invoice.exportedAt && (
+                                <>
+                                    <RowDivider />
+                                    <DetailRow
+                                        label='Exported at'
+                                        value={formatDate(invoice.exportedAt)}
+                                    />
+                                </>
+                            )}
+                            {invoice.exportBatchId && (
+                                <>
+                                    <RowDivider />
+                                    <DetailRow
+                                        label='Batch ID'
+                                        value={invoice.exportBatchId}
+                                        valueMono
+                                    />
+                                </>
+                            )}
+                        </SectionCard>
+                    </View>
+
+                    <View className='gap-1'>
+                        <SectionHeader title='Metadata' />
+                        <SectionCard>
+                            <DetailRow
+                                label='Invoice ID'
+                                value={invoice.invoiceId}
+                                valueMono
+                            />
+                            <RowDivider />
+                            <DetailRow
+                                label='Created'
+                                value={formatDate(invoice.createdAt)}
+                            />
+                            <RowDivider />
+                            <DetailRow
+                                label='Updated'
+                                value={formatDate(invoice.updatedAt)}
+                            />
+                        </SectionCard>
+                    </View>
+                </ScrollView>
+            </Container>
+        </View>
     );
 }

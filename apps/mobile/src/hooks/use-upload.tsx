@@ -1,18 +1,18 @@
-import { useCallback } from 'react';
+import { createInvoice, presignUpload, uploadToS3 } from '@/lib/api/upload';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { presignUpload, uploadToS3, createInvoice } from '@/lib/api/upload';
+import { prependInvoice } from '@/store/slices/invoices-slice';
 import {
+    reset,
+    SelectedFile,
     selectFile,
-    startUpload,
     setProgress,
     startCreating,
     startProcessing,
+    startUpload,
     uploadDone,
     uploadError,
-    reset,
-    SelectedFile,
 } from '@/store/slices/upload-slice';
-import { prependInvoice } from '@/store/slices/invoices-slice';
+import { useCallback } from 'react';
 
 export function useUpload() {
     const dispatch = useAppDispatch();

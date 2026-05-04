@@ -1,4 +1,5 @@
 import {
+    Insight,
     Invoice,
     ListInvoicesQuery,
     ListInvoicesResponse,
@@ -26,4 +27,9 @@ export async function listInvoices(
 
 export async function getInvoice(invoiceId: string): Promise<Invoice> {
     return apiRequest<Invoice>(`/invoices/${invoiceId}`);
+}
+
+export async function getInsights(invoiceId: string): Promise<Insight[]> {
+    const response = await apiRequest<{ insights: Insight[] }>(`/invoices/${invoiceId}/insights`);
+    return response.insights;
 }

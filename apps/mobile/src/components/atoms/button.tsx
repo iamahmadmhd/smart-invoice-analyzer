@@ -44,7 +44,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps
     extends Omit<PressableProps, 'children'>, VariantProps<typeof buttonVariants> {
-    children: string;
+    children: string | React.ReactNode;
     loading?: boolean;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;

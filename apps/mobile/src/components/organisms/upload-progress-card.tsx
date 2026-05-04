@@ -1,6 +1,6 @@
+import { UploadStep } from '@/store/slices/upload-slice';
 import React from 'react';
 import { View } from 'react-native';
-import { UploadStep } from '@/store/slices/upload-slice';
 import { Icon } from '../atoms/icon';
 import { ProgressBar } from '../atoms/progress-bar';
 import { Spinner } from '../atoms/spinner';

@@ -12,7 +12,7 @@
         {
             "files": ["apps/mobile/**/*.{js,jsx,ts,tsx,css}", "apps/mobile/src/app/global.css"],
             "options": {
-                "plugins": ["prettier-plugin-tailwindcss"],
+                "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
                 "tailwindStylesheet": "./apps/mobile/src/app/global.css"
             }
         }

@@ -13,6 +13,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { useColorScheme, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { useResolveClassNames } from 'uniwind';
 
@@ -87,8 +88,10 @@ export default function RootLayout() {
     }
 
     return (
-        <Provider store={store}>
-            <AuthGate />
-        </Provider>
+        <SafeAreaProvider>
+            <Provider store={store}>
+                <AuthGate />
+            </Provider>
+        </SafeAreaProvider>
     );
 }

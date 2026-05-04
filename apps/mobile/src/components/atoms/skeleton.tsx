@@ -88,3 +88,80 @@ export function InvoiceCardSkeleton() {
         </View>
     );
 }
+
+export function InvoiceDetailCardSkeleton() {
+    return (
+        <View className='gap-5 pt-4'>
+            <View className='gap-2'>
+                <Skeleton
+                    width='60%'
+                    height={22}
+                />
+                <Skeleton
+                    width='35%'
+                    height={14}
+                />
+            </View>
+            <View className='flex-row gap-2'>
+                <Skeleton
+                    width={80}
+                    height={24}
+                    rounded='sm'
+                />
+                <Skeleton
+                    width={72}
+                    height={24}
+                    rounded='sm'
+                />
+            </View>
+            <View className='gap-3 rounded-xl border border-wire bg-canvas p-4 dark:border-wire-night dark:bg-night-subtle'>
+                {[1, 2, 3, 4].map((i) => (
+                    <View
+                        key={i}
+                        className='flex-row items-center justify-between'
+                    >
+                        <Skeleton
+                            width='30%'
+                            height={13}
+                        />
+                        <Skeleton
+                            width='25%'
+                            height={13}
+                        />
+                    </View>
+                ))}
+            </View>
+            <View className='gap-3 rounded-xl border border-wire bg-canvas p-4 dark:border-wire-night dark:bg-night-subtle'>
+                {[1, 2, 3].map((i) => (
+                    <View
+                        key={i}
+                        className='flex-row items-center justify-between'
+                    >
+                        <Skeleton
+                            width='28%'
+                            height={13}
+                        />
+                        <Skeleton
+                            width='40%'
+                            height={13}
+                        />
+                    </View>
+                ))}
+            </View>
+            <View className='gap-2 rounded-xl border border-wire bg-canvas p-4 dark:border-wire-night dark:bg-night-subtle'>
+                <Skeleton
+                    width='40%'
+                    height={14}
+                />
+                <Skeleton
+                    width='100%'
+                    height={13}
+                />
+                <Skeleton
+                    width='80%'
+                    height={13}
+                />
+            </View>
+        </View>
+    );
+}

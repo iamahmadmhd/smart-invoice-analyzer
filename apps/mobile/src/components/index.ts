@@ -20,17 +20,18 @@ export type { IconProps, IconName } from './atoms/icon';
 export { Spinner, Divider } from './atoms/spinner';
 export type { SpinnerProps, DividerProps } from './atoms/spinner';
 
+export { RowDivider } from './atoms/row-divider';
+
 export { ProgressBar } from './atoms/progress-bar';
 export type { ProgressBarProps } from './atoms/progress-bar';
 
 export { Chip } from './atoms/chip';
 export type { ChipProps } from './atoms/chip';
 
-export { Skeleton, InvoiceCardSkeleton } from './atoms/skeleton';
+export { Skeleton, InvoiceCardSkeleton, InvoiceDetailCardSkeleton } from './atoms/skeleton';
 export type { SkeletonProps } from './atoms/skeleton';
 
-export { ScreenContainer } from './atoms/screen-container';
-export type { ScreenContainerProps } from './atoms/screen-container';
+export { Container } from './atoms/screen-container';
 
 export { FileTypeIcon } from './atoms/file-type-icon';
 export type { FileTypeIconProps } from './atoms/file-type-icon';
@@ -63,6 +64,21 @@ export type { FilePreviewProps } from './molecules/file-preview';
 export { UploadOption } from './molecules/upload-option';
 export type { UploadOptionProps } from './molecules/upload-option';
 
+export { SectionCard } from './molecules/section-card';
+export type { SectionCardProps } from './molecules/section-card';
+
+export { ConfidenceBar } from './molecules/confidence-bar';
+export type { ConfidenceBarProps } from './molecules/confidence-bar';
+
+export { InvoiceHeader } from './molecules/invoice-header';
+export type { InvoiceHeaderProps } from './molecules/invoice-header';
+
+export { InvoiceHero } from './molecules/invoice-hero';
+export type { InvoiceHeroProps } from './molecules/invoice-hero';
+
+export { InvoiceBadges } from './molecules/invoice-badges';
+export type { InvoiceBadgesProps } from './molecules/invoice-badges';
+
 // ─── Organisms ────────────────────────────────────────────────────────────────
 export { InvoiceList } from './organisms/invoice-list';
 export type { InvoiceListProps } from './organisms/invoice-list';
@@ -75,3 +91,6 @@ export type { UploadPanelProps } from './organisms/upload-panel';
 
 export { UploadProgressCard } from './organisms/upload-progress-card';
 export type { UploadProgressCardProps } from './organisms/upload-progress-card';
+
+export { AuthForm } from './organisms/auth-form';
+export type { AuthFormProps } from './organisms/auth-form';

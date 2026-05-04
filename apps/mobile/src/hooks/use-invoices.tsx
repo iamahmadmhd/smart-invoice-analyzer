@@ -1,4 +1,3 @@
-import { useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
     clearFilters,
@@ -8,6 +7,7 @@ import {
     setFilters,
     setSearchQuery,
 } from '@/store/slices/invoices-slice';
+import { useCallback, useEffect } from 'react';
 
 export function useInvoices() {
     const dispatch = useAppDispatch();

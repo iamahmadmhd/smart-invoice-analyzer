@@ -1,17 +1,16 @@
-import React, { useCallback, useState } from 'react';
-import { View, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { EmptyState } from '@/components';
+import { Container } from '@/components/atoms/screen-container';
+import { ActiveFilter, FilterChipGroup } from '@/components/molecules/filter-chip-group';
+import { SearchBar } from '@/components/molecules/search-bar';
+import { FilterSheet, STATUS_OPTIONS } from '@/components/organisms/filter-sheet';
+import { InvoiceList } from '@/components/organisms/invoice-list';
 import { useInvoices } from '@/hooks/use-invoices';
 import { InvoiceFilters } from '@/store/slices/invoices-slice';
-import { Text } from '@/components/atoms/text';
-import { Icon } from '@/components/atoms/icon';
-import { ScreenContainer } from '@/components/atoms/screen-container';
-import { SearchBar } from '@/components/molecules/search-bar';
-import { FilterChipGroup, ActiveFilter } from '@/components/molecules/filter-chip-group';
-import { InvoiceList } from '@/components/organisms/invoice-list';
-import { FilterSheet, STATUS_OPTIONS } from '@/components/organisms/filter-sheet';
+import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { useColorScheme, View } from 'react-native';
 
 function buildActiveFilters(filters: InvoiceFilters): ActiveFilter[] {
     const result: ActiveFilter[] = [];
@@ -32,7 +31,7 @@ function buildActiveFilters(filters: InvoiceFilters): ActiveFilter[] {
 
 export default function InvoicesScreen() {
     const router = useRouter();
-    const { top } = useSafeAreaInsets();
+    const scheme = useColorScheme();
     const [filterSheetIsVisible, setFilterSheetIsVisible] = useState(false);
 
     const {
@@ -68,50 +67,49 @@ export default function InvoicesScreen() {
         router.push('/(app)/invoices/upload');
     }, [router]);
 
-    return (
-        <View className='flex-1'>
-            <ScreenContainer className='flex-1'>
-                <View
-                    className='py-4'
-                    style={{ paddingTop: top + 16 }}
-                >
-                    {/* Header */}
-                    <View className='gap-3 px-4 pb-2'>
-                        <View className='flex-row items-center justify-between'>
-                            <Text
-                                variant='heading2'
-                                color='primary'
-                            >
-                                Invoices
-                            </Text>
-                            <Pressable
-                                onPress={handleUploadPress}
-                                className='h-9 w-9 items-center justify-center rounded-xl bg-brand active:opacity-80'
-                                accessibilityLabel='Upload invoice'
-                            >
-                                <Icon
-                                    name='plus'
-                                    size={18}
-                                    tintColor='#fff'
-                                />
-                            </Pressable>
-                        </View>
-                        <SearchBar
-                            value={searchQuery}
-                            onChangeText={updateSearch}
-                            onClear={() => updateSearch('')}
-                        />
-                    </View>
-
-                    {/* Filters */}
+    if (!loading && invoices.length === 0) {
+        return (
+            <View className='flex-1'>
+                <Container className='flex-none gap-3 pt-4 pb-2'>
+                    <SearchBar
+                        value={searchQuery}
+                        onChangeText={updateSearch}
+                        onClear={() => updateSearch('')}
+                    />
                     <FilterChipGroup
                         activeFilters={activeFilters}
                         onRemoveFilter={removeFilter}
                         onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
                     />
-                </View>
+                </Container>
+                <Container>
+                    <EmptyState
+                        icon='invoice'
+                        title='No invoices found'
+                        body='Upload your first invoice to get started'
+                        action={{ label: 'Upload Invoice', onPress: handleUploadPress }}
+                    />
+                </Container>
+            </View>
+        );
+    }
 
-                {/* List */}
+    return (
+        <View className='flex-1'>
+            <Container className='flex-none gap-3 pt-4 pb-2'>
+                <SearchBar
+                    value={searchQuery}
+                    onChangeText={updateSearch}
+                    onClear={() => updateSearch('')}
+                />
+                <FilterChipGroup
+                    activeFilters={activeFilters}
+                    onRemoveFilter={removeFilter}
+                    onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
+                />
+            </Container>
+
+            <Container>
                 <InvoiceList
                     invoices={invoices}
                     loading={loading}
@@ -120,10 +118,16 @@ export default function InvoicesScreen() {
                     onRefresh={refresh}
                     onLoadMore={loadMore}
                     onPressInvoice={handlePressInvoice}
-                    onUploadPress={handleUploadPress}
                 />
-            </ScreenContainer>
-            {/* Filter sheet */}
+            </Container>
+
+            {filterSheetIsVisible && (
+                <BlurView
+                    intensity={50}
+                    tint={scheme === 'dark' ? 'dark' : 'light'}
+                    className='absolute inset-0 z-0'
+                />
+            )}
             <FilterSheet
                 isVisible={filterSheetIsVisible}
                 currentFilters={filters}

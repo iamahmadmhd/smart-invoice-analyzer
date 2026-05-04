@@ -13,7 +13,7 @@ export interface EmptyStateProps {
 
 export function EmptyState({ icon = 'invoice', title, body, action }: EmptyStateProps) {
     return (
-        <View className='flex-1 items-center justify-center gap-4 px-8 py-16'>
+        <View className='flex-1 items-center justify-center gap-4'>
             <View className='h-16 w-16 items-center justify-center rounded-2xl bg-canvas-inset dark:bg-night-inset'>
                 <Icon
                     name={icon}

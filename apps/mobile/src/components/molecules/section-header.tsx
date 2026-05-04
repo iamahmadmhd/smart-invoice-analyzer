@@ -10,7 +10,7 @@ export interface SectionHeaderProps {
 
 export function SectionHeader({ title, count, action }: SectionHeaderProps) {
     return (
-        <View className='flex-row items-center justify-between px-4 py-2'>
+        <View className='flex-row items-center justify-between'>
             <View className='flex-row items-center gap-2'>
                 <Text
                     variant='label'

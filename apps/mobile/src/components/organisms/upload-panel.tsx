@@ -1,6 +1,7 @@
+import { SelectedFile } from '@/store/slices/upload-slice';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
-import { SelectedFile } from '@/store/slices/upload-slice';
 import { Icon } from '../atoms/icon';
 import { Text } from '../atoms/text';
 import { UploadOption } from '../molecules/upload-option';
@@ -86,8 +87,6 @@ function WebUploadPanel({ onFileSelected, disabled }: UploadPanelProps) {
 function MobileUploadPanel({ onFileSelected, disabled }: UploadPanelProps) {
     const launchCamera = async () => {
         try {
-            // Dynamic import so web bundle doesn't include it
-            const ImagePicker = await import('expo-image-picker');
             const permission = await ImagePicker.requestCameraPermissionsAsync();
             if (!permission.granted) {
                 alert('Camera permission is required to take a photo.');

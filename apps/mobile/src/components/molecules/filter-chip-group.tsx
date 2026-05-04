@@ -1,8 +1,8 @@
+import { cn } from '@/lib/utils';
+import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
 import React from 'react';
 import { ScrollView, View } from 'react-native';
 import { Chip } from '../atoms/chip';
-import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
-import { cn } from '@/lib/utils';
 
 export interface ActiveFilter {
     key: string;
@@ -39,7 +39,7 @@ export function FilterChipGroup({
             showsHorizontalScrollIndicator={false}
             style={{ flexGrow: 0, flexShrink: 0 }}
             className={cn(className)}
-            contentContainerClassName={cn('px-4 gap-2 py-0.5', contentContainerClassName)}
+            contentContainerClassName={cn('gap-2 py-0.5', contentContainerClassName)}
         >
             {onOpenFilterSheet && (
                 <Chip
