@@ -1,3 +1,4 @@
+import { colors } from '@/constants/theme';
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, ViewProps } from 'react-native';
 
@@ -44,7 +45,7 @@ export function Skeleton({
                     height,
                     borderRadius: roundedMap[rounded],
                     opacity,
-                    backgroundColor: '#e3e8ee',
+                    backgroundColor: colors.wire,
                 },
                 style,
             ]}

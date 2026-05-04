@@ -49,7 +49,9 @@ export default function AppLayout() {
                 options={{
                     title: 'Home',
                     headerShown: true,
-                    headerStyle: { backgroundColor: classNames.backgroundColor as string },
+                    headerStyle: {
+                        backgroundColor: classNames.backgroundColor as string,
+                    },
                     headerShadowVisible: false,
                     headerTitle: () => (
                         <Text

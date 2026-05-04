@@ -1,7 +1,7 @@
+import { STATUS_OPTIONS } from '@/constants/invoice';
 import { cn } from '@/lib/utils';
-import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
 import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Chip } from '../atoms/chip';
 
 export interface ActiveFilter {
@@ -17,12 +17,7 @@ export interface FilterChipGroupProps {
     contentContainerClassName?: string;
 }
 
-const STATUS_OPTIONS: { value: InvoiceStatus; label: string }[] = [
-    { value: 'COMPLETED', label: 'Completed' },
-    { value: 'PROCESSING', label: 'Processing' },
-    { value: 'UPLOADED', label: 'Uploaded' },
-    { value: 'FAILED_OCR', label: 'Failed' },
-];
+export { STATUS_OPTIONS };
 
 export function FilterChipGroup({
     activeFilters,

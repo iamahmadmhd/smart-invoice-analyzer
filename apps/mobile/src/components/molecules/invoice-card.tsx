@@ -3,7 +3,7 @@ import { mapInvoiceStatus } from '@/lib/invoice-utils';
 import { Invoice } from '@smart-invoice-analyzer/contracts';
 import React from 'react';
 import { Pressable, View } from 'react-native';
-import { Badge } from '../atoms/badge';
+import { InvoiceStatusBadge } from '../atoms/badge';
 import { Text } from '../atoms/text';
 
 export interface InvoiceCardProps {
@@ -12,16 +12,14 @@ export interface InvoiceCardProps {
 }
 
 export function InvoiceCard({ invoice, onPress }: InvoiceCardProps) {
-    const status = mapInvoiceStatus(invoice.status);
-
     return (
         <Pressable
             onPress={onPress}
             className='rounded-xl border border-wire bg-canvas p-4 active:bg-canvas-inset dark:border-wire-night dark:bg-night-subtle dark:active:bg-night-inset'
         >
-            <View className='space-y-3'>
-                <View className='flex-row items-start justify-between space-x-3'>
-                    <View className='flex-1 space-y-1'>
+            <View className='gap-3'>
+                <View className='flex-row items-start justify-between gap-3'>
+                    <View className='flex-1 gap-1'>
                         <Text
                             variant='body-semibold'
                             color='primary'
@@ -36,15 +34,8 @@ export function InvoiceCard({ invoice, onPress }: InvoiceCardProps) {
                             {formatDateShort(invoice.invoiceDate)}
                         </Text>
                     </View>
-                    <Badge
-                        label={status}
-                        variant={
-                            status === 'completed'
-                                ? 'success'
-                                : status === 'failed'
-                                  ? 'error'
-                                  : 'processing'
-                        }
+                    <InvoiceStatusBadge
+                        status={mapInvoiceStatus(invoice.status)}
                         size='sm'
                     />
                 </View>

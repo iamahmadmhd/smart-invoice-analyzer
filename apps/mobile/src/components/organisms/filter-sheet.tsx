@@ -1,5 +1,5 @@
+import { CATEGORY_OPTIONS, STATUS_OPTIONS } from '@/constants/invoice';
 import { InvoiceFilters } from '@/store/slices/invoices-slice';
-import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { Button } from '../atoms/button';
@@ -8,24 +8,7 @@ import { Icon } from '../atoms/icon';
 import { Divider } from '../atoms/spinner';
 import { Text } from '../atoms/text';
 
-export const STATUS_OPTIONS: { value: InvoiceStatus; label: string }[] = [
-    { value: 'COMPLETED', label: 'Completed' },
-    { value: 'PROCESSING', label: 'Processing' },
-    { value: 'UPLOADED', label: 'Uploaded' },
-    { value: 'FAILED_OCR', label: 'Failed (OCR)' },
-    { value: 'FAILED_AI', label: 'Failed (AI)' },
-];
-
-const CATEGORY_OPTIONS = [
-    'software',
-    'hardware',
-    'office',
-    'travel',
-    'marketing',
-    'utilities',
-    'consulting',
-    'other',
-];
+export { STATUS_OPTIONS };
 
 export interface FilterSheetProps {
     isVisible: boolean;
@@ -36,10 +19,11 @@ export interface FilterSheetProps {
 
 export function FilterSheet({ isVisible, currentFilters, onApply, onClose }: FilterSheetProps) {
     const [draft, setDraft] = useState<InvoiceFilters>(currentFilters);
+
     useEffect(() => {
         if (isVisible) setDraft(currentFilters);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isVisible]); // intentionally omit currentFilters — only sync on open
+    }, [isVisible]);
 
     function toggle<K extends keyof InvoiceFilters>(key: K, value: InvoiceFilters[K]) {
         setDraft((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));

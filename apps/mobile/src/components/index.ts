@@ -31,7 +31,7 @@ export type { ChipProps } from './atoms/chip';
 export { Skeleton, InvoiceCardSkeleton, InvoiceDetailCardSkeleton } from './atoms/skeleton';
 export type { SkeletonProps } from './atoms/skeleton';
 
-export { Container } from './atoms/screen-container';
+export { Container, ContainerScrollable } from './atoms/screen-container';
 
 export { FileTypeIcon } from './atoms/file-type-icon';
 export type { FileTypeIconProps } from './atoms/file-type-icon';

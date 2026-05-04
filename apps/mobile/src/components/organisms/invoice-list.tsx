@@ -1,6 +1,7 @@
 import { Invoice } from '@smart-invoice-analyzer/contracts';
 import React from 'react';
 import { FlatList, RefreshControl, View } from 'react-native';
+import { InvoiceCardSkeleton } from '../atoms/skeleton';
 import { Spinner } from '../atoms/spinner';
 import { InvoiceCard } from '../molecules/invoice-card';
 
@@ -14,6 +15,8 @@ export interface InvoiceListProps {
     onPressInvoice: (invoice: Invoice) => void;
 }
 
+const SKELETON_COUNT = 6;
+
 export function InvoiceList({
     invoices,
     loading,
@@ -23,6 +26,16 @@ export function InvoiceList({
     onLoadMore,
     onPressInvoice,
 }: InvoiceListProps) {
+    if (loading) {
+        return (
+            <View className='gap-3 px-4'>
+                {Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+                    <InvoiceCardSkeleton key={i} />
+                ))}
+            </View>
+        );
+    }
+
     return (
         <FlatList
             data={invoices}
@@ -33,11 +46,11 @@ export function InvoiceList({
                     onPress={() => onPressInvoice(item)}
                 />
             )}
-            contentContainerClassName='gap-3 pb-6'
+            contentContainerClassName='gap-3 px-4 pb-6'
             refreshControl={
                 onRefresh ? (
                     <RefreshControl
-                        refreshing={loading}
+                        refreshing={false}
                         onRefresh={onRefresh}
                     />
                 ) : undefined

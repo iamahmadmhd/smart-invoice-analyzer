@@ -1,4 +1,5 @@
 import { SelectedFile } from '@/store/slices/upload-slice';
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
@@ -37,7 +38,6 @@ function WebUploadPanel({ onFileSelected, disabled }: UploadPanelProps) {
 
     return (
         <View className='gap-4'>
-            {/* Dropzone visual */}
             <Pressable
                 onPress={() => inputRef.current?.click()}
                 disabled={disabled}
@@ -67,7 +67,6 @@ function WebUploadPanel({ onFileSelected, disabled }: UploadPanelProps) {
                 </View>
             </Pressable>
 
-            {/* Hidden file input (web only) */}
             {Platform.OS === 'web' && (
                 <input
                     ref={inputRef}
@@ -113,7 +112,6 @@ function MobileUploadPanel({ onFileSelected, disabled }: UploadPanelProps) {
 
     const launchImageLibrary = async () => {
         try {
-            const ImagePicker = await import('expo-image-picker');
             const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!permission.granted) {
                 alert('Photo library permission is required.');
@@ -143,7 +141,6 @@ function MobileUploadPanel({ onFileSelected, disabled }: UploadPanelProps) {
 
     const launchDocumentPicker = async () => {
         try {
-            const DocumentPicker = await import('expo-document-picker');
             const result = await DocumentPicker.getDocumentAsync({
                 type: ['application/pdf', 'image/jpeg', 'image/png'],
                 copyToCacheDirectory: true,

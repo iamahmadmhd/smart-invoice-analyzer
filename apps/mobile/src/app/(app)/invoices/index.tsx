@@ -109,7 +109,7 @@ export default function InvoicesScreen() {
                 />
             </Container>
 
-            <Container>
+            <Container className='px-0'>
                 <InvoiceList
                     invoices={invoices}
                     loading={loading}
