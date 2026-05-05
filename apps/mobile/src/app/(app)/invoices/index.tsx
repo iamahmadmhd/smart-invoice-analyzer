@@ -1,5 +1,5 @@
 import { EmptyState } from '@/components';
-import { Container } from '@/components/atoms/screen-container';
+import { Container, ContainerScrollable } from '@/components/atoms/screen-container';
 import { ActiveFilter, FilterChipGroup } from '@/components/molecules/filter-chip-group';
 import { SearchBar } from '@/components/molecules/search-bar';
 import { FilterSheet, STATUS_OPTIONS } from '@/components/organisms/filter-sheet';
@@ -10,7 +10,7 @@ import { Invoice } from '@smart-invoice-analyzer/contracts';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
+import { RefreshControl, useColorScheme, View } from 'react-native';
 
 function buildActiveFilters(filters: InvoiceFilters): ActiveFilter[] {
     const result: ActiveFilter[] = [];
@@ -82,14 +82,22 @@ export default function InvoicesScreen() {
                         onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
                     />
                 </Container>
-                <Container>
+                <ContainerScrollable
+                    contentContainerClassName='grow'
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={loading}
+                            onRefresh={refresh}
+                        />
+                    }
+                >
                     <EmptyState
                         icon='invoice'
                         title='No invoices found'
                         body='Upload your first invoice to get started'
                         action={{ label: 'Upload Invoice', onPress: handleUploadPress }}
                     />
-                </Container>
+                </ContainerScrollable>
             </View>
         );
     }

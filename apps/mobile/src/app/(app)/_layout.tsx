@@ -97,6 +97,20 @@ export default function AppLayout() {
                     ),
                 }}
             />
+            <Tabs.Screen
+                name='exports'
+                options={{
+                    title: 'Exports',
+                    headerShown: false,
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon
+                            name='export'
+                            size={size ?? 22}
+                            tintColor={color}
+                        />
+                    ),
+                }}
+            />
         </Tabs>
     );
 }

@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import authReducer from './slices/auth-slice';
+import exportsReducer from './slices/exports-slice';
 import invoicesReducer from './slices/invoices-slice';
 import uploadReducer from './slices/upload-slice';
 
@@ -9,6 +10,7 @@ export const store = configureStore({
         auth: authReducer,
         invoices: invoicesReducer,
         upload: uploadReducer,
+        exports: exportsReducer,
     },
 });
 

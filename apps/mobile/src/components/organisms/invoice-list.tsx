@@ -46,11 +46,11 @@ export function InvoiceList({
                     onPress={() => onPressInvoice(item)}
                 />
             )}
-            contentContainerClassName='gap-3 px-4 pb-6'
+            contentContainerClassName='gap-3 px-4 pb-6 grow'
             refreshControl={
                 onRefresh ? (
                     <RefreshControl
-                        refreshing={false}
+                        refreshing={loading}
                         onRefresh={onRefresh}
                     />
                 ) : undefined

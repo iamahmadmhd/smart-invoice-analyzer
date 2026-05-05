@@ -7,7 +7,7 @@ export interface SectionCardProps {
 
 export function SectionCard({ children }: SectionCardProps) {
     return (
-        <View className='rounded-2xl border border-wire bg-canvas px-4 dark:border-wire-night dark:bg-night-subtle'>
+        <View className='rounded-xl border border-wire bg-canvas px-4 dark:border-wire-night dark:bg-night-subtle'>
             {children}
         </View>
     );

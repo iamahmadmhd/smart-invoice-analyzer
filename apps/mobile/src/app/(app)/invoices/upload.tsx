@@ -80,7 +80,6 @@ export default function UploadScreen() {
                 {isSelected && (
                     <Button
                         fullWidth
-                        size='lg'
                         onPress={startUploadFlow}
                     >
                         Upload Invoice
@@ -89,7 +88,6 @@ export default function UploadScreen() {
                 {isDone && (
                     <Button
                         fullWidth
-                        size='lg'
                         onPress={handleDone}
                     >
                         View Invoices
@@ -98,7 +96,6 @@ export default function UploadScreen() {
                 {isError && (
                     <Button
                         fullWidth
-                        size='lg'
                         onPress={startUploadFlow}
                     >
                         Try Again

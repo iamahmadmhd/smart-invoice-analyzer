@@ -45,8 +45,8 @@ const dotVariants = cva('rounded-full', {
     defaultVariants: { variant: 'default', size: 'md' },
 });
 
-type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>;
-type BadgeSize = NonNullable<VariantProps<typeof badgeVariants>['size']>;
+export type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>;
+export type BadgeSize = NonNullable<VariantProps<typeof badgeVariants>['size']>;
 
 const labelColors: Record<BadgeVariant, 'primary' | 'brand' | 'success' | 'warning' | 'error'> = {
     default: 'primary',

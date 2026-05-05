@@ -4,7 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Pressable, useColorScheme } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 
-export default function InvoicesLayout() {
+export default function ExportsLayout() {
     const scheme = useColorScheme();
     const router = useRouter();
 
@@ -22,12 +22,12 @@ export default function InvoicesLayout() {
                 options={{
                     header: () => (
                         <StackHeader
-                            title='Invoices'
+                            title='Exports'
                             right={
                                 <Pressable
-                                    onPress={() => router.push('/(app)/invoices/upload')}
+                                    onPress={() => router.push('/(app)/exports/create')}
                                     className='size-8 items-center justify-center rounded-lg bg-brand active:opacity-80'
-                                    accessibilityLabel='Upload invoice'
+                                    accessibilityLabel='Create export'
                                 >
                                     <Icon
                                         name='plus'
@@ -40,11 +40,11 @@ export default function InvoicesLayout() {
                 }}
             />
             <Stack.Screen
-                name='upload'
+                name='create'
                 options={{
                     header: () => (
                         <StackHeader
-                            title='Upload Invoice'
+                            title='New Export'
                             left={
                                 <Pressable
                                     onPress={() => router.back()}
@@ -65,7 +65,7 @@ export default function InvoicesLayout() {
                 options={{
                     header: () => (
                         <StackHeader
-                            title='Invoice Details'
+                            title='Export Details'
                             left={
                                 <Pressable
                                     onPress={() => router.back()}
