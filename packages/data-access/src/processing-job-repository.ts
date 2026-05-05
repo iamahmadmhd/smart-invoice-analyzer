@@ -110,4 +110,28 @@ export class ProcessingJobRepository {
             lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
         } while (lastKey);
     }
+
+    async deleteAllForInvoice(invoiceId: string): Promise<void> {
+        let lastKey: Record<string, unknown> | undefined;
+        do {
+            const result = await dbClient.send(
+                new QueryCommand({
+                    TableName: this.tableName,
+                    KeyConditionExpression: 'invoiceId = :iid',
+                    ExpressionAttributeValues: { ':iid': invoiceId },
+                    ProjectionExpression: 'invoiceId, jobId',
+                    ExclusiveStartKey: lastKey,
+                })
+            );
+            for (const item of result.Items ?? []) {
+                await dbClient.send(
+                    new DeleteCommand({
+                        TableName: this.tableName,
+                        Key: { invoiceId: item['invoiceId'], jobId: item['jobId'] },
+                    })
+                );
+            }
+            lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+        } while (lastKey);
+    }
 }

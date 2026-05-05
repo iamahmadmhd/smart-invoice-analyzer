@@ -37,7 +37,7 @@ export function StackHeader({ title, left, right, className }: StackHeaderProps)
                                 {title}
                             </Text>
                         </View>
-                        {right && <View>{right}</View>}
+                        {right && <View className='flex-row gap-2'>{right}</View>}
                     </React.Fragment>
                 ) : (
                     // Native: left | centred title | right
@@ -52,7 +52,7 @@ export function StackHeader({ title, left, right, className }: StackHeaderProps)
                                 {title}
                             </Text>
                         </View>
-                        <View className='w-10 items-end'>{right ?? null}</View>
+                        <View className='min-w-10 flex-row items-end gap-2'>{right ?? null}</View>
                     </React.Fragment>
                 )}
             </View>

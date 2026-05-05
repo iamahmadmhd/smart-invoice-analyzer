@@ -84,6 +84,39 @@ export const ListInvoicesResponseSchema = z.object({
 });
 export type ListInvoicesResponse = z.infer<typeof ListInvoicesResponseSchema>;
 
+export const UpdateInvoiceRequestSchema = z.object({
+    vendorName: z.string().min(1).optional(),
+    invoiceNumber: z.string().min(1).optional(),
+    invoiceDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+        .optional(),
+    dueDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
+        .optional(),
+    currency: z.string().length(3).optional(),
+    netAmount: z.number().nonnegative().optional(),
+    taxAmount: z.number().nonnegative().optional(),
+    taxRate: z.number().min(0).max(100).optional(),
+    totalAmount: z.number().nonnegative().optional(),
+    vatIdOrTaxNumber: z.string().optional(),
+    category: z
+        .enum([
+            'software',
+            'hardware',
+            'office',
+            'travel',
+            'marketing',
+            'utilities',
+            'consulting',
+            'other',
+        ])
+        .optional(),
+});
+
+export type UpdateInvoiceRequest = z.infer<typeof UpdateInvoiceRequestSchema>;
+
 export const PresignRequestSchema = z.object({
     fileName: z.string().min(1),
     contentType: z.enum(['application/pdf', 'image/jpeg', 'image/png']),

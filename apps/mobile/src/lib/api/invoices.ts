@@ -3,6 +3,7 @@ import {
     Invoice,
     ListInvoicesQuery,
     ListInvoicesResponse,
+    UpdateInvoiceRequest,
 } from '@smart-invoice-analyzer/contracts';
 import { apiRequest } from './client';
 
@@ -32,4 +33,18 @@ export async function getInvoice(invoiceId: string): Promise<Invoice> {
 export async function getInsights(invoiceId: string): Promise<Insight[]> {
     const response = await apiRequest<{ insights: Insight[] }>(`/invoices/${invoiceId}/insights`);
     return response.insights;
+}
+
+export async function updateInvoice(
+    invoiceId: string,
+    patch: UpdateInvoiceRequest
+): Promise<Invoice> {
+    return apiRequest<Invoice>(`/invoices/${invoiceId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(patch),
+    });
+}
+
+export async function deleteInvoice(invoiceId: string): Promise<void> {
+    return apiRequest<void>(`/invoices/${invoiceId}`, { method: 'DELETE' });
 }

@@ -57,4 +57,29 @@ export class InsightRepository {
             lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
         } while (lastKey);
     }
+
+    async deleteAllForInvoice(invoiceId: string): Promise<void> {
+        let lastKey: Record<string, unknown> | undefined;
+        do {
+            const result = await dbClient.send(
+                new QueryCommand({
+                    TableName: this.tableName,
+                    IndexName: 'invoiceId-index',
+                    KeyConditionExpression: 'invoiceId = :iid',
+                    ExpressionAttributeValues: { ':iid': invoiceId },
+                    ProjectionExpression: 'userId, insightId',
+                    ExclusiveStartKey: lastKey,
+                })
+            );
+            for (const item of result.Items ?? []) {
+                await dbClient.send(
+                    new DeleteCommand({
+                        TableName: this.tableName,
+                        Key: { userId: item['userId'], insightId: item['insightId'] },
+                    })
+                );
+            }
+            lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+        } while (lastKey);
+    }
 }

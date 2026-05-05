@@ -1,6 +1,6 @@
-import { listInvoices } from '@/lib/api/invoices';
+import { deleteInvoice, listInvoices, updateInvoice } from '@/lib/api/invoices';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Invoice, InvoiceStatus } from '@smart-invoice-analyzer/contracts';
+import { Invoice, InvoiceStatus, UpdateInvoiceRequest } from '@smart-invoice-analyzer/contracts';
 
 export interface InvoiceFilters {
     status?: InvoiceStatus;
@@ -57,6 +57,32 @@ export const fetchMoreInvoices = createAsyncThunk(
     }
 );
 
+export const updateInvoiceThunk = createAsyncThunk(
+    'invoices/update',
+    async (
+        { invoiceId, patch }: { invoiceId: string; patch: UpdateInvoiceRequest },
+        { rejectWithValue }
+    ) => {
+        try {
+            return await updateInvoice(invoiceId, patch);
+        } catch (e: any) {
+            return rejectWithValue(e.message ?? 'Failed to update invoice');
+        }
+    }
+);
+
+export const deleteInvoiceThunk = createAsyncThunk(
+    'invoices/delete',
+    async (invoiceId: string, { rejectWithValue }) => {
+        try {
+            await deleteInvoice(invoiceId);
+            return invoiceId;
+        } catch (e: any) {
+            return rejectWithValue(e.message ?? 'Failed to delete invoice');
+        }
+    }
+);
+
 const invoicesSlice = createSlice({
     name: 'invoices',
     initialState,
@@ -87,6 +113,13 @@ const invoicesSlice = createSlice({
         ) {
             const invoice = state.items.find((i) => i.invoiceId === action.payload.invoiceId);
             if (invoice) invoice.status = action.payload.status;
+        },
+        updateInvoiceInList(state, action: PayloadAction<Invoice>) {
+            const idx = state.items.findIndex((i) => i.invoiceId === action.payload.invoiceId);
+            if (idx !== -1) state.items[idx] = action.payload;
+        },
+        removeInvoice(state, action: PayloadAction<string>) {
+            state.items = state.items.filter((i) => i.invoiceId !== action.payload);
         },
     },
     extraReducers: (builder) => {
@@ -119,10 +152,24 @@ const invoicesSlice = createSlice({
             .addCase(fetchMoreInvoices.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload as string;
+            })
+            .addCase(updateInvoiceThunk.fulfilled, (state, action) => {
+                const idx = state.items.findIndex((i) => i.invoiceId === action.payload.invoiceId);
+                if (idx !== -1) state.items[idx] = action.payload;
+            })
+            .addCase(deleteInvoiceThunk.fulfilled, (state, action) => {
+                state.items = state.items.filter((i) => i.invoiceId !== action.payload);
             });
     },
 });
 
-export const { setFilters, setSearchQuery, clearFilters, prependInvoice, updateInvoiceStatus } =
-    invoicesSlice.actions;
+export const {
+    setFilters,
+    setSearchQuery,
+    clearFilters,
+    prependInvoice,
+    updateInvoiceStatus,
+    updateInvoiceInList,
+    removeInvoice,
+} = invoicesSlice.actions;
 export default invoicesSlice.reducer;

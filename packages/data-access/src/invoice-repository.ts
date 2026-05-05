@@ -198,6 +198,15 @@ export class InvoiceRepository {
         return (result.Items ?? []) as Invoice[];
     }
 
+    async deleteById(userId: string, invoiceId: string): Promise<void> {
+        await dbClient.send(
+            new DeleteCommand({
+                TableName: this.tableName,
+                Key: { userId, invoiceId },
+            })
+        );
+    }
+
     async deleteAllForUser(userId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {

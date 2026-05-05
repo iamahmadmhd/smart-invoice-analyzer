@@ -77,6 +77,8 @@ export class Api extends Construct {
         const getExportReportFunction = createFunction('get-export-report');
         const getJobFunction = createFunction('get-job');
         const deleteUserFunction = createFunction('delete-user');
+        const updateInvoiceFunction = createFunction('update-invoice');
+        const deleteInvoiceFunction = createFunction('delete-invoice');
 
         // ── Grants ──────────────────────────────────────────────────────────
         props.invoiceBucket.grantPut(presignFunction);
@@ -128,6 +130,10 @@ export class Api extends Construct {
         props.exportBatchTable.grantReadWriteData(deleteUserFunction);
         props.insightTable.grantReadWriteData(deleteUserFunction);
         props.invoiceBucket.grantReadWrite(deleteUserFunction);
+        props.invoiceTable.grantReadWriteData(updateInvoiceFunction);
+        props.invoiceTable.grantReadWriteData(deleteInvoiceFunction);
+        props.insightTable.grantReadWriteData(deleteInvoiceFunction);
+        props.processingJobTable.grantReadWriteData(deleteInvoiceFunction);
 
         // ── REST API ────────────────────────────────────────────────────────
         const api = new apigw.RestApi(this, 'RestApi', {
@@ -187,6 +193,8 @@ export class Api extends Construct {
         const invoiceById = invoices.addResource('{invoiceId}');
         invoiceById.addMethod('GET', fn(getInvoiceFunction), auth);
         invoiceById.addResource('insights').addMethod('GET', fn(getInsightsFunction), auth);
+        invoiceById.addMethod('PATCH', fn(updateInvoiceFunction), auth);
+        invoiceById.addMethod('DELETE', fn(deleteInvoiceFunction), auth);
 
         // ── /queries ────────────────────────────────────────────────────────
         api.root.addResource('queries').addMethod('POST', fn(queryFunction), auth);
