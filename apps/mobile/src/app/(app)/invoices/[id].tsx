@@ -3,6 +3,7 @@ import {
     ConfidenceBar,
     Container,
     EmptyState,
+    Icon,
     InvoiceBadges,
     InvoiceDetailCardSkeleton,
     InvoiceHero,
@@ -18,7 +19,7 @@ import { getStatusLabel } from '@/lib/invoice-utils';
 import { capitalize } from '@/lib/string-utils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 
 export default function InvoiceDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -78,10 +79,17 @@ export default function InvoiceDetailScreen() {
                         />
                     }
                 >
-                    <InvoiceHero
-                        vendorName={invoice.vendorName}
-                        invoiceNumber={invoice.invoiceNumber}
-                    />
+                    <View className='flex-row justify-between'>
+                        <InvoiceHero
+                            vendorName={invoice.vendorName}
+                            invoiceNumber={invoice.invoiceNumber}
+                        />
+                        {Platform.OS === 'web' ? (
+                            <Pressable onPress={refresh}>
+                                <Icon name='refresh' />
+                            </Pressable>
+                        ) : null}
+                    </View>
 
                     <InvoiceBadges
                         status={invoice.status}

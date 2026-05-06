@@ -43,6 +43,9 @@ export type { FormFieldProps } from './molecules/form-field';
 export { AlertBanner } from './molecules/alert-banner';
 export type { AlertBannerProps } from './molecules/alert-banner';
 
+export { AlertDialog } from './molecules/alert-dialog';
+export type { AlertDialogProps, AlertDialogAction } from './molecules/alert-dialog';
+
 export { InvoiceCard } from './molecules/invoice-card';
 export type { InvoiceCardProps } from './molecules/invoice-card';
 

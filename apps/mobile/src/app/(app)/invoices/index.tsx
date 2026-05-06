@@ -1,4 +1,4 @@
-import { EmptyState } from '@/components';
+import { EmptyState, Icon } from '@/components';
 import { Container, ContainerScrollable } from '@/components/atoms/screen-container';
 import { FilterChipGroup } from '@/components/molecules/filter-chip-group';
 import { SearchBar } from '@/components/molecules/search-bar';
@@ -10,7 +10,7 @@ import { Invoice } from '@smart-invoice-analyzer/contracts';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { RefreshControl, useColorScheme, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, useColorScheme, View } from 'react-native';
 
 export default function InvoicesScreen() {
     const router = useRouter();
@@ -53,11 +53,18 @@ export default function InvoicesScreen() {
     );
 
     const filterChips = (
-        <FilterChipGroup
-            activeFilters={activeFilters}
-            onRemoveFilter={removeFilter}
-            onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
-        />
+        <View className='flex-row items-center justify-between'>
+            <FilterChipGroup
+                activeFilters={activeFilters}
+                onRemoveFilter={removeFilter}
+                onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
+            />
+            {Platform.OS === 'web' ? (
+                <Pressable onPress={refresh}>
+                    <Icon name='refresh' />
+                </Pressable>
+            ) : null}
+        </View>
     );
 
     const filterSheet = (

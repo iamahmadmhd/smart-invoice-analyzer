@@ -36,7 +36,7 @@ const labelVariants = {
     primary: 'inverse',
     secondary: 'primary',
     ghost: 'brand',
-    destructive: 'inverse',
+    destructive: 'primary',
 } as const;
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
