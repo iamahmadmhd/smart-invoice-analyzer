@@ -1,14 +1,23 @@
-import { ExportWizardDraft } from '@/store/slices/exports-slice';
-import { Sachkontenrahmen } from '@smart-invoice-analyzer/contracts';
+import { ExportPeriod, Sachkontenrahmen } from '@smart-invoice-analyzer/contracts';
 import React from 'react';
 import { View } from 'react-native';
 import { Chip } from '../atoms/chip';
 import { Text } from '../atoms/text';
 import { FormField } from './form-field';
 
+// Local form value type — mirrors ExportWizardDraft without coupling to the Redux slice
+export interface DatevConfigValues {
+    period?: ExportPeriod;
+    beraternummer?: string;
+    mandantennummer?: string;
+    sachkontenrahmen?: Sachkontenrahmen;
+    sachkontenlaenge?: number;
+    includeDocumentReferences?: boolean;
+}
+
 export interface DatevConfigFormProps {
-    values: Partial<ExportWizardDraft>;
-    onChange: (patch: Partial<ExportWizardDraft>) => void;
+    values: DatevConfigValues;
+    onChange: (patch: Partial<DatevConfigValues>) => void;
 }
 
 const SKR_OPTIONS: { value: Sachkontenrahmen; label: string; description: string }[] = [

@@ -6,144 +6,53 @@ import { Text } from '@/components/atoms/text';
 import { AlertBanner } from '@/components/molecules/alert-banner';
 import { FormField } from '@/components/molecules/form-field';
 import { SectionHeader } from '@/components/molecules/section-header';
+import { CATEGORY_OPTIONS, TAX_RATE_OPTIONS } from '@/constants/invoice';
 import { useInvoiceDetail } from '@/hooks/use-invoice-detail';
-import { useAppDispatch } from '@/store';
-import { updateInvoiceThunk } from '@/store/slices/invoices-slice';
-import { UpdateInvoiceRequest } from '@smart-invoice-analyzer/contracts';
+import { useInvoiceEdit } from '@/hooks/use-invoice-edit';
+import {
+    draftToRequest,
+    InvoiceDraftFields,
+    invoiceToDraft,
+    validateInvoiceDraft,
+} from '@/lib/invoice-draft';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-const TAX_RATE_OPTIONS = [
-    { label: '0 %', value: 0 },
-    { label: '7 %', value: 7 },
-    { label: '19 %', value: 19 },
-];
-
-const CATEGORY_OPTIONS = [
-    'software',
-    'hardware',
-    'office',
-    'travel',
-    'marketing',
-    'utilities',
-    'consulting',
-    'other',
-] as const;
-
-type DraftFields = {
-    vendorName: string;
-    invoiceNumber: string;
-    invoiceDate: string;
-    dueDate: string;
-    currency: string;
-    netAmount: string;
-    taxAmount: string;
-    taxRate: number | undefined;
-    totalAmount: string;
-    vatIdOrTaxNumber: string;
-    category: string;
-};
-
-function invoiceToDraft(invoice: any): DraftFields {
-    return {
-        vendorName: invoice.vendorName ?? '',
-        invoiceNumber: invoice.invoiceNumber ?? '',
-        invoiceDate: invoice.invoiceDate ?? '',
-        dueDate: invoice.dueDate ?? '',
-        currency: invoice.currency ?? 'EUR',
-        netAmount: invoice.netAmount !== undefined ? String(invoice.netAmount) : '',
-        taxAmount: invoice.taxAmount !== undefined ? String(invoice.taxAmount) : '',
-        taxRate: invoice.taxRate,
-        totalAmount: invoice.totalAmount !== undefined ? String(invoice.totalAmount) : '',
-        vatIdOrTaxNumber: invoice.vatIdOrTaxNumber ?? '',
-        category: invoice.category ?? '',
-    };
-}
-
-function draftToRequest(draft: DraftFields): UpdateInvoiceRequest {
-    const patch: UpdateInvoiceRequest = {};
-    if (draft.vendorName.trim()) patch.vendorName = draft.vendorName.trim();
-    if (draft.invoiceNumber.trim()) patch.invoiceNumber = draft.invoiceNumber.trim();
-    if (draft.invoiceDate.trim()) patch.invoiceDate = draft.invoiceDate.trim();
-    if (draft.dueDate.trim()) patch.dueDate = draft.dueDate.trim();
-    else patch.dueDate = undefined;
-    if (draft.currency.trim()) patch.currency = draft.currency.trim().toUpperCase();
-    const net = parseFloat(draft.netAmount);
-    if (!isNaN(net)) patch.netAmount = net;
-    const tax = parseFloat(draft.taxAmount);
-    if (!isNaN(tax)) patch.taxAmount = tax;
-    if (draft.taxRate !== undefined) patch.taxRate = draft.taxRate;
-    const total = parseFloat(draft.totalAmount);
-    if (!isNaN(total)) patch.totalAmount = total;
-    if (draft.vatIdOrTaxNumber.trim()) patch.vatIdOrTaxNumber = draft.vatIdOrTaxNumber.trim();
-    if (draft.category) patch.category = draft.category as UpdateInvoiceRequest['category'];
-    return patch;
-}
-
-function validate(draft: DraftFields): string | null {
-    const dateRe = /^\d{4}-\d{2}-\d{2}$/;
-    if (draft.invoiceDate && !dateRe.test(draft.invoiceDate)) {
-        return 'Invoice date must be in YYYY-MM-DD format.';
-    }
-    if (draft.dueDate && !dateRe.test(draft.dueDate)) {
-        return 'Due date must be in YYYY-MM-DD format.';
-    }
-    const total = parseFloat(draft.totalAmount);
-    if (draft.totalAmount && isNaN(total)) {
-        return 'Total amount must be a valid number.';
-    }
-    const net = parseFloat(draft.netAmount);
-    if (draft.netAmount && isNaN(net)) {
-        return 'Net amount must be a valid number.';
-    }
-    const taxAmt = parseFloat(draft.taxAmount);
-    if (draft.taxAmount && isNaN(taxAmt)) {
-        return 'Tax amount must be a valid number.';
-    }
-    return null;
-}
-
 export default function InvoiceEditScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
-    const dispatch = useAppDispatch();
 
     const { invoice, loading, error } = useInvoiceDetail(id ?? '');
+    const { save, saving, saveError, clearError } = useInvoiceEdit(id ?? '');
 
-    const [draft, setDraft] = useState<DraftFields | null>(null);
-    const [saving, setSaving] = useState(false);
-    const [saveError, setSaveError] = useState<string | null>(null);
+    const [draft, setDraft] = useState<InvoiceDraftFields | null>(null);
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     useEffect(() => {
         if (invoice && !draft) {
             setDraft(invoiceToDraft(invoice));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [invoice]);
 
-    const update = (key: keyof DraftFields, value: any) => {
+    const update = (key: keyof InvoiceDraftFields, value: InvoiceDraftFields[typeof key]) => {
         setDraft((prev) => (prev ? { ...prev, [key]: value } : prev));
     };
 
     const handleSave = async () => {
         if (!draft || !id) return;
-        const validationError = validate(draft);
-        if (validationError) {
-            setSaveError(validationError);
+        const fieldError = validateInvoiceDraft(draft);
+        if (fieldError) {
+            setValidationError(fieldError);
             return;
         }
-        setSaveError(null);
-        setSaving(true);
-        const result = await dispatch(
-            updateInvoiceThunk({ invoiceId: id, patch: draftToRequest(draft) })
-        );
-        setSaving(false);
-        if (updateInvoiceThunk.fulfilled.match(result)) {
-            router.back();
-        } else {
-            setSaveError((result.payload as string) ?? 'Failed to save changes.');
-        }
+        setValidationError(null);
+        const succeeded = await save(draftToRequest(draft));
+        if (succeeded) router.back();
     };
+
+    const displayError = validationError ?? saveError;
 
     if (loading && !draft) {
         return (
@@ -174,11 +83,14 @@ export default function InvoiceEditScreen() {
             showsVerticalScrollIndicator={false}
         >
             <View className='gap-6'>
-                {saveError && (
+                {displayError && (
                     <AlertBanner
                         variant='error'
-                        message={saveError}
-                        onDismiss={() => setSaveError(null)}
+                        message={displayError}
+                        onDismiss={() => {
+                            setValidationError(null);
+                            clearError();
+                        }}
                     />
                 )}
 
@@ -287,7 +199,7 @@ export default function InvoiceEditScreen() {
                         </View>
                     </View>
 
-                    {/* VAT rate chip selector */}
+                    {/* VAT rate */}
                     <View className='gap-2'>
                         <Text
                             variant='label'

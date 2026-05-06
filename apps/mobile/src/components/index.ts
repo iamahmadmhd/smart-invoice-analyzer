@@ -79,6 +79,30 @@ export type { InvoiceHeroProps } from './molecules/invoice-hero';
 export { InvoiceBadges } from './molecules/invoice-badges';
 export type { InvoiceBadgesProps } from './molecules/invoice-badges';
 
+export { DetailRow } from './molecules/detail-row';
+export type { DetailRowProps } from './molecules/detail-row';
+
+export { DatevConfigForm } from './molecules/datev-config-form';
+export type { DatevConfigFormProps, DatevConfigValues } from './molecules/datev-config-form';
+
+export { InsightCard } from './molecules/insight-card';
+export type { InsightCardProps } from './molecules/insight-card';
+
+export { ExportCard } from './molecules/export-card';
+export type { ExportCardProps } from './molecules/export-card';
+
+export { PeriodSelector } from './molecules/period-selector';
+export type { PeriodSelectorProps } from './molecules/period-selector';
+
+export { ValidationReportCard } from './molecules/validation-report-card';
+export type { ValidationReportCardProps } from './molecules/validation-report-card';
+
+export { StackHeader } from './molecules/stack-header';
+export type { StackHeaderProps } from './molecules/stack-header';
+
+export { InvoiceDetailActions } from './molecules/invoice-detail-actions';
+export type { InvoiceDetailActionsProps } from './molecules/invoice-detail-actions';
+
 // ─── Organisms ────────────────────────────────────────────────────────────────
 export { InvoiceList } from './organisms/invoice-list';
 export type { InvoiceListProps } from './organisms/invoice-list';
@@ -94,3 +118,6 @@ export type { UploadProgressCardProps } from './organisms/upload-progress-card';
 
 export { AuthForm } from './organisms/auth-form';
 export type { AuthFormProps } from './organisms/auth-form';
+
+export { ExportCreateWizard } from './organisms/export-create-wizard';
+export type { ExportCreateWizardProps } from './organisms/export-create-wizard';

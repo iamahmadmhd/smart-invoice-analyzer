@@ -25,3 +25,9 @@ export const CATEGORY_OPTIONS = [
 ] as const;
 
 export type InvoiceCategory = (typeof CATEGORY_OPTIONS)[number];
+
+export const TAX_RATE_OPTIONS: { label: string; value: number }[] = [
+    { label: '0 %', value: 0 },
+    { label: '7 %', value: 7 },
+    { label: '19 %', value: 19 },
+];

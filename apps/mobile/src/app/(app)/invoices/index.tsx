@@ -1,33 +1,16 @@
 import { EmptyState } from '@/components';
 import { Container, ContainerScrollable } from '@/components/atoms/screen-container';
-import { ActiveFilter, FilterChipGroup } from '@/components/molecules/filter-chip-group';
+import { FilterChipGroup } from '@/components/molecules/filter-chip-group';
 import { SearchBar } from '@/components/molecules/search-bar';
-import { FilterSheet, STATUS_OPTIONS } from '@/components/organisms/filter-sheet';
+import { FilterSheet } from '@/components/organisms/filter-sheet';
 import { InvoiceList } from '@/components/organisms/invoice-list';
 import { useInvoices } from '@/hooks/use-invoices';
-import { InvoiceFilters } from '@/store/slices/invoices-slice';
+import { buildActiveFilters } from '@/lib/invoice-filters';
 import { Invoice } from '@smart-invoice-analyzer/contracts';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, useColorScheme, View } from 'react-native';
-
-function buildActiveFilters(filters: InvoiceFilters): ActiveFilter[] {
-    const result: ActiveFilter[] = [];
-    if (filters.status)
-        result.push({
-            key: 'status',
-            label: STATUS_OPTIONS.find((o) => o.value === filters.status)?.label ?? filters.status,
-        });
-    if (filters.category)
-        result.push({
-            key: 'category',
-            label: filters.category.charAt(0).toUpperCase() + filters.category.slice(1),
-        });
-    if (filters.duplicateFlag) result.push({ key: 'duplicateFlag', label: 'Duplicates' });
-    if (filters.anomalyFlag) result.push({ key: 'anomalyFlag', label: 'Anomalies' });
-    return result;
-}
 
 export default function InvoicesScreen() {
     const router = useRouter();
@@ -50,37 +33,48 @@ export default function InvoicesScreen() {
     const activeFilters = buildActiveFilters(filters);
 
     const removeFilter = useCallback(
-        (key: string) => {
-            applyFilters({ ...filters, [key]: undefined });
-        },
+        (key: string) => applyFilters({ ...filters, [key]: undefined }),
         [filters, applyFilters]
     );
 
     const handlePressInvoice = useCallback(
-        (invoice: Invoice) => {
-            router.push(`/(app)/invoices/${invoice.invoiceId}`);
-        },
+        (invoice: Invoice) => router.push(`/(app)/invoices/${invoice.invoiceId}`),
         [router]
     );
 
-    const handleUploadPress = useCallback(() => {
-        router.push('/(app)/invoices/upload');
-    }, [router]);
+    const handleUploadPress = useCallback(() => router.push('/(app)/invoices/upload'), [router]);
+
+    const searchBar = (
+        <SearchBar
+            value={searchQuery}
+            onChangeText={updateSearch}
+            onClear={() => updateSearch('')}
+        />
+    );
+
+    const filterChips = (
+        <FilterChipGroup
+            activeFilters={activeFilters}
+            onRemoveFilter={removeFilter}
+            onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
+        />
+    );
+
+    const filterSheet = (
+        <FilterSheet
+            isVisible={filterSheetIsVisible}
+            currentFilters={filters}
+            onApply={applyFilters}
+            onClose={() => setFilterSheetIsVisible(false)}
+        />
+    );
 
     if (!loading && invoices.length === 0) {
         return (
             <View className='flex-1'>
                 <Container className='flex-none gap-3 pt-4 pb-2'>
-                    <SearchBar
-                        value={searchQuery}
-                        onChangeText={updateSearch}
-                        onClear={() => updateSearch('')}
-                    />
-                    <FilterChipGroup
-                        activeFilters={activeFilters}
-                        onRemoveFilter={removeFilter}
-                        onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
-                    />
+                    {searchBar}
+                    {filterChips}
                 </Container>
                 <ContainerScrollable
                     contentContainerClassName='grow'
@@ -98,6 +92,7 @@ export default function InvoicesScreen() {
                         action={{ label: 'Upload Invoice', onPress: handleUploadPress }}
                     />
                 </ContainerScrollable>
+                {filterSheet}
             </View>
         );
     }
@@ -105,16 +100,8 @@ export default function InvoicesScreen() {
     return (
         <View className='flex-1'>
             <Container className='flex-none gap-3 pt-4 pb-2'>
-                <SearchBar
-                    value={searchQuery}
-                    onChangeText={updateSearch}
-                    onClear={() => updateSearch('')}
-                />
-                <FilterChipGroup
-                    activeFilters={activeFilters}
-                    onRemoveFilter={removeFilter}
-                    onOpenFilterSheet={() => setFilterSheetIsVisible(true)}
-                />
+                {searchBar}
+                {filterChips}
             </Container>
 
             <Container className='px-0'>
@@ -136,12 +123,7 @@ export default function InvoicesScreen() {
                     className='absolute inset-0 z-0'
                 />
             )}
-            <FilterSheet
-                isVisible={filterSheetIsVisible}
-                currentFilters={filters}
-                onApply={applyFilters}
-                onClose={() => setFilterSheetIsVisible(false)}
-            />
+            {filterSheet}
         </View>
     );
 }

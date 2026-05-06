@@ -6,7 +6,7 @@ import { Button } from '../atoms/button';
 import { Icon } from '../atoms/icon';
 import { Text } from '../atoms/text';
 import { AlertBanner } from '../molecules/alert-banner';
-import { DatevConfigForm } from '../molecules/datev-config-form';
+import { DatevConfigForm, DatevConfigValues } from '../molecules/datev-config-form';
 import { PeriodSelector } from '../molecules/period-selector';
 import { ValidationReportCard } from '../molecules/validation-report-card';
 
@@ -115,7 +115,7 @@ export function ExportCreateWizard({ onSuccess }: ExportCreateWizardProps) {
                         subtitle='Enter your accounting firm details for the export header.'
                     />
                     <DatevConfigForm
-                        values={wizardDraft}
+                        values={wizardDraft as DatevConfigValues}
                         onChange={updateDraft}
                     />
                     {wizardError && (

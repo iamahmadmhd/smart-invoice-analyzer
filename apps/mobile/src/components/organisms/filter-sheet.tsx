@@ -8,8 +8,6 @@ import { Icon } from '../atoms/icon';
 import { Divider } from '../atoms/spinner';
 import { Text } from '../atoms/text';
 
-export { STATUS_OPTIONS };
-
 export interface FilterSheetProps {
     isVisible: boolean;
     currentFilters: InvoiceFilters;
