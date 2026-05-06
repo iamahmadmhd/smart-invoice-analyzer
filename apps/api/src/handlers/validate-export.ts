@@ -20,9 +20,8 @@ const handler = withObservability(async (event) => {
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
     const invoices = await invoiceRepo.listEligibleForExport(user.userId, periodStart, periodEnd);
 
-    const report = validateInvoicesForExport(invoices, body.sachkontenlaenge);
+    const report = validateInvoicesForExport(invoices);
 
-    // Create a PENDING batch so the user can confirm → create-export
     const exportBatchId = generateExportBatchId();
     const now = new Date().toISOString();
 
@@ -32,11 +31,7 @@ const handler = withObservability(async (event) => {
         userId: user.userId,
         periodStart,
         periodEnd,
-        format: 'DATEV_EXTF_7',
-        beraternummer: body.beraternummer,
-        mandantennummer: body.mandantennummer,
-        sachkontenrahmen: body.sachkontenrahmen,
-        sachkontenlaenge: body.sachkontenlaenge,
+        format: 'CSV',
         status: 'VALIDATING',
         validationReport: report,
         createdAt: now,
@@ -46,9 +41,7 @@ const handler = withObservability(async (event) => {
         user.userId,
         exportBatchId,
         report.canProceed ? 'READY' : 'FAILED',
-        {
-            validationReport: report,
-        }
+        { validationReport: report }
     );
 
     return created({ exportBatchId, report });

@@ -1,77 +1,90 @@
 import { ExportBatch, Invoice } from '@smart-invoice-analyzer/contracts';
 import { logger } from '@smart-invoice-analyzer/observability';
-import { buildDatevHeader } from './datev-header.js';
-import { mapInvoiceToDatevRow, MapOptions, serialiseDatevRow } from './datev-mapper.js';
 
-export interface CsvGeneratorOptions extends MapOptions {
-    encoding: 'windows-1252' | 'utf-8-bom';
+export interface CsvGeneratorOptions {
+    includeDocumentReferences: boolean;
+    bucketName: string;
+    invoicePrefix: string;
 }
 
 export interface GeneratedCsv {
-    /** Raw CSV content as a Buffer (encoded per options.encoding) */
+    /** Raw CSV content as a Buffer (UTF-8 with BOM) */
     buffer: Buffer;
     filename: string;
     rowCount: number;
 }
 
-export function generateDatevCsv(
-    batch: ExportBatch,
+const HEADERS = [
+    'Invoice ID',
+    'Vendor Name',
+    'Invoice Number',
+    'Invoice Date',
+    'Due Date',
+    'Currency',
+    'Net Amount',
+    'Tax Amount',
+    'Tax Rate (%)',
+    'Total Amount',
+    'VAT/Tax ID',
+    'Category',
+    'Status',
+    'Export Batch ID',
+    'Document Reference',
+];
+
+function escapeField(value: string): string {
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+}
+
+function buildDocumentReference(invoice: Invoice, options: CsvGeneratorOptions): string {
+    if (!options.includeDocumentReferences) return '';
+    return `https://s3.amazonaws.com/${options.bucketName}/${options.invoicePrefix}${invoice.userId}/${invoice.sourceFileId}`;
+}
+
+function invoiceToRow(invoice: Invoice, options: CsvGeneratorOptions): string {
+    const fields = [
+        invoice.invoiceId,
+        invoice.vendorName ?? '',
+        invoice.invoiceNumber ?? '',
+        invoice.invoiceDate ?? '',
+        invoice.dueDate ?? '',
+        invoice.currency ?? '',
+        invoice.netAmount !== undefined ? invoice.netAmount.toFixed(2) : '',
+        invoice.taxAmount !== undefined ? invoice.taxAmount.toFixed(2) : '',
+        invoice.taxRate !== undefined ? String(invoice.taxRate) : '',
+        invoice.totalAmount !== undefined ? invoice.totalAmount.toFixed(2) : '',
+        invoice.vatIdOrTaxNumber ?? '',
+        invoice.category ?? '',
+        invoice.status,
+        invoice.exportBatchId ?? '',
+        buildDocumentReference(invoice, options),
+    ];
+    return fields.map(escapeField).join(',');
+}
+
+export function generateCsv(
     invoices: Invoice[],
+    batch: ExportBatch,
     options: CsvGeneratorOptions
 ): GeneratedCsv {
-    logger.info('Generating DATEV CSV', {
+    logger.info('Generating CSV', {
         exportBatchId: batch.exportBatchId,
         invoiceCount: invoices.length,
-        encoding: options.encoding,
     });
 
-    // Build data rows first so we know the count for the header
-    const dataRows = invoices.map((inv) => {
-        const row = mapInvoiceToDatevRow(inv, batch, options);
-        return serialiseDatevRow(row);
-    });
+    const headerRow = HEADERS.map(escapeField).join(',');
+    const dataRows = invoices.map((inv) => invoiceToRow(inv, options));
+    const content = [headerRow, ...dataRows].join('\n') + '\n';
 
-    const header = buildDatevHeader(batch, dataRows.length);
-    const fullCsv = header + dataRows.join('\n') + '\n';
+    // UTF-8 with BOM so Excel opens correctly
+    const bom = Buffer.from([0xef, 0xbb, 0xbf]);
+    const buffer = Buffer.concat([bom, Buffer.from(content, 'utf-8')]);
 
-    const buffer = encodeContent(fullCsv, options.encoding);
-    const filename = buildFilename(batch);
+    const period = batch.periodStart.slice(0, 7).replace('-', '_');
+    const filename = `InvoiceExport_${period}.csv`;
 
     return { buffer, filename, rowCount: dataRows.length };
-}
-
-// ── Encoding ──────────────────────────────────────────────────────────────────
-
-function encodeContent(content: string, encoding: CsvGeneratorOptions['encoding']): Buffer {
-    if (encoding === 'utf-8-bom') {
-        // UTF-8 with BOM — modern DATEV versions accept this
-        const bom = Buffer.from([0xef, 0xbb, 0xbf]);
-        return Buffer.concat([bom, Buffer.from(content, 'utf-8')]);
-    }
-
-    // Windows-1252 (ANSI) — required by older DATEV versions
-    // Node.js doesn't support Windows-1252 natively; we do a best-effort
-    // transliteration of common German characters.
-    const transliterated = transliterateToWindows1252(content);
-    return Buffer.from(transliterated, 'latin1');
-}
-
-function transliterateToWindows1252(text: string): string {
-    return text
-        .replace(/Ä/g, '\xc4')
-        .replace(/Ö/g, '\xd6')
-        .replace(/Ü/g, '\xdc')
-        .replace(/ä/g, '\xe4')
-        .replace(/ö/g, '\xf6')
-        .replace(/ü/g, '\xfc')
-        .replace(/ß/g, '\xdf')
-        .replace(/€/g, '\x80');
-}
-
-// ── Filename ──────────────────────────────────────────────────────────────────
-
-function buildFilename(batch: ExportBatch): string {
-    // e.g. DATEV_Buchungsstapel_2024_Q1.csv
-    const period = batch.periodStart.slice(0, 7).replace('-', '_');
-    return `DATEV_Buchungsstapel_${period}.csv`;
 }

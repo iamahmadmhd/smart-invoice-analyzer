@@ -12,9 +12,6 @@ export const ExportBatchStatusSchema = z.enum([
 ]);
 export type ExportBatchStatus = z.infer<typeof ExportBatchStatusSchema>;
 
-export const SachkontenrahmenSchema = z.enum(['SKR03', 'SKR04']);
-export type Sachkontenrahmen = z.infer<typeof SachkontenrahmenSchema>;
-
 // ── Export batch entity ───────────────────────────────────────────────────────
 
 export const ExportBatchSchema = z.object({
@@ -22,11 +19,7 @@ export const ExportBatchSchema = z.object({
     userId: z.string().min(1),
     periodStart: z.string(), // ISO date YYYY-MM-DD
     periodEnd: z.string(), // ISO date YYYY-MM-DD
-    format: z.literal('DATEV_EXTF_7'),
-    beraternummer: z.string().min(1).max(7),
-    mandantennummer: z.string().min(1).max(5),
-    sachkontenrahmen: SachkontenrahmenSchema,
-    sachkontenlaenge: z.number().int().min(4).max(8),
+    format: z.string(),
     status: ExportBatchStatusSchema,
     validationReport: z.any().optional(),
     archiveS3Key: z.string().optional(),
@@ -41,14 +34,11 @@ export const ValidationWarningSchema = z.object({
     invoiceId: z.string(),
     field: z.string(),
     code: z.enum([
-        'MISSING_VAT_RATE',
         'MISSING_INVOICE_NUMBER',
         'MISSING_INVOICE_DATE',
         'UNREADABLE_DATE',
         'MISSING_VENDOR',
         'MISSING_TOTAL',
-        'MISSING_ACCOUNT_MAPPING',
-        'ACCOUNT_LENGTH_MISMATCH',
         'ALREADY_EXPORTED',
     ]),
     message: z.string(),
@@ -77,10 +67,6 @@ export type ExportPeriod = z.infer<typeof ExportPeriodSchema>;
 
 export const CreateExportRequestSchema = z.object({
     period: ExportPeriodSchema,
-    beraternummer: z.string().min(1).max(7),
-    mandantennummer: z.string().min(1).max(5),
-    sachkontenrahmen: SachkontenrahmenSchema,
-    sachkontenlaenge: z.number().int().min(4).max(8),
     includeDocumentReferences: z.boolean().default(false),
 });
 export type CreateExportRequest = z.infer<typeof CreateExportRequestSchema>;
@@ -94,18 +80,3 @@ export const ExportDownloadResponseSchema = z.object({
     archiveFilename: z.string(),
 });
 export type ExportDownloadResponse = z.infer<typeof ExportDownloadResponseSchema>;
-
-// ── DATEV row ─────────────────────────────────────────────────────────────────
-
-export const DatevRowSchema = z.object({
-    Umsatz: z.string(), // total amount formatted as German decimal
-    SollHaben: z.enum(['S', 'H']),
-    Konto: z.string(),
-    Gegenkonto: z.string().optional(),
-    BUSchluessel: z.string().optional(),
-    Belegdatum: z.string(), // DDMM
-    Belegfeld1: z.string().optional(),
-    Buchungstext: z.string().optional(),
-    DocumentReference: z.string().optional(),
-});
-export type DatevRow = z.infer<typeof DatevRowSchema>;

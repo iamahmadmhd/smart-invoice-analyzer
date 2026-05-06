@@ -4,7 +4,6 @@ import {
     CreateExportRequest,
     ExportBatch,
     ExportPeriod,
-    Sachkontenrahmen,
     ValidationReport,
 } from '@smart-invoice-analyzer/contracts';
 
@@ -12,14 +11,10 @@ import {
 
 export interface ExportWizardDraft {
     period: ExportPeriod;
-    beraternummer: string;
-    mandantennummer: string;
-    sachkontenrahmen: Sachkontenrahmen;
-    sachkontenlaenge: number;
     includeDocumentReferences: boolean;
 }
 
-export type WizardStep = 'period' | 'config' | 'validate' | 'confirm';
+export type WizardStep = 'period' | 'confirm';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -44,8 +39,6 @@ interface ExportsState {
 }
 
 const initialDraft: Partial<ExportWizardDraft> = {
-    sachkontenrahmen: 'SKR03',
-    sachkontenlaenge: 4,
     includeDocumentReferences: false,
 };
 

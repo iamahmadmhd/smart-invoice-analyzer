@@ -24,7 +24,7 @@ const handler = withObservability(async (event) => {
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
     const invoices = await invoiceRepo.listEligibleForExport(user.userId, periodStart, periodEnd);
 
-    const report = validateInvoicesForExport(invoices, body.sachkontenlaenge);
+    const report = validateInvoicesForExport(invoices);
     if (!report.canProceed) {
         throw new ConflictError('Export validation failed — resolve errors before generating', {
             errors: report.errors,
@@ -40,11 +40,7 @@ const handler = withObservability(async (event) => {
         userId: user.userId,
         periodStart,
         periodEnd,
-        format: 'DATEV_EXTF_7',
-        beraternummer: body.beraternummer,
-        mandantennummer: body.mandantennummer,
-        sachkontenrahmen: body.sachkontenrahmen,
-        sachkontenlaenge: body.sachkontenlaenge,
+        format: 'CSV',
         status: 'PENDING',
         validationReport: report,
         createdAt: now,

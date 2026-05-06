@@ -83,7 +83,7 @@ export default function ExportDetailScreen() {
                             variant='heading3'
                             color='primary'
                         >
-                            DATEV Export
+                            CSV Export
                         </Text>
                         <Text
                             variant='body-small'
@@ -112,7 +112,7 @@ export default function ExportDetailScreen() {
                         <AlertBanner
                             variant='success'
                             title='Export ready'
-                            message='Your DATEV export archive is ready to download.'
+                            message='Your CSV export archive is ready to download.'
                         />
                     )}
 
@@ -146,35 +146,18 @@ export default function ExportDetailScreen() {
                         </Button>
                     )}
 
-                    {/* DATEV details */}
+                    {/* Export Configuration */}
                     <View className='gap-1'>
-                        <SectionHeader title='DATEV Configuration' />
+                        <SectionHeader title='Export Configuration' />
                         <SectionCard>
                             <DetailRow
                                 label='Format'
-                                value='DATEV EXTF 7.0'
+                                value='CSV'
                             />
                             <RowDivider />
                             <DetailRow
-                                label='Kontenrahmen'
-                                value={batch.sachkontenrahmen}
-                            />
-                            <RowDivider />
-                            <DetailRow
-                                label='Kontenlänge'
-                                value={String(batch.sachkontenlaenge)}
-                            />
-                            <RowDivider />
-                            <DetailRow
-                                label='Beraternummer'
-                                value={batch.beraternummer}
-                                valueMono
-                            />
-                            <RowDivider />
-                            <DetailRow
-                                label='Mandantennummer'
-                                value={batch.mandantennummer}
-                                valueMono
+                                label='Period'
+                                value={`${batch.periodStart} – ${batch.periodEnd}`}
                             />
                         </SectionCard>
                     </View>

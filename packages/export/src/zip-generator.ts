@@ -20,10 +20,7 @@ export async function generateZipArchive(
 
     const zip = new JSZip();
 
-    // Add the DATEV CSV
     zip.file(csv.filename, csv.buffer);
-
-    // Add a human-readable manifest
     zip.file('README.txt', buildReadme(batch, csv));
 
     const buffer = await zip.generateAsync({
@@ -44,11 +41,9 @@ export async function generateZipArchive(
     return { buffer, s3Key, filename };
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function buildZipFilename(batch: ExportBatch): string {
     const period = batch.periodStart.slice(0, 7).replace('-', '_');
-    return `DATEV_Export_${period}_${batch.exportBatchId}.zip`;
+    return `InvoiceExport_${period}_${batch.exportBatchId}.zip`;
 }
 
 function buildS3Key(batch: ExportBatch): string {
@@ -57,25 +52,22 @@ function buildS3Key(batch: ExportBatch): string {
 
 function buildReadme(batch: ExportBatch, csv: GeneratedCsv): string {
     return [
-        'DATEV EXTF 7.0 Export',
-        '======================',
+        'Invoice CSV Export',
+        '==================',
         '',
         `Export Batch ID : ${batch.exportBatchId}`,
         `Period          : ${batch.periodStart} – ${batch.periodEnd}`,
-        `Beraternummer   : ${batch.beraternummer}`,
-        `Mandantennummer : ${batch.mandantennummer}`,
-        `Kontenrahmen    : ${batch.sachkontenrahmen}`,
-        `Kontenlänge     : ${batch.sachkontenlaenge}`,
-        `Buchungen       : ${csv.rowCount}`,
-        `Erstellt am     : ${new Date().toISOString()}`,
+        `Invoices        : ${csv.rowCount}`,
+        `Created at      : ${new Date().toISOString()}`,
         '',
-        'Enthaltene Dateien',
-        '------------------',
-        `  ${csv.filename}  — DATEV Buchungsstapel`,
+        'Included Files',
+        '--------------',
+        `  ${csv.filename}  — Invoice export (CSV, UTF-8 with BOM)`,
         '',
-        'Import',
+        'Format',
         '------',
-        'Diese Datei kann direkt in DATEV Unternehmen Online, DATEV Pro,',
-        'ADDISON oder BMD über die EXTF-Importfunktion importiert werden.',
+        'The CSV file uses comma as the delimiter and UTF-8 encoding with BOM,',
+        'so it can be opened directly in Excel, Google Sheets, or any standard',
+        'spreadsheet application.',
     ].join('\n');
 }

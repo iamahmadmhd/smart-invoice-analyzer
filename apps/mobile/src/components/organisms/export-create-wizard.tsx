@@ -6,7 +6,6 @@ import { Button } from '../atoms/button';
 import { Icon } from '../atoms/icon';
 import { Text } from '../atoms/text';
 import { AlertBanner } from '../molecules/alert-banner';
-import { DatevConfigForm, DatevConfigValues } from '../molecules/datev-config-form';
 import { PeriodSelector } from '../molecules/period-selector';
 import { ValidationReportCard } from '../molecules/validation-report-card';
 
@@ -65,12 +64,10 @@ export function ExportCreateWizard({ onSuccess }: ExportCreateWizardProps) {
         isCreating,
         isSucceeded,
         wizardError,
-        goToStep,
         updateDraft,
         validate,
         confirm,
         draftIsReadyForPeriod,
-        draftIsReadyForConfig,
         pendingExportBatchId,
     } = useCreateExport();
 
@@ -87,7 +84,7 @@ export function ExportCreateWizard({ onSuccess }: ExportCreateWizardProps) {
                 <View className='gap-6'>
                     <StepHeader
                         step={1}
-                        total={3}
+                        total={2}
                         title='Select period'
                         subtitle='Choose the accounting period to export invoices for.'
                     />
@@ -95,61 +92,29 @@ export function ExportCreateWizard({ onSuccess }: ExportCreateWizardProps) {
                         value={wizardDraft.period as ExportPeriod | undefined}
                         onChange={(period) => updateDraft({ period })}
                     />
-                    <Button
-                        fullWidth
-                        disabled={!draftIsReadyForPeriod}
-                        onPress={() => goToStep('config')}
-                    >
-                        Continue
-                    </Button>
-                </View>
-            )}
-
-            {/* ── Step 2: DATEV config ───────────────────────────────────── */}
-            {wizardStep === 'config' && (
-                <View className='gap-6'>
-                    <StepHeader
-                        step={2}
-                        total={3}
-                        title='DATEV configuration'
-                        subtitle='Enter your accounting firm details for the export header.'
-                    />
-                    <DatevConfigForm
-                        values={wizardDraft as DatevConfigValues}
-                        onChange={updateDraft}
-                    />
                     {wizardError && (
                         <AlertBanner
                             variant='error'
                             message={wizardError}
                         />
                     )}
-                    <View className='flex-row gap-3'>
-                        <Button
-                            variant='secondary'
-                            onPress={() => goToStep('period')}
-                            className='flex-1'
-                        >
-                            Back
-                        </Button>
-                        <Button
-                            loading={isValidating}
-                            disabled={!draftIsReadyForConfig}
-                            onPress={validate}
-                            className='flex-1'
-                        >
-                            Validate
-                        </Button>
-                    </View>
+                    <Button
+                        fullWidth
+                        loading={isValidating}
+                        disabled={!draftIsReadyForPeriod}
+                        onPress={validate}
+                    >
+                        Continue
+                    </Button>
                 </View>
             )}
 
-            {/* ── Step 3: Confirm ────────────────────────────────────────── */}
+            {/* ── Step 2: Review & confirm ───────────────────────────────── */}
             {wizardStep === 'confirm' && validationReport && (
                 <View className='gap-6'>
                     <StepHeader
-                        step={3}
-                        total={3}
+                        step={2}
+                        total={2}
                         title='Review & confirm'
                         subtitle='Check the validation report before generating your export.'
                     />
@@ -165,7 +130,7 @@ export function ExportCreateWizard({ onSuccess }: ExportCreateWizardProps) {
                     <View className='flex-row gap-3'>
                         <Button
                             variant='secondary'
-                            onPress={() => goToStep('config')}
+                            onPress={() => updateDraft({})}
                             className='flex-1'
                         >
                             Back

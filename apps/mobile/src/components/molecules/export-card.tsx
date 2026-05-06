@@ -11,8 +11,6 @@ export interface ExportCardProps {
     onPress: () => void;
 }
 
-// Export batch status badge
-
 const STATUS_MAP: Record<
     ExportBatchStatus,
     { label: string; variant: BadgeVariant; dot?: boolean }
@@ -59,7 +57,7 @@ export function ExportCard({ batch, onPress }: ExportCardProps) {
                             color='primary'
                             numberOfLines={1}
                         >
-                            DATEV Export
+                            CSV Export
                         </Text>
                         <Text
                             variant='caption'
@@ -79,7 +77,7 @@ export function ExportCard({ batch, onPress }: ExportCardProps) {
                         variant='caption'
                         color='tertiary'
                     >
-                        {batch.sachkontenrahmen} · Berater {batch.beraternummer}
+                        {period}
                     </Text>
                     <View className='flex-row items-center gap-1'>
                         <Text

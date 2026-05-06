@@ -1,9 +1,6 @@
 import { Invoice, ValidationReport, ValidationWarning } from '@smart-invoice-analyzer/contracts';
 
-export function validateInvoicesForExport(
-    invoices: Invoice[],
-    sachkontenlaenge: number
-): ValidationReport {
+export function validateInvoicesForExport(invoices: Invoice[]): ValidationReport {
     const warnings: ValidationWarning[] = [];
     const errors: ValidationWarning[] = [];
 
@@ -24,7 +21,7 @@ export function validateInvoicesForExport(
                 invoiceId: invoice.invoiceId,
                 field: 'invoiceDate',
                 code: 'MISSING_INVOICE_DATE',
-                message: 'Invoice date is required for DATEV export',
+                message: 'Invoice date is required for export',
             });
         } else if (isNaN(Date.parse(invoice.invoiceDate))) {
             errors.push({
@@ -40,17 +37,17 @@ export function validateInvoicesForExport(
                 invoiceId: invoice.invoiceId,
                 field: 'totalAmount',
                 code: 'MISSING_TOTAL',
-                message: 'Total amount is required for DATEV export',
+                message: 'Total amount is required for export',
             });
         }
 
-        // Warnings — export can proceed but advisor should review
+        // Warnings — export can proceed but should be reviewed
         if (!invoice.invoiceNumber) {
             warnings.push({
                 invoiceId: invoice.invoiceId,
                 field: 'invoiceNumber',
                 code: 'MISSING_INVOICE_NUMBER',
-                message: 'Invoice number is missing — Belegfeld 1 will be empty',
+                message: 'Invoice number is missing',
             });
         }
 
@@ -59,30 +56,8 @@ export function validateInvoicesForExport(
                 invoiceId: invoice.invoiceId,
                 field: 'vendorName',
                 code: 'MISSING_VENDOR',
-                message: 'Vendor name is missing — Buchungstext will be empty',
+                message: 'Vendor name is missing',
             });
-        }
-
-        if (invoice.taxRate === undefined) {
-            warnings.push({
-                invoiceId: invoice.invoiceId,
-                field: 'taxRate',
-                code: 'MISSING_VAT_RATE',
-                message: 'VAT rate is missing — BU-Schlüssel cannot be determined',
-            });
-        }
-
-        // Account length validation
-        if (invoice.vatIdOrTaxNumber) {
-            const accountLen = invoice.vatIdOrTaxNumber.replace(/\D/g, '').length;
-            if (accountLen > 0 && accountLen !== sachkontenlaenge) {
-                warnings.push({
-                    invoiceId: invoice.invoiceId,
-                    field: 'vatIdOrTaxNumber',
-                    code: 'ACCOUNT_LENGTH_MISMATCH',
-                    message: `Account length ${accountLen} does not match configured Sachkontenlänge ${sachkontenlaenge}`,
-                });
-            }
         }
     }
 

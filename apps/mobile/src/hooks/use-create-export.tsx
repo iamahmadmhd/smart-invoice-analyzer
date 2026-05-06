@@ -11,6 +11,8 @@ import {
 import { CreateExportRequest } from '@smart-invoice-analyzer/contracts';
 import { useCallback } from 'react';
 
+export type { WizardStep };
+
 export function useCreateExport() {
     const dispatch = useAppDispatch();
     const {
@@ -47,11 +49,6 @@ export function useCreateExport() {
     const isSucceeded = wizardStatus === 'succeeded';
 
     const draftIsReadyForPeriod = !!wizardDraft.period;
-    const draftIsReadyForConfig =
-        !!wizardDraft.beraternummer &&
-        !!wizardDraft.mandantennummer &&
-        !!wizardDraft.sachkontenrahmen &&
-        !!wizardDraft.sachkontenlaenge;
 
     return {
         wizardStep,
@@ -68,6 +65,5 @@ export function useCreateExport() {
         confirm,
         reset,
         draftIsReadyForPeriod,
-        draftIsReadyForConfig,
     };
 }

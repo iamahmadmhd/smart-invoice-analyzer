@@ -85,9 +85,6 @@ export type { InvoiceBadgesProps } from './molecules/invoice-badges';
 export { DetailRow } from './molecules/detail-row';
 export type { DetailRowProps } from './molecules/detail-row';
 
-export { DatevConfigForm } from './molecules/datev-config-form';
-export type { DatevConfigFormProps, DatevConfigValues } from './molecules/datev-config-form';
-
 export { InsightCard } from './molecules/insight-card';
 export type { InsightCardProps } from './molecules/insight-card';
 

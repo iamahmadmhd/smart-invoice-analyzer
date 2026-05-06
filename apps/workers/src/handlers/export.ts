@@ -5,7 +5,8 @@ import {
     InvoiceRepository,
     S3Repository,
 } from '@smart-invoice-analyzer/data-access';
-import { generateDatevCsv, generateZipArchive } from '@smart-invoice-analyzer/export';
+import { validateInvoicesForExport } from '@smart-invoice-analyzer/domain';
+import { generateCsv, generateZipArchive } from '@smart-invoice-analyzer/export';
 import { logger, setCorrelationId } from '@smart-invoice-analyzer/observability';
 import { parseWorkerEvent, SQSEvent } from '../utils/parse-event';
 
@@ -27,7 +28,6 @@ export const handler = async (event: SQSEvent): Promise<void> => {
 
         const batch = await batchRepo.getById(payload.userId, payload.exportBatchId);
 
-        // Load eligible invoices for the period
         const invoices = await invoiceRepo.listEligibleForExport(
             payload.userId,
             batch.periodStart,
@@ -42,9 +42,19 @@ export const handler = async (event: SQSEvent): Promise<void> => {
             return;
         }
 
-        // Generate DATEV CSV
-        const csv = generateDatevCsv(batch, invoices, {
-            encoding: 'utf-8-bom',
+        // Re-validate before generating
+        const report = validateInvoicesForExport(invoices);
+        if (!report.canProceed) {
+            logger.warn('Export validation failed at generation time', {
+                exportBatchId: payload.exportBatchId,
+                errors: report.errors,
+            });
+            await batchRepo.updateStatus(payload.userId, payload.exportBatchId, 'FAILED');
+            return;
+        }
+
+        // Generate plain CSV
+        const csv = generateCsv(invoices, batch, {
             includeDocumentReferences: payload.includeDocumentReferences ?? false,
             bucketName: config.BUCKET_NAME,
             invoicePrefix: s3Config.invoicePrefix,

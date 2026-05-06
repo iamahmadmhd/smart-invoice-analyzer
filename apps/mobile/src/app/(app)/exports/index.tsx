@@ -1,4 +1,4 @@
-import { EmptyState } from '@/components';
+import { EmptyState, Icon } from '@/components';
 import { Container, ContainerScrollable } from '@/components/atoms/screen-container';
 import { InvoiceCardSkeleton } from '@/components/atoms/skeleton';
 import { AlertBanner } from '@/components/molecules/alert-banner';
@@ -7,7 +7,7 @@ import { useExports } from '@/hooks/use-exports';
 import { ExportBatch } from '@smart-invoice-analyzer/contracts';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { FlatList, RefreshControl, View } from 'react-native';
+import { FlatList, Platform, Pressable, RefreshControl, View } from 'react-native';
 
 export default function ExportsScreen() {
     const router = useRouter();
@@ -70,24 +70,34 @@ export default function ExportsScreen() {
     }
 
     return (
-        <Container className='px-0 pt-4'>
-            <FlatList
-                data={exports}
-                keyExtractor={(item) => item.exportBatchId}
-                renderItem={({ item }) => (
-                    <ExportCard
-                        batch={item}
-                        onPress={() => handlePress(item)}
-                    />
-                )}
-                contentContainerClassName='gap-3 grow px-4 pb-8'
-                refreshControl={
-                    <RefreshControl
-                        refreshing={loading}
-                        onRefresh={refresh}
-                    />
-                }
-            />
-        </Container>
+        <React.Fragment>
+            {Platform.OS === 'web' ? (
+                <Container className='flex-none flex-row-reverse items-center justify-between py-4'>
+                    <Pressable onPress={refresh}>
+                        <Icon name='refresh' />
+                    </Pressable>
+                </Container>
+            ) : null}
+
+            <Container className='px-0 pt-4'>
+                <FlatList
+                    data={exports}
+                    keyExtractor={(item) => item.exportBatchId}
+                    renderItem={({ item }) => (
+                        <ExportCard
+                            batch={item}
+                            onPress={() => handlePress(item)}
+                        />
+                    )}
+                    contentContainerClassName='gap-3 grow px-4 pb-8'
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={loading}
+                            onRefresh={refresh}
+                        />
+                    }
+                />
+            </Container>
+        </React.Fragment>
     );
 }
