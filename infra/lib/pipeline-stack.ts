@@ -81,11 +81,11 @@ export class PipelineStack extends cdk.Stack {
                 }),
                 new iam.PolicyStatement({
                     actions: ['s3:ListBucket'],
-                    resources: [`arn:aws:s3:::sia-prod-web-app`],
+                    resources: [`arn:aws:s3:::*`],
                 }),
                 new iam.PolicyStatement({
                     actions: ['s3:DeleteObject', 's3:GetObject', 's3:PutObject'],
-                    resources: [`arn:aws:s3:::sia-prod-web-app/*`],
+                    resources: [`arn:aws:s3:::*/*`],
                 }),
                 new iam.PolicyStatement({
                     actions: ['cloudfront:CreateInvalidation'],
@@ -124,7 +124,7 @@ export class PipelineStack extends cdk.Stack {
                 }),
                 new iam.PolicyStatement({
                     actions: ['s3:PutObject'],
-                    resources: [`arn:aws:s3:::sia-prod-mobile-artifacts/*`],
+                    resources: [`arn:aws:s3:::*/*`],
                 }),
                 new iam.PolicyStatement({
                     actions: ['kms:Decrypt'],
