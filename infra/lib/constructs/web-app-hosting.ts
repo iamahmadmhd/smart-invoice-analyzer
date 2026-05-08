@@ -17,20 +17,23 @@ interface WebAppHostingProps {
 
 export class WebAppHosting extends Construct {
     public readonly distribution: cloudfront.Distribution;
+    public readonly certificate: acm.Certificate;
 
     constructor(scope: Construct, id: string, props: WebAppHostingProps) {
         super(scope, id);
 
-        const certificate = new acm.DnsValidatedCertificate(this, 'Certificate', {
+        // Certificate must be in us-east-1 for CloudFront
+        // Note: This requires the certificate to be created in us-east-1 region
+        // For cross-region certificate, consider using a separate stack or cross-region references
+        this.certificate = new acm.Certificate(this, 'Certificate', {
             domainName: props.domainName,
-            hostedZone: props.hostedZone,
-            region: 'us-east-1',
+            validation: acm.CertificateValidation.fromDns(props.hostedZone),
         });
 
         this.distribution = new cloudfront.Distribution(this, 'Distribution', {
             defaultRootObject: 'index.html',
             domainNames: [props.domainName],
-            certificate,
+            certificate: this.certificate,
             defaultBehavior: {
                 origin: origins.S3BucketOrigin.withOriginAccessControl(props.webAppBucket),
                 viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -53,6 +56,8 @@ export class WebAppHosting extends Construct {
                     ttl: cdk.Duration.minutes(5),
                 },
             ],
+            enableLogging: true,
+            logIncludesCookies: false,
         });
 
         new route53.ARecord(this, 'AliasRecord', {

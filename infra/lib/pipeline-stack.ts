@@ -4,7 +4,7 @@ import { GitHubTrigger } from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as pipelines from 'aws-cdk-lib/pipelines';
 import { Construct } from 'constructs';
-import { AppStage } from './stages/app-stage';
+import { AppStack } from './stacks/app-stack';
 
 const STAGE = 'prod';
 const BRANCH = 'main';
@@ -25,7 +25,7 @@ export class PipelineStack extends cdk.Stack {
         );
 
         const pipeline = new pipelines.CodePipeline(this, 'Pipeline', {
-            pipelineName: `SmartInvoiceAnalyzer-${STAGE}`,
+            pipelineName: `SmartInvoiceAnalyzer-Production-Pipeline`,
             selfMutation: true,
             synth: new pipelines.CodeBuildStep('Synth', {
                 input: source,
@@ -49,12 +49,19 @@ export class PipelineStack extends cdk.Stack {
             }),
         });
 
-        const appStage = pipeline.addStage(
-            new AppStage(this, STAGE, {
-                env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'eu-central-1' },
-                stage: STAGE,
-            })
-        );
+        // Create production stage directly
+        const prodStage = new cdk.Stage(this, 'Production', {
+            env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'eu-central-1' },
+            stageName: 'SmartInvoiceAnalyzer-Production',
+        });
+
+        new AppStack(prodStage, 'AppStack', {
+            stage: STAGE,
+            stackName: 'SmartInvoiceAnalyzer-Production-AppStack',
+            description: 'Smart Invoice Analyzer - Production Application Stack',
+        });
+
+        const appStage = pipeline.addStage(prodStage);
 
         appStage.addPost(this.createDeployWebStep(source), this.createBuildAndroidApkStep(source));
     }
@@ -90,8 +97,8 @@ export class PipelineStack extends cdk.Stack {
                 `API_URL=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/api-url --query Parameter.Value --output text)`,
                 `USER_POOL_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-id --query Parameter.Value --output text)`,
                 `USER_POOL_CLIENT_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-client-id --query Parameter.Value --output text)`,
-                `WEB_BUCKET=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/web-bucket-name --query Parameter.Value --output text)`,
-                `WEB_DISTRIBUTION_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/web-distribution-id --query Parameter.Value --output text)`,
+                `WEB_BUCKET=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/web-app-bucket-name --query Parameter.Value --output text)`,
+                `WEB_DISTRIBUTION_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/web-app-distribution-id --query Parameter.Value --output text)`,
                 'cd apps/mobile',
                 'EXPO_PUBLIC_API_URL="$API_URL" EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID" npm run build:web',
                 'aws s3 sync dist "s3://$WEB_BUCKET" --delete',
@@ -145,7 +152,7 @@ export class PipelineStack extends cdk.Stack {
                 `ANDROID_KEY_ALIAS=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/key-alias --with-decryption --query Parameter.Value --output text)`,
                 `ANDROID_KEYSTORE_PASSWORD=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/keystore-password --with-decryption --query Parameter.Value --output text)`,
                 `ANDROID_KEY_PASSWORD=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/key-password --with-decryption --query Parameter.Value --output text)`,
-                `APK_BUCKET=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/mobile-artifacts-bucket-name --query Parameter.Value --output text)`,
+                `APK_BUCKET=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/mobile-app-artifacts-bucket-name --query Parameter.Value --output text)`,
                 'export EXPO_PUBLIC_API_URL="$API_URL" EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID"',
                 'export ANDROID_KEYSTORE_BASE64 ANDROID_KEY_ALIAS ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD',
                 'cd apps/mobile',

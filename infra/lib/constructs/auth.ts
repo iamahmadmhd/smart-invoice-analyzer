@@ -10,7 +10,6 @@ export class Auth extends Construct {
         super(scope, id);
 
         this.userPool = new cognito.UserPool(this, 'UserPool', {
-            userPoolName: `${props.prefix}-userpool`,
             selfSignUpEnabled: true,
             signInAliases: { email: true },
             autoVerify: { email: true },
@@ -21,7 +20,6 @@ export class Auth extends Construct {
 
         this.userPoolClient = new cognito.UserPoolClient(this, 'UserPoolClient', {
             userPool: this.userPool,
-            userPoolClientName: `${props.prefix}-client`,
             authFlows: { userPassword: true, userSrp: true },
         });
     }

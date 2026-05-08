@@ -5,6 +5,7 @@ import { Construct } from 'constructs';
 import { Api } from '../constructs/api';
 import { Auth } from '../constructs/auth';
 import { Database } from '../constructs/database';
+import { Monitoring } from '../constructs/monitoring';
 import { Processing } from '../constructs/processing';
 import { Storage } from '../constructs/storage';
 import { WebAppHosting } from '../constructs/web-app-hosting';
@@ -55,6 +56,7 @@ export class AppStack extends cdk.Stack {
 
         const api = new Api(this, 'Api', {
             prefix,
+            prod,
             userPool: auth.userPool,
             orchestratorFunction: processing.orchestratorFunction,
             invoiceBucket: storage.invoiceBucket,
@@ -66,6 +68,24 @@ export class AppStack extends cdk.Stack {
             exportQueueUrl: processing.exportQueueUrl,
             domainName: hostedZone ? API_DOMAIN : undefined,
             hostedZone,
+        });
+
+        // ── Monitoring ──────────────────────────────────────────────────────
+        new Monitoring(this, 'Monitoring', {
+            prefix,
+            lambdaFunctions: [
+                processing.orchestratorFunction,
+                ...processing.workerFunctions,
+                ...api.apiFunctions,
+            ],
+            queues: processing.queues,
+            tables: [
+                database.invoiceTable,
+                database.processingJobTable,
+                database.exportTable,
+                database.insightTable,
+                database.userTable,
+            ],
         });
 
         if (prod && webAppHosting) {

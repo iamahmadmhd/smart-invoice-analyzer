@@ -1,9 +1,11 @@
 import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
@@ -28,6 +30,10 @@ export class Processing extends Construct {
     public readonly orchestratorFunction: lambda.Function;
     /** Exposed so AppStack can pass the URL to the Api construct */
     public readonly exportQueueUrl: string;
+    /** Exposed for monitoring */
+    public readonly workerFunctions: lambda.Function[] = [];
+    /** Exposed for monitoring */
+    public readonly queues: sqs.Queue[] = [];
 
     constructor(scope: Construct, id: string, props: ProcessingProps) {
         super(scope, id);
@@ -61,30 +67,82 @@ export class Processing extends Construct {
             name: string,
             timeout = cdk.Duration.seconds(60),
             extraEnv?: Record<string, string>
-        ) =>
-            new lambda.Function(this, `${name}Worker`, {
-                functionName: `${prefix}-worker-${name}`,
+        ) => {
+            const logGroup = new logs.LogGroup(this, `${name}WorkerLogGroup`, {
+                retention: logs.RetentionDays.ONE_WEEK,
+                removalPolicy,
+            });
+
+            const fn = new lambda.Function(this, `${name}Worker`, {
                 runtime: lambda.Runtime.NODEJS_22_X,
                 handler: 'index.handler',
                 code: lambda.Code.fromAsset(path.join(WORKERS_DIST, name)),
                 timeout,
                 environment: { ...commonEnv, ...extraEnv },
+                logGroup,
+                tracing: lambda.Tracing.ACTIVE,
             });
+
+            // Add alarm for worker errors
+            fn.metricErrors({
+                period: cdk.Duration.minutes(5),
+            }).createAlarm(this, `${name}WorkerErrorAlarm`, {
+                threshold: 3,
+                evaluationPeriods: 1,
+                alarmDescription: `${name} worker has high error rate`,
+                treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+            });
+
+            // Add alarm for worker throttles
+            fn.metricThrottles({
+                period: cdk.Duration.minutes(5),
+            }).createAlarm(this, `${name}WorkerThrottleAlarm`, {
+                threshold: 5,
+                evaluationPeriods: 1,
+                alarmDescription: `${name} worker is being throttled`,
+                treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+            });
+
+            return fn;
+        };
 
         // ── Helper: create an SQS queue with a DLQ ──────────────────────────
         const makeQueue = (name: string) => {
             const dlq = new sqs.Queue(this, `${name}Dlq`, {
-                queueName: `${prefix}-${name}-dlq`,
                 retentionPeriod: cdk.Duration.days(14),
                 removalPolicy,
             });
 
             const queue = new sqs.Queue(this, `${name}Queue`, {
-                queueName: `${prefix}-${name}`,
                 visibilityTimeout: cdk.Duration.seconds(300),
                 removalPolicy,
                 deadLetterQueue: { queue: dlq, maxReceiveCount: 3 },
             });
+
+            // Add alarm for messages in DLQ
+            dlq.metricApproximateNumberOfMessagesVisible({
+                period: cdk.Duration.minutes(5),
+            }).createAlarm(this, `${name}DlqAlarm`, {
+                threshold: 1,
+                evaluationPeriods: 1,
+                alarmDescription: `Messages detected in ${name} DLQ - requires investigation`,
+                treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+            });
+
+            // Add alarm for queue age
+            queue
+                .metricApproximateAgeOfOldestMessage({
+                    period: cdk.Duration.minutes(5),
+                })
+                .createAlarm(this, `${name}QueueAgeAlarm`, {
+                    threshold: 600, // 10 minutes
+                    evaluationPeriods: 2,
+                    alarmDescription: `Messages in ${name} queue are aging - possible processing delay`,
+                    treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+                });
+
+            // Track for monitoring
+            this.queues.push(queue);
 
             return { queue, dlq };
         };
@@ -118,6 +176,7 @@ export class Processing extends Construct {
         const ocrWorker = makeWorker('ocr', cdk.Duration.seconds(120), {
             NORMALIZATION_QUEUE_URL: normalizationQueue.queueUrl,
         });
+        this.workerFunctions.push(ocrWorker);
         ocrWorker.addEventSource(new lambdaEventSources.SqsEventSource(ocrQueue, { batchSize: 1 }));
         invoiceBucket.grantReadWrite(ocrWorker);
         processingJobTable.grantReadWriteData(ocrWorker);
@@ -136,6 +195,7 @@ export class Processing extends Construct {
         const normalizationWorker = makeWorker('normalization', cdk.Duration.seconds(60), {
             ENRICHMENT_QUEUE_URL: enrichmentQueue.queueUrl,
         });
+        this.workerFunctions.push(normalizationWorker);
         normalizationWorker.addEventSource(
             new lambdaEventSources.SqsEventSource(normalizationQueue, { batchSize: 1 })
         );
@@ -148,6 +208,7 @@ export class Processing extends Construct {
         const enrichmentWorker = makeWorker('enrichment', cdk.Duration.seconds(120), {
             DUPLICATE_QUEUE_URL: duplicateQueue.queueUrl,
         });
+        this.workerFunctions.push(enrichmentWorker);
         enrichmentWorker.addEventSource(
             new lambdaEventSources.SqsEventSource(enrichmentQueue, { batchSize: 1 })
         );
@@ -175,6 +236,7 @@ export class Processing extends Construct {
         const duplicateWorker = makeWorker('duplicate-detection', cdk.Duration.seconds(60), {
             ANOMALY_QUEUE_URL: anomalyQueue.queueUrl,
         });
+        this.workerFunctions.push(duplicateWorker);
         duplicateWorker.addEventSource(
             new lambdaEventSources.SqsEventSource(duplicateQueue, { batchSize: 1 })
         );
@@ -185,6 +247,7 @@ export class Processing extends Construct {
 
         // 6. Anomaly detection — flags unusual tax rates, amounts, vendor patterns
         const anomalyWorker = makeWorker('anomaly-detection', cdk.Duration.seconds(60));
+        this.workerFunctions.push(anomalyWorker);
         anomalyWorker.addEventSource(
             new lambdaEventSources.SqsEventSource(anomalyQueue, { batchSize: 1 })
         );
@@ -197,6 +260,7 @@ export class Processing extends Construct {
         const exportWorker = makeWorker('export', cdk.Duration.seconds(300), {
             EXPORT_PREFIX: 'exports/',
         });
+        this.workerFunctions.push(exportWorker);
         exportWorker.addEventSource(
             new lambdaEventSources.SqsEventSource(exportQueue, { batchSize: 1 })
         );
