@@ -1,5 +1,13 @@
 # Ignore artifacts:
 build
 coverage
+cdk.out
+dist
+node_modules
+ios
+android
 # Ignore all dotfiles
 .*
+# Generated files
+**/uniwind-types.d.ts
+**/expo-env.d.ts

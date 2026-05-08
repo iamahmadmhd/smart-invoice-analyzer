@@ -3,7 +3,7 @@ import { Construct } from 'constructs';
 import { AppStack } from '../stacks/app-stack';
 
 interface AppStageProps extends cdk.StageProps {
-    stage: 'dev' | 'staging' | 'prod';
+    stage: 'dev' | 'prod';
 }
 
 export class AppStage extends cdk.Stage {
@@ -11,7 +11,8 @@ export class AppStage extends cdk.Stage {
         super(scope, id, props);
 
         new AppStack(this, 'App', {
-            stackName: `sia-${props.stage}`,
+            env: props.env,
+            stackName: `SIA${props.stage}`,
             stage: props.stage,
         });
     }
