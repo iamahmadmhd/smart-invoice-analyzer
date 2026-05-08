@@ -22,7 +22,6 @@ export class Database extends Construct {
 
         // ── User table ──────────────────────────────────────────────────────
         this.userTable = new dynamodb.Table(this, 'UserTable', {
-            tableName: `${props.prefix}-users`,
             partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
@@ -39,7 +38,6 @@ export class Database extends Construct {
         // ── Invoice table ───────────────────────────────────────────────────
         // PK: userId  SK: invoiceId
         this.invoiceTable = new dynamodb.Table(this, 'InvoiceTable', {
-            tableName: `${props.prefix}-invoices`,
             partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'invoiceId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -85,7 +83,6 @@ export class Database extends Construct {
         // ── ProcessingJob table ─────────────────────────────────────────────
         // PK: invoiceId  SK: jobId
         this.processingJobTable = new dynamodb.Table(this, 'ProcessingJobTable', {
-            tableName: `${props.prefix}-processingjobs`,
             partitionKey: { name: 'invoiceId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'jobId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -121,7 +118,6 @@ export class Database extends Construct {
         // ── Export table ───────────────────────────────────────────────
         // PK: userId  SK: exportId
         this.exportTable = new dynamodb.Table(this, 'ExportTable', {
-            tableName: `${props.prefix}-exports`,
             partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'exportId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -153,7 +149,6 @@ export class Database extends Construct {
         // ── Insight table ───────────────────────────────────────────────────
         // PK: userId  SK: insightId
         this.insightTable = new dynamodb.Table(this, 'InsightTable', {
-            tableName: `${props.prefix}-insights`,
             partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'insightId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,

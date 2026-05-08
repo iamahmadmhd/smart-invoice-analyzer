@@ -16,9 +16,9 @@ export class Storage extends Construct {
         super(scope, id);
 
         this.invoiceBucket = new s3.Bucket(this, 'InvoiceBucket', {
-            bucketName: `${props.prefix}-invoice-files`,
             encryption: s3.BucketEncryption.S3_MANAGED,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
             versioned: true,
             removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: !props.prod,
@@ -34,7 +34,6 @@ export class Storage extends Construct {
         });
 
         this.webAppBucket = new s3.Bucket(this, 'WebAppBucket', {
-            bucketName: `${props.prefix}-web-app`,
             encryption: s3.BucketEncryption.S3_MANAGED,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
@@ -43,7 +42,6 @@ export class Storage extends Construct {
         });
 
         this.mobileAppArtifactsBucket = new s3.Bucket(this, 'MobileAppArtifactsBucket', {
-            bucketName: `${props.prefix}-mobile-app-artifacts`,
             encryption: s3.BucketEncryption.S3_MANAGED,
             blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
             enforceSSL: true,
@@ -51,5 +49,10 @@ export class Storage extends Construct {
             removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
             autoDeleteObjects: !props.prod,
         });
+
+        // Add tags for identification
+        cdk.Tags.of(this.invoiceBucket).add('Purpose', 'InvoiceStorage');
+        cdk.Tags.of(this.webAppBucket).add('Purpose', 'WebAppHosting');
+        cdk.Tags.of(this.mobileAppArtifactsBucket).add('Purpose', 'MobileAppArtifacts');
     }
 }

@@ -2,10 +2,12 @@ import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -13,6 +15,7 @@ import { Construct } from 'constructs';
 
 export interface ApiProps {
     prefix: string;
+    prod: boolean;
     userPool: cognito.UserPool;
     orchestratorFunction: lambda.Function;
     invoiceBucket: s3.IBucket;
@@ -39,6 +42,7 @@ const GATEWAY_CORS_HEADERS: Record<string, string> = {
 
 export class Api extends Construct {
     public readonly apiUrl: string;
+    public readonly apiFunctions: lambda.Function[] = [];
 
     constructor(scope: Construct, id: string, props: ApiProps) {
         super(scope, id);
@@ -55,15 +59,37 @@ export class Api extends Construct {
         };
 
         // ── Helper ──────────────────────────────────────────────────────────
-        const createFunction = (name: string, extraEnv?: Record<string, string>) =>
-            new lambda.Function(this, `${name}Function`, {
-                functionName: `${props.prefix}-api-${name}`,
+        const createFunction = (name: string, extraEnv?: Record<string, string>) => {
+            const logGroup = new logs.LogGroup(this, `${name}FunctionLogGroup`, {
+                retention: logs.RetentionDays.ONE_WEEK,
+                removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+            });
+
+            const fn = new lambda.Function(this, `${name}Function`, {
                 runtime: lambda.Runtime.NODEJS_22_X,
                 handler: 'index.handler',
                 code: lambda.Code.fromAsset(path.join(API_DIST, name)),
                 timeout: cdk.Duration.seconds(30),
                 environment: { ...commonEnv, ...extraEnv },
+                logGroup,
+                tracing: lambda.Tracing.ACTIVE,
             });
+
+            // Add alarm for function errors
+            fn.metricErrors({
+                period: cdk.Duration.minutes(5),
+            }).createAlarm(this, `${name}ErrorAlarm`, {
+                threshold: 5,
+                evaluationPeriods: 1,
+                alarmDescription: `${name} API function has high error rate`,
+                treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+            });
+
+            // Track for monitoring
+            this.apiFunctions.push(fn);
+
+            return fn;
+        };
 
         // ── Lambda handlers ─────────────────────────────────────────────────
         const presignFunction = createFunction('presign', {
@@ -150,8 +176,13 @@ export class Api extends Construct {
                 : undefined;
 
         const api = new apigw.RestApi(this, 'RestApi', {
-            restApiName: `${props.prefix}-api`,
-            deployOptions: { stageName: 'v1' },
+            deployOptions: {
+                stageName: 'v1',
+                tracingEnabled: true,
+                metricsEnabled: true,
+                loggingLevel: apigw.MethodLoggingLevel.INFO,
+                dataTraceEnabled: false,
+            },
             domainName:
                 props.domainName && certificate
                     ? {
@@ -174,6 +205,26 @@ export class Api extends Construct {
             },
         });
 
+        // Add alarm for API Gateway 5xx errors
+        api.metricServerError({
+            period: cdk.Duration.minutes(5),
+        }).createAlarm(this, 'ApiServerErrorAlarm', {
+            threshold: 10,
+            evaluationPeriods: 1,
+            alarmDescription: 'API Gateway has high 5xx error rate',
+            treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+
+        // Add alarm for API Gateway 4xx errors
+        api.metricClientError({
+            period: cdk.Duration.minutes(5),
+        }).createAlarm(this, 'ApiClientErrorAlarm', {
+            threshold: 50,
+            evaluationPeriods: 2,
+            alarmDescription: 'API Gateway has high 4xx error rate',
+            treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        });
+
         // ── Gateway responses (Cognito 401/403 and other gateway errors) ────
         // These responses are emitted by API Gateway before Lambda is invoked,
         // so CORS headers must be injected here — Lambda cannot do it.
@@ -193,7 +244,6 @@ export class Api extends Construct {
 
         const authorizer = new apigw.CognitoUserPoolsAuthorizer(this, 'Authorizer', {
             cognitoUserPools: [props.userPool],
-            authorizerName: `${props.prefix}-authorizer`,
         });
 
         const auth: apigw.MethodOptions = {
