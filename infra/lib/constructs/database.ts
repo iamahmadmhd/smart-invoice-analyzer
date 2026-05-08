@@ -10,7 +10,7 @@ export interface DatabaseProps {
 export class Database extends Construct {
     public readonly invoiceTable: dynamodb.Table;
     public readonly processingJobTable: dynamodb.Table;
-    public readonly exportBatchTable: dynamodb.Table;
+    public readonly exportTable: dynamodb.Table;
     public readonly insightTable: dynamodb.Table;
     public readonly userTable: dynamodb.Table;
 
@@ -70,8 +70,8 @@ export class Database extends Construct {
         });
 
         this.invoiceTable.addGlobalSecondaryIndex({
-            indexName: 'exportBatchId-index',
-            partitionKey: { name: 'exportBatchId', type: dynamodb.AttributeType.STRING },
+            indexName: 'exportId-index',
+            partitionKey: { name: 'exportId', type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.ALL,
         });
 
@@ -85,7 +85,7 @@ export class Database extends Construct {
         // ── ProcessingJob table ─────────────────────────────────────────────
         // PK: invoiceId  SK: jobId
         this.processingJobTable = new dynamodb.Table(this, 'ProcessingJobTable', {
-            tableName: `${props.prefix}-processing-jobs`,
+            tableName: `${props.prefix}-processingjobs`,
             partitionKey: { name: 'invoiceId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'jobId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -118,32 +118,32 @@ export class Database extends Construct {
             projectionType: dynamodb.ProjectionType.ALL,
         });
 
-        // ── ExportBatch table ───────────────────────────────────────────────
-        // PK: userId  SK: exportBatchId
-        this.exportBatchTable = new dynamodb.Table(this, 'ExportBatchTable', {
-            tableName: `${props.prefix}-export-batches`,
+        // ── Export table ───────────────────────────────────────────────
+        // PK: userId  SK: exportId
+        this.exportTable = new dynamodb.Table(this, 'ExportTable', {
+            tableName: `${props.prefix}-exports`,
             partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
-            sortKey: { name: 'exportBatchId', type: dynamodb.AttributeType.STRING },
+            sortKey: { name: 'exportId', type: dynamodb.AttributeType.STRING },
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption: dynamodb.TableEncryption.AWS_MANAGED,
             pointInTimeRecoverySpecification: pitr,
             removalPolicy,
         });
 
-        this.exportBatchTable.addGlobalSecondaryIndex({
-            indexName: 'exportBatchId-index',
-            partitionKey: { name: 'exportBatchId', type: dynamodb.AttributeType.STRING },
+        this.exportTable.addGlobalSecondaryIndex({
+            indexName: 'exportId-index',
+            partitionKey: { name: 'exportId', type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.ALL,
         });
 
-        this.exportBatchTable.addGlobalSecondaryIndex({
+        this.exportTable.addGlobalSecondaryIndex({
             indexName: 'userId-createdAt-index',
             partitionKey: { name: 'userId', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.ALL,
         });
 
-        this.exportBatchTable.addGlobalSecondaryIndex({
+        this.exportTable.addGlobalSecondaryIndex({
             indexName: 'status-index',
             partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
             sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },

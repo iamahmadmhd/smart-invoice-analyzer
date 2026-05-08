@@ -1,10 +1,13 @@
 import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
@@ -15,10 +18,12 @@ export interface ApiProps {
     invoiceBucket: s3.IBucket;
     invoiceTable: dynamodb.ITable;
     processingJobTable: dynamodb.ITable;
-    exportBatchTable: dynamodb.ITable;
+    exportTable: dynamodb.ITable;
     insightTable: dynamodb.ITable;
     userTable: dynamodb.ITable;
     exportQueueUrl: string;
+    domainName?: string;
+    hostedZone?: route53.IHostedZone;
 }
 
 const API_DIST = path.join(__dirname, '../../../apps/api/dist');
@@ -42,7 +47,7 @@ export class Api extends Construct {
         const commonEnv: Record<string, string> = {
             INVOICE_TABLE: props.invoiceTable.tableName,
             PROCESSING_JOB_TABLE: props.processingJobTable.tableName,
-            EXPORT_BATCH_TABLE: props.exportBatchTable.tableName,
+            EXPORT_BATCH_TABLE: props.exportTable.tableName,
             INSIGHT_TABLE: props.insightTable.tableName,
             USER_TABLE: props.userTable.tableName,
             BUCKET_NAME: props.invoiceBucket.bucketName,
@@ -95,10 +100,10 @@ export class Api extends Construct {
         props.insightTable.grantReadData(queryFunction);
 
         props.invoiceTable.grantReadData(validateExportFunction);
-        props.exportBatchTable.grantReadWriteData(validateExportFunction);
+        props.exportTable.grantReadWriteData(validateExportFunction);
 
         props.invoiceTable.grantReadData(createExportFunction);
-        props.exportBatchTable.grantReadWriteData(createExportFunction);
+        props.exportTable.grantReadWriteData(createExportFunction);
         createExportFunction.addToRolePolicy(
             new iam.PolicyStatement({
                 actions: ['sqs:SendMessage'],
@@ -115,11 +120,11 @@ export class Api extends Construct {
             })
         );
 
-        props.exportBatchTable.grantReadData(listExportsFunction);
-        props.exportBatchTable.grantReadData(getExportFunction);
-        props.exportBatchTable.grantReadData(getExportReportFunction);
+        props.exportTable.grantReadData(listExportsFunction);
+        props.exportTable.grantReadData(getExportFunction);
+        props.exportTable.grantReadData(getExportReportFunction);
 
-        props.exportBatchTable.grantReadData(downloadExportFunction);
+        props.exportTable.grantReadData(downloadExportFunction);
         props.invoiceBucket.grantRead(downloadExportFunction);
 
         props.processingJobTable.grantReadData(getJobFunction);
@@ -127,7 +132,7 @@ export class Api extends Construct {
         props.userTable.grantReadWriteData(deleteUserFunction);
         props.invoiceTable.grantReadWriteData(deleteUserFunction);
         props.processingJobTable.grantReadWriteData(deleteUserFunction);
-        props.exportBatchTable.grantReadWriteData(deleteUserFunction);
+        props.exportTable.grantReadWriteData(deleteUserFunction);
         props.insightTable.grantReadWriteData(deleteUserFunction);
         props.invoiceBucket.grantReadWrite(deleteUserFunction);
         props.invoiceTable.grantReadWriteData(updateInvoiceFunction);
@@ -136,9 +141,26 @@ export class Api extends Construct {
         props.processingJobTable.grantReadWriteData(deleteInvoiceFunction);
 
         // ── REST API ────────────────────────────────────────────────────────
+        const certificate =
+            props.domainName && props.hostedZone
+                ? new acm.Certificate(this, 'Certificate', {
+                      domainName: props.domainName,
+                      validation: acm.CertificateValidation.fromDns(props.hostedZone),
+                  })
+                : undefined;
+
         const api = new apigw.RestApi(this, 'RestApi', {
             restApiName: `${props.prefix}-api`,
             deployOptions: { stageName: 'v1' },
+            domainName:
+                props.domainName && certificate
+                    ? {
+                          domainName: props.domainName,
+                          certificate,
+                          endpointType: apigw.EndpointType.REGIONAL,
+                          securityPolicy: apigw.SecurityPolicy.TLS_1_2,
+                      }
+                    : undefined,
             defaultCorsPreflightOptions: {
                 allowOrigins: apigw.Cors.ALL_ORIGINS,
                 allowMethods: apigw.Cors.ALL_METHODS,
@@ -222,8 +244,16 @@ export class Api extends Construct {
             .addResource('me')
             .addMethod('DELETE', fn(deleteUserFunction), auth);
 
+        if (props.domainName && props.hostedZone && api.domainName) {
+            new route53.ARecord(this, 'AliasRecord', {
+                zone: props.hostedZone,
+                recordName: props.domainName,
+                target: route53.RecordTarget.fromAlias(new targets.ApiGateway(api)),
+            });
+        }
+
         // ── Outputs ─────────────────────────────────────────────────────────
-        this.apiUrl = api.url;
-        new cdk.CfnOutput(scope, 'ApiUrl', { value: api.url });
+        this.apiUrl = props.domainName ? `https://${props.domainName}` : api.url;
+        new cdk.CfnOutput(scope, 'ApiUrl', { value: this.apiUrl });
     }
 }

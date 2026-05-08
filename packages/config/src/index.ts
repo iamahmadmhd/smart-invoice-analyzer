@@ -36,12 +36,12 @@ const configSchema = z.object({
     // Feature flags
     ENABLE_ANOMALY_DETECTION: z
         .string()
-        .transform((v) => v === 'true')
-        .default(true),
+        .default('true')
+        .transform((v) => v === 'true'),
     ENABLE_DUPLICATE_DETECTION: z
         .string()
-        .transform((v) => v === 'true')
-        .default(true),
+        .default('true')
+        .transform((v) => v === 'true'),
 });
 
 export type Config = z.infer<typeof configSchema>;

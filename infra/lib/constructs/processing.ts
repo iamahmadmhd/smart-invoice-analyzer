@@ -15,7 +15,7 @@ export interface ProcessingProps {
     invoiceBucket: s3.IBucket;
     invoiceTable: dynamodb.ITable;
     processingJobTable: dynamodb.ITable;
-    exportBatchTable: dynamodb.ITable;
+    exportTable: dynamodb.ITable;
     insightTable: dynamodb.ITable;
     userTable: dynamodb.ITable;
 }
@@ -38,7 +38,7 @@ export class Processing extends Construct {
             invoiceBucket,
             invoiceTable,
             processingJobTable,
-            exportBatchTable,
+            exportTable,
             insightTable,
             userTable,
         } = props;
@@ -49,7 +49,7 @@ export class Processing extends Construct {
         const commonEnv: Record<string, string> = {
             INVOICE_TABLE: invoiceTable.tableName,
             PROCESSING_JOB_TABLE: processingJobTable.tableName,
-            EXPORT_BATCH_TABLE: exportBatchTable.tableName,
+            EXPORT_BATCH_TABLE: exportTable.tableName,
             INSIGHT_TABLE: insightTable.tableName,
             USER_TABLE: userTable.tableName,
             BUCKET_NAME: invoiceBucket.bucketName,
@@ -201,7 +201,7 @@ export class Processing extends Construct {
             new lambdaEventSources.SqsEventSource(exportQueue, { batchSize: 1 })
         );
         invoiceTable.grantReadWriteData(exportWorker);
-        exportBatchTable.grantReadWriteData(exportWorker);
+        exportTable.grantReadWriteData(exportWorker);
         invoiceBucket.grantReadWrite(exportWorker);
         processingJobTable.grantReadWriteData(exportWorker);
 

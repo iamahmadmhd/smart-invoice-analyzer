@@ -41,5 +41,9 @@ yarn-error.log*
 .vscode/
 .idea/
 
-# Agent rules
+# Agents
 .amazonq/
+
+# Release keys
+*.keystore
+*.keystore.*

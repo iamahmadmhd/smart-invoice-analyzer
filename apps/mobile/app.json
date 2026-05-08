@@ -2,14 +2,14 @@
     "expo": {
         "name": "Smart Invoice Analyzer",
         "slug": "smart-invoice-analyzer",
-        "version": "1.0.0",
+        "version": "0.1.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
         "scheme": "smart-invoice-analyzer",
         "userInterfaceStyle": "automatic",
         "ios": {
-            "icon": "./assets/expo.icon/icon.json",
-            "bundleIdentifier": "com.anonymous.smartinvoiceanalyzer"
+            "icon": "./assets/expo.icon",
+            "bundleIdentifier": "com.iamahmadmhd.smartinvoiceanalyzer"
         },
         "android": {
             "adaptiveIcon": {
@@ -19,10 +19,10 @@
                 "monochromeImage": "./assets/images/android-icon-monochrome.png"
             },
             "predictiveBackGestureEnabled": false,
-            "package": "com.anonymous.smartinvoiceanalyzer"
+            "package": "com.iamahmadmhd.smartinvoiceanalyzer"
         },
         "web": {
-            "output": "server",
+            "output": "single",
             "favicon": "./assets/images/favicon.png"
         },
         "plugins": [
@@ -58,10 +58,7 @@
             "reactCompiler": true
         },
         "extra": {
-            "router": {},
-            "eas": {
-                "projectId": "ddd559a3-2259-4aa3-945f-d2ffabc4223a"
-            }
+            "router": {}
         },
         "owner": "iamahmadmhd"
     }

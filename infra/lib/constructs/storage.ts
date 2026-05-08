@@ -9,6 +9,8 @@ interface StorageProps {
 
 export class Storage extends Construct {
     public readonly invoiceBucket: s3.Bucket;
+    public readonly mobileAppArtifactsBucket: s3.Bucket;
+    public readonly webAppBucket: s3.Bucket;
 
     constructor(scope: Construct, id: string, props: StorageProps) {
         super(scope, id);
@@ -29,6 +31,25 @@ export class Storage extends Construct {
                     maxAge: 3000,
                 },
             ],
+        });
+
+        this.webAppBucket = new s3.Bucket(this, 'WebAppBucket', {
+            bucketName: `${props.prefix}-web-app`,
+            encryption: s3.BucketEncryption.S3_MANAGED,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
+            removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+            autoDeleteObjects: !props.prod,
+        });
+
+        this.mobileAppArtifactsBucket = new s3.Bucket(this, 'MobileAppArtifactsBucket', {
+            bucketName: `${props.prefix}-mobile-app-artifacts`,
+            encryption: s3.BucketEncryption.S3_MANAGED,
+            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+            enforceSSL: true,
+            versioned: true,
+            removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+            autoDeleteObjects: !props.prod,
         });
     }
 }

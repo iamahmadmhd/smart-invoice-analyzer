@@ -1,14 +1,14 @@
 {
     "name": "@smart-invoice-analyzer/infra",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "private": true,
     "main": "bin/app.js",
     "scripts": {
         "build": "echo 'No build for infra'",
         "watch": "tsc -w",
         "cdk": "cdk",
-        "deploy:dev": "cdk deploy sia-dev --require-approval never",
-        "deploy:pipeline": "cdk deploy PipelineStack-Staging PipelineStack-Prod --require-approval never",
+        "deploy:dev": "cdk deploy SIADev --require-approval never",
+        "deploy:pipeline": "cdk deploy SIAPipeline --require-approval never",
         "synth": "cdk synth",
         "lint": "echo 'No lint for infra'",
         "check-types": "tsc --noEmit"
