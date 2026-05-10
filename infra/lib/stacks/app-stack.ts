@@ -7,6 +7,7 @@ import { Database } from '../constructs/database';
 import { Monitoring } from '../constructs/monitoring';
 import { Processing } from '../constructs/processing';
 import { Storage } from '../constructs/storage';
+import { WebAppHosting } from '../constructs/web-app-hosting';
 
 interface AppStackProps extends cdk.StackProps {
     stage: 'dev' | 'prod';
@@ -48,7 +49,15 @@ export class AppStack extends cdk.Stack {
             exportQueueUrl: processing.exportQueueUrl,
         });
 
-        // ── Monitoring ──────────────────────────────────────────────────────
+        // ── Web app hosting ────────────────────────────────────────────────
+        // CloudFront distribution with OAC in front of the S3 web app bucket.
+        // The bucket itself has no public access; all traffic goes via the CDN.
+        const webApp = new WebAppHosting(this, 'WebAppHosting', {
+            webAppBucket: storage.webAppBucket,
+            prod,
+        });
+
+        // ── Monitoring ─────────────────────────────────────────────────────
         new Monitoring(this, 'Monitoring', {
             prefix,
             lambdaFunctions: [
@@ -66,6 +75,7 @@ export class AppStack extends cdk.Stack {
             ],
         });
 
+        // ── SSM parameters (production only, consumed by the deploy pipeline) ──
         if (prod) {
             this.putParameter('ApiUrlParameter', 'api-url', api.apiUrl);
             this.putParameter('UserPoolIdParameter', 'user-pool-id', auth.userPool.userPoolId);
@@ -84,6 +94,14 @@ export class AppStack extends cdk.Stack {
                 'mobile-app-artifacts-bucket-name',
                 storage.mobileAppArtifactsBucket.bucketName
             );
+            // Distribution ID is needed for `aws cloudfront create-invalidation`
+            // after each web deploy so stale HTML is purged from edge caches.
+            this.putParameter(
+                'CloudFrontDistributionIdParameter',
+                'cloudfront-distribution-id',
+                webApp.distribution.distributionId
+            );
+            this.putParameter('WebAppUrlParameter', 'web-app-url', webApp.distributionUrl);
         }
     }
 

@@ -11,7 +11,8 @@
         "web": "expo start --web",
         "lint": "expo lint",
         "build:web": "expo export --platform web --output-dir dist",
-        "build:android:apk": "bash scripts/build-android-apk.sh"
+        "build:android:apk": "eas build --platform android --profile production --local --output ./build.apk",
+        "build:android:eas": "eas build --platform android --profile production --non-interactive"
     },
     "dependencies": {
         "@aws-amplify/react-native": "^1.3.3",
@@ -58,6 +59,7 @@
     },
     "devDependencies": {
         "@types/react": "~19.2.2",
+        "eas-cli": "^18.11.0",
         "eslint": "^9.0.0",
         "eslint-config-expo": "~55.0.0",
         "typescript": "~5.9.2"
