@@ -30,15 +30,28 @@ export class PipelineStack extends cdk.Stack {
             synth: new pipelines.CodeBuildStep('Synth', {
                 input: source,
                 buildEnvironment: {
-                    buildImage: codebuild.LinuxBuildImage.fromDockerRegistry('node:22'),
+                    buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
                 },
                 commands: [
+                    'node --version',
+                    'npm --version',
+                    'aws --version',
                     'npm ci',
                     'npm run lint',
                     'npm run check-types',
                     'npm run build',
                     'cd infra && npx cdk synth',
                 ],
+                partialBuildSpec: codebuild.BuildSpec.fromObject({
+                    version: '0.2',
+                    phases: {
+                        install: {
+                            'runtime-versions': {
+                                nodejs: '22',
+                            },
+                        },
+                    },
+                }),
                 primaryOutputDirectory: 'infra/cdk.out',
             }),
         });
@@ -64,7 +77,7 @@ export class PipelineStack extends cdk.Stack {
         return new pipelines.CodeBuildStep('DeployWeb', {
             input: source,
             buildEnvironment: {
-                buildImage: codebuild.LinuxBuildImage.fromDockerRegistry('node:22'),
+                buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
             },
             rolePolicyStatements: [
                 new iam.PolicyStatement({
@@ -83,6 +96,9 @@ export class PipelineStack extends cdk.Stack {
                 }),
             ],
             commands: [
+                'node --version',
+                'npm --version',
+                'aws --version',
                 'npm ci',
                 `API_URL=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/api-url --query Parameter.Value --output text)`,
                 `USER_POOL_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-id --query Parameter.Value --output text)`,
@@ -92,6 +108,21 @@ export class PipelineStack extends cdk.Stack {
                 'EXPO_PUBLIC_API_URL="$API_URL" EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID" npm run build:web',
                 'aws s3 sync dist "s3://$WEB_BUCKET" --delete',
             ],
+            partialBuildSpec: codebuild.BuildSpec.fromObject({
+                version: '0.2',
+                phases: {
+                    install: {
+                        'runtime-versions': {
+                            nodejs: '22',
+                        },
+                        commands: [
+                            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                            'unzip awscliv2.zip',
+                            './aws/install',
+                        ],
+                    },
+                },
+            }),
         });
     }
 
@@ -100,7 +131,7 @@ export class PipelineStack extends cdk.Stack {
             input: source,
             timeout: cdk.Duration.hours(2),
             buildEnvironment: {
-                buildImage: codebuild.LinuxBuildImage.fromDockerRegistry('node:22'),
+                buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
                 privileged: true,
             },
             rolePolicyStatements: [
@@ -120,6 +151,9 @@ export class PipelineStack extends cdk.Stack {
                 }),
             ],
             commands: [
+                'node --version',
+                'npm --version',
+                'aws --version',
                 'apt-get update',
                 'apt-get install -y openjdk-17-jdk unzip wget',
                 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64',
@@ -150,6 +184,21 @@ export class PipelineStack extends cdk.Stack {
                 'aws s3 cp "$APK_PATH" "s3://$APK_BUCKET/android/releases/${CODEBUILD_RESOLVED_SOURCE_VERSION}.apk"',
                 'aws s3 cp "$APK_PATH" "s3://$APK_BUCKET/android/latest.apk"',
             ],
+            partialBuildSpec: codebuild.BuildSpec.fromObject({
+                version: '0.2',
+                phases: {
+                    install: {
+                        'runtime-versions': {
+                            nodejs: '22',
+                        },
+                        commands: [
+                            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                            'unzip awscliv2.zip',
+                            './aws/install',
+                        ],
+                    },
+                },
+            }),
         });
     }
 }
