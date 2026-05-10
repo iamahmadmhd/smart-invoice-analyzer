@@ -207,15 +207,7 @@ export class PipelineStack extends cdk.Stack {
                 // the APK at compile time on Expo's cloud machines. Shell `export`
                 // alone has no effect on remote builds.
                 'echo "Triggering EAS build..."',
-                'BUILD_JSON=$(npx eas build \\',
-                '  --platform android \\',
-                '  --profile production \\',
-                '  --non-interactive \\',
-                '  --wait \\',
-                '  --json \\',
-                '  --env EXPO_PUBLIC_API_URL="$API_URL" \\',
-                '  --env EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" \\',
-                '  --env EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID")',
+                'BUILD_JSON=$(npx eas build --platform android --profile production --non-interactive --wait --json --env EXPO_PUBLIC_API_URL="$API_URL" --env EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" --env EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID")',
 
                 // Extract the artifact download URL from the build record.
                 'BUILD_URL=$(echo "$BUILD_JSON" | jq -r \'.artifacts.buildUrl\')',
