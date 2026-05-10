@@ -12,7 +12,6 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
 export interface ProcessingProps {
-    prefix: string;
     prod: boolean;
     invoiceBucket: s3.IBucket;
     invoiceTable: dynamodb.ITable;
@@ -39,7 +38,6 @@ export class Processing extends Construct {
         super(scope, id);
 
         const {
-            prefix,
             prod,
             invoiceBucket,
             invoiceTable,

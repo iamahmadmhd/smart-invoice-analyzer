@@ -52,7 +52,7 @@ export class Storage extends Construct {
 
         // Add tags for identification
         cdk.Tags.of(this.invoiceBucket).add('Purpose', 'InvoiceStorage');
-        cdk.Tags.of(this.webAppBucket).add('Purpose', 'WebAppHosting');
+        cdk.Tags.of(this.webAppBucket).add('Purpose', 'WebApp');
         cdk.Tags.of(this.mobileAppArtifactsBucket).add('Purpose', 'MobileAppArtifacts');
     }
 }

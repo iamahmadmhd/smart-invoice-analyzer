@@ -1,15 +1,12 @@
 import * as path from 'path';
 import * as cdk from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
@@ -25,8 +22,6 @@ export interface ApiProps {
     insightTable: dynamodb.ITable;
     userTable: dynamodb.ITable;
     exportQueueUrl: string;
-    domainName?: string;
-    hostedZone?: route53.IHostedZone;
 }
 
 const API_DIST = path.join(__dirname, '../../../apps/api/dist');
@@ -167,14 +162,6 @@ export class Api extends Construct {
         props.processingJobTable.grantReadWriteData(deleteInvoiceFunction);
 
         // ── REST API ────────────────────────────────────────────────────────
-        const certificate =
-            props.domainName && props.hostedZone
-                ? new acm.Certificate(this, 'Certificate', {
-                      domainName: props.domainName,
-                      validation: acm.CertificateValidation.fromDns(props.hostedZone),
-                  })
-                : undefined;
-
         const api = new apigw.RestApi(this, 'RestApi', {
             deployOptions: {
                 stageName: 'v1',
@@ -183,15 +170,6 @@ export class Api extends Construct {
                 loggingLevel: apigw.MethodLoggingLevel.INFO,
                 dataTraceEnabled: false,
             },
-            domainName:
-                props.domainName && certificate
-                    ? {
-                          domainName: props.domainName,
-                          certificate,
-                          endpointType: apigw.EndpointType.REGIONAL,
-                          securityPolicy: apigw.SecurityPolicy.TLS_1_2,
-                      }
-                    : undefined,
             defaultCorsPreflightOptions: {
                 allowOrigins: apigw.Cors.ALL_ORIGINS,
                 allowMethods: apigw.Cors.ALL_METHODS,
@@ -294,16 +272,8 @@ export class Api extends Construct {
             .addResource('me')
             .addMethod('DELETE', fn(deleteUserFunction), auth);
 
-        if (props.domainName && props.hostedZone && api.domainName) {
-            new route53.ARecord(this, 'AliasRecord', {
-                zone: props.hostedZone,
-                recordName: props.domainName,
-                target: route53.RecordTarget.fromAlias(new targets.ApiGateway(api)),
-            });
-        }
-
         // ── Outputs ─────────────────────────────────────────────────────────
-        this.apiUrl = props.domainName ? `https://${props.domainName}` : api.url;
+        this.apiUrl = api.url;
         new cdk.CfnOutput(scope, 'ApiUrl', { value: this.apiUrl });
     }
 }
