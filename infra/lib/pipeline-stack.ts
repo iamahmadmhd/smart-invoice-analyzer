@@ -32,12 +32,6 @@ export class PipelineStack extends cdk.Stack {
                 buildEnvironment: {
                     buildImage: codebuild.LinuxBuildImage.fromDockerRegistry('node:22'),
                 },
-                rolePolicyStatements: [
-                    new iam.PolicyStatement({
-                        actions: ['route53:ListHostedZones', 'route53:ListHostedZonesByName'],
-                        resources: ['*'],
-                    }),
-                ],
                 commands: [
                     'npm ci',
                     'npm run lint',
@@ -87,10 +81,6 @@ export class PipelineStack extends cdk.Stack {
                     actions: ['s3:DeleteObject', 's3:GetObject', 's3:PutObject'],
                     resources: [`arn:aws:s3:::*/*`],
                 }),
-                new iam.PolicyStatement({
-                    actions: ['cloudfront:CreateInvalidation'],
-                    resources: ['*'],
-                }),
             ],
             commands: [
                 'npm ci',
@@ -98,11 +88,9 @@ export class PipelineStack extends cdk.Stack {
                 `USER_POOL_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-id --query Parameter.Value --output text)`,
                 `USER_POOL_CLIENT_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-client-id --query Parameter.Value --output text)`,
                 `WEB_BUCKET=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/web-app-bucket-name --query Parameter.Value --output text)`,
-                `WEB_DISTRIBUTION_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/web-app-distribution-id --query Parameter.Value --output text)`,
                 'cd apps/mobile',
                 'EXPO_PUBLIC_API_URL="$API_URL" EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID" npm run build:web',
                 'aws s3 sync dist "s3://$WEB_BUCKET" --delete',
-                'aws cloudfront create-invalidation --distribution-id "$WEB_DISTRIBUTION_ID" --paths "/*"',
             ],
         });
     }
