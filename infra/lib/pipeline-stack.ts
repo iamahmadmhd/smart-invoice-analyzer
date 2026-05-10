@@ -35,6 +35,7 @@ export class PipelineStack extends cdk.Stack {
                 commands: [
                     'node --version',
                     'npm --version',
+                    'aws --version',
                     'npm ci',
                     'npm run lint',
                     'npm run check-types',
@@ -97,6 +98,7 @@ export class PipelineStack extends cdk.Stack {
             commands: [
                 'node --version',
                 'npm --version',
+                'aws --version',
                 'npm ci',
                 `API_URL=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/api-url --query Parameter.Value --output text)`,
                 `USER_POOL_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-id --query Parameter.Value --output text)`,
@@ -113,6 +115,11 @@ export class PipelineStack extends cdk.Stack {
                         'runtime-versions': {
                             nodejs: '22',
                         },
+                        commands: [
+                            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                            'unzip awscliv2.zip',
+                            './aws/install',
+                        ],
                     },
                 },
             }),
@@ -146,6 +153,7 @@ export class PipelineStack extends cdk.Stack {
             commands: [
                 'node --version',
                 'npm --version',
+                'aws --version',
                 'apt-get update',
                 'apt-get install -y openjdk-17-jdk unzip wget',
                 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64',
@@ -183,6 +191,11 @@ export class PipelineStack extends cdk.Stack {
                         'runtime-versions': {
                             nodejs: '22',
                         },
+                        commands: [
+                            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                            'unzip awscliv2.zip',
+                            './aws/install',
+                        ],
                     },
                 },
             }),
