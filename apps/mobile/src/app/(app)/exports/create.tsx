@@ -11,6 +11,7 @@ export default function ExportCreateScreen() {
     // Reset wizard state when screen mounts
     useEffect(() => {
         reset();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleSuccess = useCallback(
