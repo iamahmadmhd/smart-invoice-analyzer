@@ -19,7 +19,8 @@
                 "monochromeImage": "./assets/images/android-icon-monochrome.png"
             },
             "predictiveBackGestureEnabled": false,
-            "package": "com.iamahmadmhd.smartinvoiceanalyzer"
+            "package": "com.iamahmadmhd.smartinvoiceanalyzer",
+            "permissions": ["android.permission.RECORD_AUDIO"]
         },
         "web": {
             "output": "single",
@@ -58,7 +59,10 @@
             "reactCompiler": true
         },
         "extra": {
-            "router": {}
+            "router": {},
+            "eas": {
+                "projectId": "ddd559a3-2259-4aa3-945f-d2ffabc4223a"
+            }
         },
         "owner": "iamahmadmhd"
     }

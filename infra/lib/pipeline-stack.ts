@@ -124,10 +124,11 @@ export class PipelineStack extends cdk.Stack {
     private createBuildAndroidApkStep(source: pipelines.IFileSetProducer) {
         return new pipelines.CodeBuildStep('BuildAndroidApk', {
             input: source,
-            timeout: cdk.Duration.hours(2),
+            timeout: cdk.Duration.hours(1), // Reduced timeout since EAS handles the heavy lifting
             buildEnvironment: {
                 buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
-                privileged: true,
+                privileged: false, // No longer need privileged mode
+                computeType: codebuild.ComputeType.SMALL, // Back to small since we're not building locally
             },
             rolePolicyStatements: [
                 new iam.PolicyStatement({
@@ -149,35 +150,54 @@ export class PipelineStack extends cdk.Stack {
                 'node --version',
                 'npm --version',
                 'aws --version',
-                'apt-get update',
-                'apt-get install -y openjdk-17-jdk unzip wget',
-                'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64',
-                'export ANDROID_HOME=/opt/android-sdk',
-                'export ANDROID_SDK_ROOT=$ANDROID_HOME',
-                'export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools',
-                'mkdir -p $ANDROID_HOME/cmdline-tools',
-                'wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/android-commandline-tools.zip',
-                'unzip -q /tmp/android-commandline-tools.zip -d /tmp/android-commandline-tools',
-                'mv /tmp/android-commandline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest',
-                'yes | sdkmanager --licenses >/dev/null || true',
-                'sdkmanager "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0"',
-                'npm ci',
+                'echo "📱 Starting EAS Android build..."',
+
+                // Get configuration from SSM
                 `API_URL=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/api-url --query Parameter.Value --output text)`,
                 `USER_POOL_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-id --query Parameter.Value --output text)`,
                 `USER_POOL_CLIENT_ID=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/user-pool-client-id --query Parameter.Value --output text)`,
-                `ANDROID_KEYSTORE_BASE64=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/keystore-base64 --with-decryption --query Parameter.Value --output text)`,
-                `ANDROID_KEY_ALIAS=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/key-alias --with-decryption --query Parameter.Value --output text)`,
-                `ANDROID_KEYSTORE_PASSWORD=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/keystore-password --with-decryption --query Parameter.Value --output text)`,
-                `ANDROID_KEY_PASSWORD=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/android/key-password --with-decryption --query Parameter.Value --output text)`,
+                `EXPO_TOKEN=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/expo-token --with-decryption --query Parameter.Value --output text)`,
                 `APK_BUCKET=$(aws ssm get-parameter --name ${SSM_PARAMETER_PREFIX}/mobile-app-artifacts-bucket-name --query Parameter.Value --output text)`,
+
+                // Set environment variables
                 'export EXPO_PUBLIC_API_URL="$API_URL" EXPO_PUBLIC_USER_POOL_ID="$USER_POOL_ID" EXPO_PUBLIC_USER_POOL_CLIENT_ID="$USER_POOL_CLIENT_ID"',
-                'export ANDROID_KEYSTORE_BASE64 ANDROID_KEY_ALIAS ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_PASSWORD',
+                'export EXPO_TOKEN="$EXPO_TOKEN"',
+
+                // Install dependencies and build with EAS
+                'npm ci',
                 'cd apps/mobile',
-                'npm run build:android:apk',
-                'APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)',
-                'test -n "$APK_PATH"',
-                'aws s3 cp "$APK_PATH" "s3://$APK_BUCKET/android/releases/${CODEBUILD_RESOLVED_SOURCE_VERSION}.apk"',
-                'aws s3 cp "$APK_PATH" "s3://$APK_BUCKET/android/latest.apk"',
+                'npm ci',
+
+                // Authenticate with Expo
+                'npx expo login --non-interactive',
+
+                // Build with EAS
+                'echo "🚀 Starting EAS build..."',
+                'npx eas build --platform android --profile production --non-interactive --wait',
+
+                // Download the built APK
+                'echo "📥 Downloading built APK..."',
+                'BUILD_ID=$(npx eas build:list --platform android --status finished --limit 1 --json | jq -r ".[0].id")',
+                'echo "Build ID: $BUILD_ID"',
+                'npx eas build:download --id "$BUILD_ID" --output ./build.apk',
+
+                // Verify APK was downloaded
+                'test -f "./build.apk"',
+                'ls -la ./build.apk',
+                'APK_SIZE=$(stat -f%z "./build.apk" 2>/dev/null || stat -c%s "./build.apk" 2>/dev/null || echo "0")',
+                'echo "📊 APK size: ${APK_SIZE} bytes"',
+
+                // Upload to S3
+                'echo "🚀 Uploading APK to S3..."',
+                'aws s3 cp "./build.apk" "s3://$APK_BUCKET/android/releases/${CODEBUILD_RESOLVED_SOURCE_VERSION}.apk"',
+                'aws s3 cp "./build.apk" "s3://$APK_BUCKET/android/latest.apk"',
+
+                // Verify uploads
+                'echo "✅ Upload verification..."',
+                'aws s3 ls "s3://$APK_BUCKET/android/releases/${CODEBUILD_RESOLVED_SOURCE_VERSION}.apk"',
+                'aws s3 ls "s3://$APK_BUCKET/android/latest.apk"',
+
+                'echo "🎉 EAS Android build completed successfully!"',
             ],
             partialBuildSpec: codebuild.BuildSpec.fromObject({
                 version: '0.2',
