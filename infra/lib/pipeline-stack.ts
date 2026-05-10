@@ -115,11 +115,6 @@ export class PipelineStack extends cdk.Stack {
                         'runtime-versions': {
                             nodejs: '22',
                         },
-                        commands: [
-                            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
-                            'unzip awscliv2.zip',
-                            './aws/install',
-                        ],
                     },
                 },
             }),
@@ -191,11 +186,6 @@ export class PipelineStack extends cdk.Stack {
                         'runtime-versions': {
                             nodejs: '22',
                         },
-                        commands: [
-                            'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
-                            'unzip awscliv2.zip',
-                            './aws/install',
-                        ],
                     },
                 },
             }),
