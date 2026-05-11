@@ -193,6 +193,14 @@ export class PipelineStack extends cdk.Stack {
                 'cd apps/mobile',
                 'npm ci',
 
+                // Debug: Check EAS CLI version and authentication status
+                'echo "EAS CLI version:"',
+                'npx eas --version',
+                'echo "Checking EAS authentication..."',
+                'npx eas whoami || echo "Not authenticated - using EXPO_TOKEN"',
+                'echo "Checking project configuration..."',
+                'npx eas project:info || echo "Project info failed"',
+
                 // EXPO_TOKEN is already in the environment (injected by CodeBuild
                 // from the parameter-store block), so no login call is needed.
                 // `expo login --non-interactive` does not support token auth and

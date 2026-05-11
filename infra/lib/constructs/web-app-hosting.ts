@@ -69,7 +69,7 @@ export class WebAppHosting extends Construct {
                             "style-src 'self' 'unsafe-inline'",
                             "img-src 'self' data: blob:",
                             "font-src 'self' data:",
-                            "connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com",
+                            "connect-src 'self' https://*.amazonaws.com https://*.amazoncognito.com https://*.cloudfront.net https://*.iamahmadmhd.com",
                             "worker-src 'self' blob:",
                             "frame-ancestors 'none'",
                         ].join('; '),
