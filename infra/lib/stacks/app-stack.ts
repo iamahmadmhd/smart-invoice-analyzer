@@ -89,11 +89,6 @@ export class AppStack extends cdk.Stack {
                 'web-app-bucket-name',
                 storage.webAppBucket.bucketName
             );
-            this.putParameter(
-                'MobileAppArtifactsBucketNameParameter',
-                'mobile-app-artifacts-bucket-name',
-                storage.mobileAppArtifactsBucket.bucketName
-            );
             // Distribution ID is needed for `aws cloudfront create-invalidation`
             // after each web deploy so stale HTML is purged from edge caches.
             this.putParameter(

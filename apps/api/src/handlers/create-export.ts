@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { getUserContext, parseBody } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { CreateExportRequestSchema, ExportWorkerEvent } from '@smart-invoice-analyzer/contracts';
@@ -11,8 +10,7 @@ import {
 } from '@smart-invoice-analyzer/domain';
 import { ConflictError, withObservability } from '@smart-invoice-analyzer/observability';
 import { created } from '../utils/response';
-
-const sqs = new SQSClient({});
+import { sendToQueue } from '../utils/sqs';
 
 const handler = withObservability(async (event) => {
     const user = getUserContext(event as never);
@@ -53,12 +51,7 @@ const handler = withObservability(async (event) => {
         includeDocumentReferences: body.includeDocumentReferences ?? false,
     };
 
-    await sqs.send(
-        new SendMessageCommand({
-            QueueUrl: config.EXPORT_QUEUE_URL,
-            MessageBody: JSON.stringify(workerEvent),
-        })
-    );
+    await sendToQueue(config.EXPORT_QUEUE_URL, workerEvent);
 
     return created({ exportBatchId, status: 'PENDING' });
 });

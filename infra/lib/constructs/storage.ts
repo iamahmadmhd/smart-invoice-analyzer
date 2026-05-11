@@ -9,7 +9,6 @@ interface StorageProps {
 
 export class Storage extends Construct {
     public readonly invoiceBucket: s3.Bucket;
-    public readonly mobileAppArtifactsBucket: s3.Bucket;
     public readonly webAppBucket: s3.Bucket;
 
     constructor(scope: Construct, id: string, props: StorageProps) {
@@ -41,18 +40,8 @@ export class Storage extends Construct {
             autoDeleteObjects: !props.prod,
         });
 
-        this.mobileAppArtifactsBucket = new s3.Bucket(this, 'MobileAppArtifactsBucket', {
-            encryption: s3.BucketEncryption.S3_MANAGED,
-            blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-            enforceSSL: true,
-            versioned: true,
-            removalPolicy: props.prod ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
-            autoDeleteObjects: !props.prod,
-        });
-
         // Add tags for identification
         cdk.Tags.of(this.invoiceBucket).add('Purpose', 'InvoiceStorage');
-        cdk.Tags.of(this.webAppBucket).add('Purpose', 'WebApp');
-        cdk.Tags.of(this.mobileAppArtifactsBucket).add('Purpose', 'MobileAppArtifacts');
+        cdk.Tags.of(this.webAppBucket).add('Purpose', 'WebAppStorage');
     }
 }
