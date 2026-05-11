@@ -1,13 +1,25 @@
+import { randomUUID } from 'crypto';
+import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { getUserContext, parseBody, requirePathParam } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { UpdateInvoiceRequestSchema } from '@smart-invoice-analyzer/contracts';
-import { InvoiceRepository } from '@smart-invoice-analyzer/data-access';
+import {
+    InsightRepository,
+    InvoiceRepository,
+    ProcessingJobRepository,
+} from '@smart-invoice-analyzer/data-access';
+import { generateJobId } from '@smart-invoice-analyzer/domain';
 import {
     ConflictError,
+    logger,
     NotFoundError,
     withObservability,
 } from '@smart-invoice-analyzer/observability';
 import { ok } from '../utils/response';
+import { sendToQueue } from '../utils/sqs';
+
+/** Statuses where OCR + enrichment have already run — safe to re-trigger detection. */
+const REPROCESSABLE_STATUSES = new Set(['ENRICHED', 'REVIEW_READY', 'COMPLETED']);
 
 const handler = withObservability(async (event) => {
     const user = getUserContext(event as never);
@@ -22,7 +34,6 @@ const handler = withObservability(async (event) => {
         throw new NotFoundError('Invoice', invoiceId);
     }
 
-    // Prevent editing exported invoices
     if (invoice.exportStatus === 'EXPORTED') {
         throw new ConflictError('Cannot edit an invoice that has already been exported', {
             invoiceId,
@@ -34,7 +45,7 @@ const handler = withObservability(async (event) => {
     const updated = {
         ...invoice,
         ...body,
-        // These fields must never be overwritten by user input
+        // Immutable fields — never overwritten by user input
         invoiceId: invoice.invoiceId,
         userId: invoice.userId,
         status: invoice.status,
@@ -49,7 +60,66 @@ const handler = withObservability(async (event) => {
         updatedAt: now,
     };
 
+    // ── Tax recalculation ─────────────────────────────────────────────────
+    // Resolve effective values (user-supplied takes priority over existing)
+    const effectiveNet = body.netAmount ?? invoice.netAmount;
+    const effectiveTaxRate = body.taxRate ?? invoice.taxRate;
+
+    // Derive taxAmount from net * rate if not explicitly supplied
+    if (
+        effectiveNet !== undefined &&
+        effectiveTaxRate !== undefined &&
+        body.taxAmount === undefined
+    ) {
+        updated.taxAmount = parseFloat(((effectiveNet * effectiveTaxRate) / 100).toFixed(2));
+    }
+
+    // Derive totalAmount from net + tax if not explicitly supplied
+    const effectiveTax = updated.taxAmount ?? invoice.taxAmount;
+    const effectiveNet2 = updated.netAmount ?? invoice.netAmount;
+    if (
+        effectiveNet2 !== undefined &&
+        effectiveTax !== undefined &&
+        body.totalAmount === undefined
+    ) {
+        updated.totalAmount = parseFloat((effectiveNet2 + effectiveTax).toFixed(2));
+    }
+
     await repo.put(updated);
+
+    if (REPROCESSABLE_STATUSES.has(invoice.status) && config.ENRICHMENT_QUEUE_URL) {
+        const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
+        // Delete ALL stale insights
+        await insightRepo.deleteByTypesForInvoice(invoiceId, ['SUMMARY', 'DUPLICATE', 'ANOMALY']);
+
+        await repo.put({ ...updated, duplicateFlag: false, anomalyFlag: false });
+
+        const jobId = generateJobId();
+        const correlationId = randomUUID();
+
+        const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
+        await jobRepo.put({
+            jobId,
+            invoiceId,
+            userId: user.userId,
+            stage: 'ENRICHMENT',
+            status: 'PENDING',
+            retryCount: 0,
+            startedAt: now,
+        });
+
+        // Enrich first (regenerates summary), then it chains to duplicate → anomaly
+        await sendToQueue(config.ENRICHMENT_QUEUE_URL, {
+            invoiceId,
+            userId: user.userId,
+            jobId,
+            correlationId,
+            attempt: 1,
+            rawOutputS3Key: `${config.DERIVED_PREFIX}${user.userId}/${invoiceId}/ocr.json`,
+        });
+
+        logger.info('Re-triggered enrichment pipeline after invoice update', { invoiceId, jobId });
+    }
 
     return ok(updated);
 });

@@ -46,7 +46,8 @@ export class AppStack extends cdk.Stack {
             exportTable: database.exportTable,
             insightTable: database.insightTable,
             userTable: database.userTable,
-            exportQueueUrl: processing.exportQueueUrl,
+            exportQueue: processing.exportQueue,
+            enrichmentQueue: processing.enrichmentQueue,
         });
 
         // ── Web app hosting ────────────────────────────────────────────────

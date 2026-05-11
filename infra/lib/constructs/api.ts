@@ -8,6 +8,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
 export interface ApiProps {
@@ -21,7 +22,8 @@ export interface ApiProps {
     exportTable: dynamodb.ITable;
     insightTable: dynamodb.ITable;
     userTable: dynamodb.ITable;
-    exportQueueUrl: string;
+    exportQueue: sqs.IQueue;
+    enrichmentQueue: sqs.IQueue;
 }
 
 const API_DIST = path.join(__dirname, '../../../apps/api/dist');
@@ -50,7 +52,7 @@ export class Api extends Construct {
             INSIGHT_TABLE: props.insightTable.tableName,
             USER_TABLE: props.userTable.tableName,
             BUCKET_NAME: props.invoiceBucket.bucketName,
-            EXPORT_QUEUE_URL: props.exportQueueUrl,
+            EXPORT_QUEUE_URL: props.exportQueue.queueUrl,
         };
 
         // ── Helper ──────────────────────────────────────────────────────────
@@ -103,7 +105,9 @@ export class Api extends Construct {
         const getExportReportFunction = createFunction('get-export-report');
         const getJobFunction = createFunction('get-job');
         const deleteUserFunction = createFunction('delete-user');
-        const updateInvoiceFunction = createFunction('update-invoice');
+        const updateInvoiceFunction = createFunction('update-invoice', {
+            ENRICHMENT_QUEUE_URL: props.enrichmentQueue.queueUrl,
+        });
         const deleteInvoiceFunction = createFunction('delete-invoice');
 
         // ── Grants ──────────────────────────────────────────────────────────
@@ -128,16 +132,7 @@ export class Api extends Construct {
         createExportFunction.addToRolePolicy(
             new iam.PolicyStatement({
                 actions: ['sqs:SendMessage'],
-                resources: [
-                    cdk.Fn.join('', [
-                        'arn:aws:sqs:',
-                        cdk.Stack.of(this).region,
-                        ':',
-                        cdk.Stack.of(this).account,
-                        ':',
-                        cdk.Fn.select(4, cdk.Fn.split('/', props.exportQueueUrl)),
-                    ]),
-                ],
+                resources: [props.exportQueue.queueArn],
             })
         );
 
@@ -157,6 +152,9 @@ export class Api extends Construct {
         props.insightTable.grantReadWriteData(deleteUserFunction);
         props.invoiceBucket.grantReadWrite(deleteUserFunction);
         props.invoiceTable.grantReadWriteData(updateInvoiceFunction);
+        props.insightTable.grantReadWriteData(updateInvoiceFunction);
+        props.processingJobTable.grantReadWriteData(updateInvoiceFunction);
+        props.enrichmentQueue.grantSendMessages(updateInvoiceFunction);
         props.invoiceTable.grantReadWriteData(deleteInvoiceFunction);
         props.insightTable.grantReadWriteData(deleteInvoiceFunction);
         props.processingJobTable.grantReadWriteData(deleteInvoiceFunction);
