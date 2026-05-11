@@ -96,7 +96,7 @@ export default function HomeScreen() {
                                 variant='body-semibold'
                                 color='primary'
                             >
-                                Create DATEV Export
+                                Create Export
                             </Text>
                             <Text
                                 variant='caption'

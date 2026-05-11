@@ -253,7 +253,7 @@ export class Processing extends Construct {
         insightTable.grantReadWriteData(anomalyWorker);
         processingJobTable.grantReadWriteData(anomalyWorker);
 
-        // 7. Export — generates DATEV EXTF 7.0 CSV, packages ZIP, stores in S3
+        // 7. Export — generates CSV, packages ZIP, stores in S3
         //    Triggered by the API (create-export handler) via exportQueue
         const exportWorker = makeWorker('export', cdk.Duration.seconds(300), {
             EXPORT_PREFIX: 'exports/',

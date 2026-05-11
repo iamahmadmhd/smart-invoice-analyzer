@@ -61,7 +61,7 @@ export default function ExportsScreen() {
                     <EmptyState
                         icon='export'
                         title='No exports yet'
-                        body='Create a DATEV export to send your invoices to your accountant.'
+                        body='Create an export to send your invoices to your accountant.'
                         action={{ label: 'Create Export', onPress: handleCreate }}
                     />
                 </ContainerScrollable>
