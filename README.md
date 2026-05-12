@@ -6,9 +6,6 @@ This project is written as a portfolio-grade product: it demonstrates mobile UX,
 
 ## Demo
 
-```markdown
-## Demo
-
 ### Upload and OCR flow
 
 https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/upload-ocr-flow.MP4
@@ -20,7 +17,6 @@ https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/update-flo
 ### Duplicate detection
 
 https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/duplicate-detection.MP4
-```
 
 ## Why this project matters
 
