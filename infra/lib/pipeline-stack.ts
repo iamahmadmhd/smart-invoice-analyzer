@@ -67,7 +67,17 @@ export class PipelineStack extends cdk.Stack {
             description: 'Smart Invoice Analyzer - Production Application Stack',
         });
 
-        const appStage = pipeline.addStage(prodStage);
+        const appStage = pipeline.addStage(prodStage, {
+            // Manual approval gate: a reviewer must approve in the AWS Console
+            // (or via the CodePipeline API) before the production stack is deployed.
+            // The pipeline pauses here indefinitely until approved or rejected.
+            pre: [
+                new pipelines.ManualApprovalStep('ApproveProductionDeployment', {
+                    comment:
+                        'Review the planned CDK changes (cdk diff) and approve to deploy to production.',
+                }),
+            ],
+        });
 
         appStage.addPost(this.createDeployWebStep(source));
     }

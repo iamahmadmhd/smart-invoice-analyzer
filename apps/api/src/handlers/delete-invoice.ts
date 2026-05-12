@@ -1,7 +1,6 @@
 import { getUserContext, requirePathParam } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import {
-    ExportBatchRepository,
     InsightRepository,
     InvoiceRepository,
     ProcessingJobRepository,
