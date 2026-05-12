@@ -6,6 +6,14 @@ This project is written as a portfolio-grade product: it demonstrates mobile UX,
 
 ## Demo
 
+### Signin
+
+https://github.com/user-attachments/assets/2d70e63c-7258-4a5b-9cf9-6a5c036dba12
+
+### Signup
+
+https://github.com/user-attachments/assets/1d16b232-3b7c-4e99-aaa3-46757bad909d
+
 ### Upload and OCR flow
 
 https://github.com/user-attachments/assets/ffa80f54-6f78-40db-972b-c50c754fc441
