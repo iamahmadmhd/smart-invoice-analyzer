@@ -6,10 +6,11 @@ import {
     InvoiceRepository,
     ProcessingJobRepository,
 } from '@smart-invoice-analyzer/data-access';
-import { ConflictError, logger, withObservability } from '@smart-invoice-analyzer/observability';
+import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { logger, withApiHandler } from '../powertools';
 import { noContent } from '../utils/response';
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const invoiceId = requirePathParam(event as never, 'invoiceId');
     const config = getConfig();
@@ -30,7 +31,6 @@ const handler = withObservability(async (event) => {
     // Cascade: delete insights and processing jobs for this invoice
     const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
     const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
-    const exportBatchRepo = new ExportBatchRepository(config.EXPORT_BATCH_TABLE);
 
     await Promise.all([
         insightRepo.deleteAllForInvoice(invoiceId),

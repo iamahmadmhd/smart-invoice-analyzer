@@ -28,7 +28,8 @@ export class Processing extends Construct {
     /** Exposed so Api construct can wire it to S3 event notifications */
     public readonly orchestratorFunction: lambda.Function;
     /** Exposed so AppStack can pass the URL to the Api construct */
-    public readonly exportQueueUrl: string;
+    public readonly exportQueue: sqs.Queue;
+    public readonly enrichmentQueue: sqs.Queue;
     /** Exposed for monitoring */
     public readonly workerFunctions: lambda.Function[] = [];
     /** Exposed for monitoring */
@@ -253,7 +254,7 @@ export class Processing extends Construct {
         insightTable.grantReadWriteData(anomalyWorker);
         processingJobTable.grantReadWriteData(anomalyWorker);
 
-        // 7. Export — generates DATEV EXTF 7.0 CSV, packages ZIP, stores in S3
+        // 7. Export — generates CSV, packages ZIP, stores in S3
         //    Triggered by the API (create-export handler) via exportQueue
         const exportWorker = makeWorker('export', cdk.Duration.seconds(300), {
             EXPORT_PREFIX: 'exports/',
@@ -268,7 +269,8 @@ export class Processing extends Construct {
         processingJobTable.grantReadWriteData(exportWorker);
 
         // Expose export queue URL so the API create-export handler can enqueue jobs
-        this.exportQueueUrl = exportQueue.queueUrl;
+        this.exportQueue = exportQueue;
+        this.enrichmentQueue = enrichmentQueue;
         new cdk.CfnOutput(scope, 'ExportQueueUrl', { value: exportQueue.queueUrl });
     }
 }

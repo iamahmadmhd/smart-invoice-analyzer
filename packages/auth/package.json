@@ -9,7 +9,7 @@
         "check-types": "tsc --noEmit"
     },
     "dependencies": {
-        "@smart-invoice-analyzer/observability": "*",
+        "@smart-invoice-analyzer/errors": "*",
         "zod": "^4.3.6"
     },
     "devDependencies": {

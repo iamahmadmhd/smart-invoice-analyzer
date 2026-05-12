@@ -46,7 +46,8 @@ export class AppStack extends cdk.Stack {
             exportTable: database.exportTable,
             insightTable: database.insightTable,
             userTable: database.userTable,
-            exportQueueUrl: processing.exportQueueUrl,
+            exportQueue: processing.exportQueue,
+            enrichmentQueue: processing.enrichmentQueue,
         });
 
         // ── Web app hosting ────────────────────────────────────────────────
@@ -88,11 +89,6 @@ export class AppStack extends cdk.Stack {
                 'WebAppBucketNameParameter',
                 'web-app-bucket-name',
                 storage.webAppBucket.bucketName
-            );
-            this.putParameter(
-                'MobileAppArtifactsBucketNameParameter',
-                'mobile-app-artifacts-bucket-name',
-                storage.mobileAppArtifactsBucket.bucketName
             );
             // Distribution ID is needed for `aws cloudfront create-invalidation`
             // after each web deploy so stale HTML is purged from edge caches.

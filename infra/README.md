@@ -89,7 +89,7 @@ infra/
 4. **Enrichment** - Uses AWS Bedrock to fill gaps and categorize
 5. **Duplicate Detection** - Identifies potential duplicate invoices
 6. **Anomaly Detection** - Flags unusual patterns
-7. **Export** - Generates DATEV EXTF 7.0 CSV exports
+7. **Export** - Generates CSV exports
 
 ## Monitoring
 

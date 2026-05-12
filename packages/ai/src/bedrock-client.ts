@@ -1,10 +1,12 @@
+import { Logger } from '@aws-lambda-powertools/logger';
 import {
     BedrockRuntimeClient,
     ConverseCommand,
     type Message,
 } from '@aws-sdk/client-bedrock-runtime';
 import { getBedrockConfig, getConfig } from '@smart-invoice-analyzer/config';
-import { logger } from '@smart-invoice-analyzer/observability';
+
+const logger = new Logger({ serviceName: 'smart-invoice-analyzer-ai' });
 
 let _client: BedrockRuntimeClient | undefined;
 

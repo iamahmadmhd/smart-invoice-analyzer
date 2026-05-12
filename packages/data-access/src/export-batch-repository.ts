@@ -10,7 +10,7 @@ import {
     ExportBatchStatus,
     ValidationReport,
 } from '@smart-invoice-analyzer/contracts';
-import { NotFoundError } from '@smart-invoice-analyzer/observability';
+import { NotFoundError } from '@smart-invoice-analyzer/errors';
 import { dbClient } from './dynamodb-client';
 
 export class ExportBatchRepository {

@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { getUserContext, parseBody } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { CreateExportRequestSchema, ExportWorkerEvent } from '@smart-invoice-analyzer/contracts';
@@ -9,12 +8,12 @@ import {
     resolvePeriod,
     validateInvoicesForExport,
 } from '@smart-invoice-analyzer/domain';
-import { ConflictError, withObservability } from '@smart-invoice-analyzer/observability';
+import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { withApiHandler } from '../powertools';
 import { created } from '../utils/response';
+import { sendToQueue } from '../utils/sqs';
 
-const sqs = new SQSClient({});
-
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const body = parseBody(event as never, CreateExportRequestSchema);
     const config = getConfig();
@@ -53,12 +52,7 @@ const handler = withObservability(async (event) => {
         includeDocumentReferences: body.includeDocumentReferences ?? false,
     };
 
-    await sqs.send(
-        new SendMessageCommand({
-            QueueUrl: config.EXPORT_QUEUE_URL,
-            MessageBody: JSON.stringify(workerEvent),
-        })
-    );
+    await sendToQueue(config.EXPORT_QUEUE_URL, workerEvent);
 
     return created({ exportBatchId, status: 'PENDING' });
 });

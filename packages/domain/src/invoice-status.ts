@@ -1,5 +1,5 @@
 import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
-import { ValidationError } from '@smart-invoice-analyzer/observability';
+import { ValidationError } from '@smart-invoice-analyzer/errors';
 
 // ── Allowed transitions ───────────────────────────────────────────────────────
 

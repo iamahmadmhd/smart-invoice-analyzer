@@ -49,11 +49,10 @@ export default function UploadScreen() {
                 )}
 
                 {/* Progress card */}
-                {(isActive || isDone || isError) && (
+                {isActive && (
                     <UploadProgressCard
                         step={step}
                         progress={uploadProgress}
-                        error={error}
                     />
                 )}
 

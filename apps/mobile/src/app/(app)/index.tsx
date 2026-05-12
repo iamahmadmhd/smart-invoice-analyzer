@@ -96,13 +96,13 @@ export default function HomeScreen() {
                                 variant='body-semibold'
                                 color='primary'
                             >
-                                Create DATEV Export
+                                Create Export
                             </Text>
                             <Text
                                 variant='caption'
                                 color='secondary'
                             >
-                                Generate EXTF 7.0 for your accountant
+                                Generate CSV export for your accountant
                             </Text>
                         </View>
                         <Icon

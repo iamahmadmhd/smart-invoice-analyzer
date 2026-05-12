@@ -8,6 +8,9 @@
         "lint": "echo 'No lint configured'"
     },
     "dependencies": {
+        "@aws-lambda-powertools/logger": "^2.33.0",
+        "@aws-lambda-powertools/metrics": "^2.33.0",
+        "@aws-lambda-powertools/tracer": "^2.33.0",
         "@aws-sdk/client-sqs": "^3.1037.0",
         "@smart-invoice-analyzer/ai": "*",
         "@smart-invoice-analyzer/auth": "*",
@@ -15,7 +18,7 @@
         "@smart-invoice-analyzer/contracts": "*",
         "@smart-invoice-analyzer/data-access": "*",
         "@smart-invoice-analyzer/domain": "*",
-        "@smart-invoice-analyzer/observability": "*"
+        "@smart-invoice-analyzer/errors": "*"
     },
     "devDependencies": {
         "esbuild": "^0.24.0",

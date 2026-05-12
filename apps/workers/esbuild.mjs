@@ -16,6 +16,9 @@ await Promise.all(
             external: ['@aws-sdk/*'],
             sourcemap: true,
             minify: false,
+            banner: {
+                js: "import { createRequire } from 'module';const require = createRequire(import.meta.url);",
+            },
         });
     })
 );

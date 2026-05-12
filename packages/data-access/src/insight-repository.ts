@@ -82,4 +82,19 @@ export class InsightRepository {
             lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
         } while (lastKey);
     }
+
+    async deleteByTypesForInvoice(invoiceId: string, types: InsightType[]): Promise<void> {
+        const allInsights = await this.listByInvoice(invoiceId);
+        const toDelete = allInsights.filter((i) => types.includes(i.type));
+        await Promise.all(
+            toDelete.map((i) =>
+                dbClient.send(
+                    new DeleteCommand({
+                        TableName: this.tableName,
+                        Key: { userId: i.userId, insightId: i.insightId },
+                    })
+                )
+            )
+        );
+    }
 }

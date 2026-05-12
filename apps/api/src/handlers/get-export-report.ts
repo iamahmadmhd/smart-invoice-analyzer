@@ -1,10 +1,11 @@
 import { getUserContext, requirePathParam } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { ExportBatchRepository } from '@smart-invoice-analyzer/data-access';
-import { NotFoundError, withObservability } from '@smart-invoice-analyzer/observability';
+import { NotFoundError } from '@smart-invoice-analyzer/errors';
+import { withApiHandler } from '../powertools';
 import { ok } from '../utils/response';
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const exportBatchId = requirePathParam(event as never, 'exportBatchId');
     const config = getConfig();
