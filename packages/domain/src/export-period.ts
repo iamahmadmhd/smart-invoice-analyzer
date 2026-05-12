@@ -1,5 +1,5 @@
 import { ExportPeriod } from '@smart-invoice-analyzer/contracts';
-import { ValidationError } from '@smart-invoice-analyzer/observability';
+import { ValidationError } from '@smart-invoice-analyzer/errors';
 
 export interface DateRange {
     periodStart: string; // YYYY-MM-DD

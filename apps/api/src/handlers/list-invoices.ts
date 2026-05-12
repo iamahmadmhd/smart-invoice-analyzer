@@ -2,10 +2,10 @@ import { getQueryParam, getUserContext } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { ListInvoicesQuerySchema } from '@smart-invoice-analyzer/contracts';
 import { InvoiceRepository } from '@smart-invoice-analyzer/data-access';
-import { withObservability } from '@smart-invoice-analyzer/observability';
+import { withApiHandler } from '../powertools';
 import { ok } from '../utils/response';
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const config = getConfig();
 

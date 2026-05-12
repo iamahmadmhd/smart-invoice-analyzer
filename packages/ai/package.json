@@ -9,10 +9,10 @@
         "check-types": "tsc --noEmit"
     },
     "dependencies": {
+        "@aws-lambda-powertools/logger": "^2.33.0",
         "@aws-sdk/client-bedrock-runtime": "^3.0.0",
         "@smart-invoice-analyzer/config": "*",
         "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/observability": "*",
         "zod": "^4.3.6"
     },
     "devDependencies": {

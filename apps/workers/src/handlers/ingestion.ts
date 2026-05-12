@@ -4,30 +4,20 @@ import { getConfig } from '@smart-invoice-analyzer/config';
 import { ProcessingJob } from '@smart-invoice-analyzer/contracts';
 import { InvoiceRepository, ProcessingJobRepository } from '@smart-invoice-analyzer/data-access';
 import { generateJobId } from '@smart-invoice-analyzer/domain';
-import { logger, setCorrelationId } from '@smart-invoice-analyzer/observability';
+import { logger } from '../powertools';
+import { S3Event } from '../utils/parse-event';
 import { sendToQueue } from '../utils/sqs';
 
 const ALLOWED_CONTENT_TYPES = new Set(['application/pdf', 'image/jpeg', 'image/png']);
 
 const s3 = new S3Client({});
 
-interface S3EventRecord {
-    s3: {
-        bucket: { name: string };
-        object: { key: string; size: number };
-    };
-}
-
-interface S3Event {
-    Records: S3EventRecord[];
-}
-
 export const handler = async (event: S3Event): Promise<void> => {
     const config = getConfig();
 
     for (const record of event.Records) {
         const correlationId = randomUUID();
-        setCorrelationId(correlationId);
+        logger.appendKeys({ correlationId });
 
         const s3Key = decodeURIComponent(record.s3.object.key.replace(/\+/g, ' '));
         const s3Bucket = record.s3.bucket.name;
@@ -45,9 +35,6 @@ export const handler = async (event: S3Event): Promise<void> => {
             continue;
         }
 
-        // Read content type from S3 object metadata — the client sets it
-        // correctly on upload via the presigned URL. Never infer from the key
-        // because fileObjectId has no extension (e.g. file_<uuid>).
         let contentType: string;
         try {
             const head = await s3.send(new HeadObjectCommand({ Bucket: s3Bucket, Key: s3Key }));

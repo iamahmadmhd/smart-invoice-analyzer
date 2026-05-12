@@ -9,19 +9,15 @@ import {
     ProcessingJobRepository,
 } from '@smart-invoice-analyzer/data-access';
 import { generateJobId } from '@smart-invoice-analyzer/domain';
-import {
-    ConflictError,
-    logger,
-    NotFoundError,
-    withObservability,
-} from '@smart-invoice-analyzer/observability';
+import { ConflictError, NotFoundError } from '@smart-invoice-analyzer/errors';
+import { logger, withApiHandler } from '../powertools';
 import { ok } from '../utils/response';
 import { sendToQueue } from '../utils/sqs';
 
 /** Statuses where OCR + enrichment have already run — safe to re-trigger detection. */
 const REPROCESSABLE_STATUSES = new Set(['ENRICHED', 'REVIEW_READY', 'COMPLETED']);
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const invoiceId = requirePathParam(event as never, 'invoiceId');
     const body = parseBody(event as never, UpdateInvoiceRequestSchema);
@@ -61,11 +57,9 @@ const handler = withObservability(async (event) => {
     };
 
     // ── Tax recalculation ─────────────────────────────────────────────────
-    // Resolve effective values (user-supplied takes priority over existing)
     const effectiveNet = body.netAmount ?? invoice.netAmount;
     const effectiveTaxRate = body.taxRate ?? invoice.taxRate;
 
-    // Derive taxAmount from net * rate if not explicitly supplied
     if (
         effectiveNet !== undefined &&
         effectiveTaxRate !== undefined &&
@@ -74,7 +68,6 @@ const handler = withObservability(async (event) => {
         updated.taxAmount = parseFloat(((effectiveNet * effectiveTaxRate) / 100).toFixed(2));
     }
 
-    // Derive totalAmount from net + tax if not explicitly supplied
     const effectiveTax = updated.taxAmount ?? invoice.taxAmount;
     const effectiveNet2 = updated.netAmount ?? invoice.netAmount;
     if (
@@ -89,7 +82,6 @@ const handler = withObservability(async (event) => {
 
     if (REPROCESSABLE_STATUSES.has(invoice.status) && config.ENRICHMENT_QUEUE_URL) {
         const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
-        // Delete ALL stale insights
         await insightRepo.deleteByTypesForInvoice(invoiceId, ['SUMMARY', 'DUPLICATE', 'ANOMALY']);
 
         await repo.put({ ...updated, duplicateFlag: false, anomalyFlag: false });
@@ -108,7 +100,6 @@ const handler = withObservability(async (event) => {
             startedAt: now,
         });
 
-        // Enrich first (regenerates summary), then it chains to duplicate → anomaly
         await sendToQueue(config.ENRICHMENT_QUEUE_URL, {
             invoiceId,
             userId: user.userId,

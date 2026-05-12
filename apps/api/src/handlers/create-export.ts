@@ -8,11 +8,12 @@ import {
     resolvePeriod,
     validateInvoicesForExport,
 } from '@smart-invoice-analyzer/domain';
-import { ConflictError, withObservability } from '@smart-invoice-analyzer/observability';
+import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { withApiHandler } from '../powertools';
 import { created } from '../utils/response';
 import { sendToQueue } from '../utils/sqs';
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const body = parseBody(event as never, CreateExportRequestSchema);
     const config = getConfig();

@@ -1,5 +1,5 @@
 import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
-import { ValidationError } from '@smart-invoice-analyzer/observability';
+import { ValidationError } from '@smart-invoice-analyzer/errors';
 
 const sqs = new SQSClient({});
 

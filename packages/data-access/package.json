@@ -14,7 +14,7 @@
         "@aws-sdk/lib-dynamodb": "^3.0.0",
         "@aws-sdk/s3-request-presigner": "^3.0.0",
         "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/observability": "*"
+        "@smart-invoice-analyzer/errors": "*"
     },
     "devDependencies": {
         "typescript": "~5.9.2"

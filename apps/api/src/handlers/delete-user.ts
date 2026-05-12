@@ -6,10 +6,10 @@ import {
     InvoiceRepository,
     ProcessingJobRepository,
 } from '@smart-invoice-analyzer/data-access';
-import { logger, withObservability } from '@smart-invoice-analyzer/observability';
+import { logger, withApiHandler } from '../powertools';
 import { noContent } from '../utils/response';
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const config = getConfig();
     const { userId } = user;

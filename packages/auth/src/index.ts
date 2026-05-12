@@ -1,4 +1,4 @@
-import { AppError } from '@smart-invoice-analyzer/observability';
+import { AppError } from '@smart-invoice-analyzer/errors';
 import { z } from 'zod';
 
 // ── Cognito JWT claims ────────────────────────────────────────────────────────

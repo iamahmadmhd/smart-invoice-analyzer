@@ -3,10 +3,10 @@ import { getConfig } from '@smart-invoice-analyzer/config';
 import { CreateInvoiceRequestSchema, Invoice } from '@smart-invoice-analyzer/contracts';
 import { InvoiceRepository } from '@smart-invoice-analyzer/data-access';
 import { generateInvoiceId } from '@smart-invoice-analyzer/domain';
-import { withObservability } from '@smart-invoice-analyzer/observability';
+import { withApiHandler } from '../powertools';
 import { created } from '../utils/response';
 
-const handler = withObservability(async (event) => {
+const handler = withApiHandler(async (event) => {
     const user = getUserContext(event as never);
     const body = parseBody(event as never, CreateInvoiceRequestSchema);
     const config = getConfig();

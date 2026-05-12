@@ -6,7 +6,7 @@ import {
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { ProcessingJob, ProcessingJobStatus } from '@smart-invoice-analyzer/contracts';
-import { NotFoundError } from '@smart-invoice-analyzer/observability';
+import { NotFoundError } from '@smart-invoice-analyzer/errors';
 import { dbClient } from './dynamodb-client';
 
 const TTL_DAYS = 90;

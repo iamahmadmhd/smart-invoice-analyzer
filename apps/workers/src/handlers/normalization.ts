@@ -6,59 +6,48 @@ import {
     S3Repository,
 } from '@smart-invoice-analyzer/data-access';
 import { mergeOcrParseIntoInvoice, parseOcrText } from '@smart-invoice-analyzer/domain';
-import { logger, setCorrelationId } from '@smart-invoice-analyzer/observability';
-import { parseWorkerEvent, SQSEvent } from '../utils/parse-event';
+import type { SQSRecord } from 'aws-lambda';
+import { logger } from '../powertools';
+import { parseRecord, processor, processPartialResponse } from '../utils/parse-event';
 import { sendToQueue } from '../utils/sqs';
 
-export const handler = async (event: SQSEvent): Promise<void> => {
-    const payload = parseWorkerEvent(event, NormalizationEventSchema);
-    setCorrelationId(payload.correlationId);
+async function recordHandler(record: SQSRecord): Promise<void> {
+    const payload = parseRecord(record.body, NormalizationEventSchema);
+    logger.appendKeys({ correlationId: payload.correlationId, invoiceId: payload.invoiceId });
 
     const config = getConfig();
     const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
     const s3 = new S3Repository(config.BUCKET_NAME);
 
-    logger.info('Normalization started', { invoiceId: payload.invoiceId });
+    logger.info('Normalization started');
 
-    try {
-        await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
+    await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
-        const ocrJson = await s3.getObjectAsString(payload.rawOutputS3Key);
-        const { rawText } = JSON.parse(ocrJson) as { rawText: string };
+    const ocrJson = await s3.getObjectAsString(payload.rawOutputS3Key);
+    const { rawText } = JSON.parse(ocrJson) as { rawText: string };
 
-        const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
+    const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
 
-        // Deterministic regex-based extraction — no Bedrock call
-        const parsed = parseOcrText(rawText);
-        const patch = mergeOcrParseIntoInvoice(invoice, parsed);
+    const parsed = parseOcrText(rawText);
+    const patch = mergeOcrParseIntoInvoice(invoice, parsed);
 
-        const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
-        await invoiceRepo.put(updated);
-        await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'EXTRACTED');
-        await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
+    const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
+    await invoiceRepo.put(updated);
+    await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'EXTRACTED');
+    await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
-        // Pass rawOutputS3Key forward so enrichment can make a single combined AI call
-        await sendToQueue(config.ENRICHMENT_QUEUE_URL!, {
-            invoiceId: payload.invoiceId,
-            userId: payload.userId,
-            jobId: payload.jobId,
-            correlationId: payload.correlationId,
-            attempt: payload.attempt,
-            rawOutputS3Key: payload.rawOutputS3Key,
-        });
+    await sendToQueue(config.ENRICHMENT_QUEUE_URL!, {
+        invoiceId: payload.invoiceId,
+        userId: payload.userId,
+        jobId: payload.jobId,
+        correlationId: payload.correlationId,
+        attempt: payload.attempt,
+        rawOutputS3Key: payload.rawOutputS3Key,
+    });
 
-        logger.info('Normalization completed', { invoiceId: payload.invoiceId, patch });
-    } catch (error) {
-        logger.error('Normalization failed', {
-            invoiceId: payload.invoiceId,
-            error: String(error),
-        });
-        await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'FAILED_VALIDATION');
-        await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'FAILED', {
-            code: 'NORMALIZATION_ERROR',
-            message: String(error),
-        });
-        throw error;
-    }
-};
+    logger.info('Normalization completed', { patch });
+}
+
+export const handler = async (event: { Records: SQSRecord[] }) =>
+    processPartialResponse(event as never, recordHandler, processor);

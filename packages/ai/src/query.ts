@@ -1,7 +1,9 @@
+import { Logger } from '@aws-lambda-powertools/logger';
 import { Invoice } from '@smart-invoice-analyzer/contracts';
-import { logger } from '@smart-invoice-analyzer/observability';
 import { z } from 'zod';
 import { callBedrock } from './bedrock-client';
+
+const logger = new Logger({ serviceName: 'smart-invoice-analyzer-ai' });
 
 // ── Reliability scoring ───────────────────────────────────────────────────────
 
