@@ -8,15 +8,15 @@ This project is written as a portfolio-grade product: it demonstrates mobile UX,
 
 ### Upload and OCR flow
 
-https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/upload-ocr-flow.MP4
+https://github.com/user-attachments/assets/ffa80f54-6f78-40db-972b-c50c754fc441
 
 ### Update flow
 
-https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/update-flow.MP4
+https://github.com/user-attachments/assets/8e7983d4-2b14-4278-9924-a7d794dbb409
 
 ### Duplicate detection
 
-https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/duplicate-detection.MP4
+https://github.com/user-attachments/assets/f45dcf5b-a6d2-41ee-9e04-65fcb011fe2d
 
 ## Why this project matters
 
