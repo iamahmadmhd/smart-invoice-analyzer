@@ -4,6 +4,26 @@ Smart Invoice Analyzer is a full-stack, cloud-native invoice processing platform
 
 This project is written as a portfolio-grade product: it demonstrates mobile UX, serverless backend design, event-driven processing, typed domain modeling, AWS infrastructure, and AI-assisted document intelligence in one cohesive TypeScript monorepo.
 
+## Demo
+
+```markdown
+### Upload and OCR flow
+
+https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/upload-ocr-flow.MP4
+```
+
+```markdown
+### Update flow
+
+https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/update-flow.MP4
+```
+
+```markdown
+### Duplicate detection
+
+https://github.com/iamahmadmhd/smart-invoice-analyzer/assets/demo/ios/duplicate-detection.MP4
+```
+
 ## Why this project matters
 
 Manual invoice review is slow, repetitive, and easy to get wrong. Smart Invoice Analyzer turns unstructured invoice documents into searchable, validated, exportable financial records through an automated pipeline:
@@ -15,13 +35,11 @@ Manual invoice review is slow, repetitive, and easy to get wrong. Smart Invoice 
 5. Validated invoices can be exported as CSV/ZIP batches.
 6. Users can query invoice data using natural language.
 
-The result is a project that reflects real business workflows, real infrastructure concerns, and real engineering trade-offs.
-
 ## Product capabilities
 
 ### Invoice upload and processing
 
-- Upload invoice documents from an Expo React Native app.
+- Upload invoice documents from an Expo React Native app (iOS, Android, and web).
 - Support PDF, JPEG, and PNG source files.
 - Use presigned upload flows for direct document storage in Amazon S3.
 - Track invoice lifecycle from upload through processing and review.
@@ -30,122 +48,128 @@ The result is a project that reflects real business workflows, real infrastructu
 ### OCR and AI enrichment
 
 - Run an AWS Textract-based document extraction pipeline.
-- Normalize and enrich extracted data with Amazon Bedrock-powered helpers.
+- Normalize and enrich extracted data with Amazon Bedrock-powered helpers (Claude claude-haiku-4-5-20251001).
 - Capture structured invoice fields including vendor, invoice number, invoice dates, currency, net amount, tax amount, tax rate, total amount, VAT/tax number, category, and confidence score.
 
 ### Validation and review
 
 - Move processed invoices into a review-ready state.
-- Allow users to correct invoice details before export.
+- Allow users to correct invoice details (vendor, amounts, dates, category, VAT rate) before export.
 - Prevent edits to invoices that have already been exported.
 - Generate validation reports that identify missing or risky fields before accounting export.
 
 ### Duplicate and anomaly detection
 
-- Flag likely duplicate invoices.
-- Flag suspicious or unusual invoice data.
-- Keep detection logic in domain packages instead of coupling it directly to UI or infrastructure code.
+- Flag likely duplicate invoices based on invoice number, vendor, amount, and date proximity.
+- Flag suspicious invoice data: unexpected VAT rates, amount mismatches, unusually large totals, future-dated invoices, and low AI confidence scores.
+- Keep detection logic in domain packages, decoupled from UI or infrastructure code.
 
 ### Export workflow
 
-- Validate invoices by month, quarter, or year.
-- Generate export batches for accounting workflows.
-- Track export batch status.
-- Download export archives.
-- Optionally include document references in export packages.
+- Validate invoices by month, quarter, or year using a two-step wizard (validate → confirm → generate).
+- Generate export batches containing a UTF-8 CSV with BOM and a ZIP archive.
+- Track export batch status with polling on the detail screen.
+- Download export archives via presigned S3 URLs.
+- Optionally include document references (S3 paths) in export packages.
 
 ### Natural-language invoice insights
 
-- Ask questions about invoice data, such as spending totals or vendor-specific costs.
-- Generate answers from available invoice records.
-- Include reliability labels and scores so users know when an answer is based on limited data.
+- Ask questions about invoice data, such as spending totals or vendor-specific costs, via a `/queries` endpoint.
+- Parse query intent with Bedrock, retrieve relevant invoices, and synthesize a natural-language answer.
+- Include reliability labels (HIGH / MEDIUM / LOW) and scores so users know when an answer is based on limited data.
 
 ### Mobile-first experience
 
-- Expo React Native app with web support.
-- Authentication screens for sign in, sign up, confirmation, password reset, and forgot password.
-- Invoice dashboard, upload flow, invoice detail/edit screens, export screens, and insight cards.
+- Expo React Native app with full web support.
+- Authentication screens: sign in, sign up, email confirmation (OTP), forgot password, and reset password.
+- Invoice dashboard with search and multi-filter support (status, category, duplicate/anomaly flags).
+- Invoice detail screen with AI insight cards, confidence bar, financial breakdown, and edit/delete actions.
+- Invoice edit screen with category chips, VAT rate picker, and client-side tax recalculation.
+- Upload flow with camera, photo library, and file picker options; progress tracking.
+- Exports list, export detail with validation report, and ZIP download.
+- Two-step export creation wizard with period selector (month / quarter / year).
 - Component architecture organized into atoms, molecules, and organisms.
+- Dark mode support throughout using a Stripe-inspired design token system.
 
 ## Architecture overview
 
 Smart Invoice Analyzer is implemented as a TypeScript monorepo using npm workspaces and Turborepo.
 
 ```text
-Mobile/Web App
+Mobile/Web App (Expo React Native)
     |
-    | Authenticated API calls
+    | Authenticated API calls (Cognito JWT)
     v
-API Gateway + Lambda handlers
+API Gateway (REST) + Lambda handlers
     |
     | Create records, generate upload URLs, enqueue work
     v
 DynamoDB + S3 + SQS
     |
-    | Event-driven worker pipeline
+    | S3 event → Ingestion worker → SQS chain
     v
-OCR -> Normalization -> Enrichment -> Duplicate Detection -> Anomaly Detection -> Export
+OCR → Normalization → Enrichment → Duplicate Detection → Anomaly Detection
     |
     v
-Reviewed invoices, insights, exports, and downloadable archives
+Reviewed invoices, insights, exports, and downloadable ZIP archives
 ```
 
 ### Key architectural decisions
 
 - **Serverless-first backend** for scalability and low operational overhead.
-- **Event-driven processing** with SQS queues and dedicated worker handlers.
-- **Typed contracts** shared across API, workers, domain logic, and mobile clients.
-- **Infrastructure as Code** with AWS CDK.
+- **Event-driven processing** with SQS queues and dedicated worker Lambda functions.
+- **Typed contracts** shared across API handlers, workers, domain logic, and the mobile client via a single `contracts` package.
+- **Infrastructure as Code** with AWS CDK v2.
 - **Separation of concerns** between UI, API handlers, domain rules, persistence, AI integration, and deployment infrastructure.
-- **Observability wrappers** around Lambda handlers for consistent error handling and logging.
-- **Cloud-native storage model** using S3 for source files/artifacts and DynamoDB for application state.
+- **AWS Lambda Powertools** for structured logging, metrics, and X-Ray tracing across all Lambda functions.
+- **Cloud-native storage** using S3 for source files and derived artifacts, DynamoDB for application state.
 
 ## Tech stack
 
 ### Frontend
 
-- Expo
-- React Native
-- React 19
-- Expo Router
-- React Navigation
-- Redux Toolkit
-- AWS Amplify
-- Zod
-- Tailwind/Uniwind-style utility styling
+- Expo ~55
+- React Native 0.83 / React 19
+- Expo Router (file-based routing)
+- Redux Toolkit + React Redux
+- AWS Amplify v6 (Cognito authentication)
+- Zod v4 (form validation)
+- Uniwind / Tailwind CSS (utility styling with dark mode)
+- Plus Jakarta Sans (Google Fonts)
 
 ### Backend
 
-- TypeScript
-- AWS Lambda
-- Amazon API Gateway
-- Amazon SQS
-- Amazon S3
-- Amazon DynamoDB
-- Amazon Textract
-- Amazon Bedrock
+- TypeScript on Node.js 22
+- AWS Lambda (ESM bundles via esbuild)
+- Amazon API Gateway (REST, Cognito authorizer)
+- Amazon SQS + Dead-Letter Queues
+- Amazon S3 (invoice storage, derived artifacts, export archives)
+- Amazon DynamoDB (pay-per-request, GSI-based queries)
+- Amazon Textract (OCR for PDF and images)
+- Amazon Bedrock / Claude claude-haiku-4-5-20251001 (enrichment and query synthesis)
 - AWS SDK v3
+- AWS Lambda Powertools v2 (logging, metrics, tracing, batch processing)
 - Zod runtime validation
-- esbuild for Lambda bundling
 
 ### Infrastructure
 
-- AWS CDK v2
-- CloudFront
-- S3 static web hosting bucket
-- Cognito authentication
-- CloudWatch dashboards and alarms
-- X-Ray tracing
-- Dead-letter queues
+- AWS CDK v2 (TypeScript)
+- CloudFront distribution with OAC, security headers, and SPA routing function
+- Cognito user pool with email sign-up and SRP auth flows
+- DynamoDB tables with PITR and GSIs for all access patterns
+- SQS processing pipeline with DLQs and CloudWatch alarms
+- CloudWatch dashboard covering Lambda, SQS, and DynamoDB metrics
+- X-Ray tracing on all Lambda functions
 - SSM parameters for production deployment outputs
+- CI/CD pipeline via AWS CodePipeline with self-mutation
 
 ### Tooling
 
-- npm workspaces
-- Turborepo
-- TypeScript
-- Prettier
-- Expo/EAS build tooling
+- npm workspaces + Turborepo
+- TypeScript 5.9 (strict mode across all packages)
+- Prettier with import sorting and Tailwind class sorting
+- esbuild for Lambda bundling (ESM output)
+- EAS / Expo for mobile builds
 
 ## Monorepo structure
 
@@ -157,14 +181,14 @@ Reviewed invoices, insights, exports, and downloadable archives
 │   └── workers             # Event-driven invoice processing workers
 ├── infra                   # AWS CDK infrastructure
 ├── packages
-│   ├── ai                  # Bedrock-powered query/enrichment helpers
-│   ├── auth                # Auth and request parsing helpers
-│   ├── config              # Runtime configuration validation
+│   ├── ai                  # Bedrock-powered enrichment and query helpers
+│   ├── auth                # Cognito JWT parsing and request helpers
+│   ├── config              # Runtime environment configuration (Zod-validated)
 │   ├── contracts           # Shared Zod schemas and TypeScript DTOs
 │   ├── data-access         # DynamoDB and S3 repositories
 │   ├── domain              # Business rules and domain logic
-│   ├── export              # CSV and ZIP export generation
-│   └── observability       # Logging, errors, and Lambda wrappers
+│   ├── errors              # Typed error classes and serialization
+│   └── export              # CSV and ZIP export generation
 ├── package.json
 ├── turbo.json
 └── README.md
@@ -174,137 +198,154 @@ Reviewed invoices, insights, exports, and downloadable archives
 
 ### `apps/mobile`
 
-The customer-facing Expo app. It includes auth screens, invoice list/detail views, upload flows, invoice editing, export creation, reusable design-system components, Redux slices, hooks, and API clients.
-
-Important paths:
+The customer-facing Expo app. Includes auth screens, invoice list/detail/edit views, upload flow, export creation wizard, export detail, reusable design-system components, Redux slices, hooks, and API clients.
 
 ```text
-apps/mobile/src/app
-apps/mobile/src/components
-apps/mobile/src/hooks
-apps/mobile/src/lib/api
-apps/mobile/src/store
+apps/mobile/src/app          # File-based routes ((app)/* and (auth)/*)
+apps/mobile/src/components   # Atoms, molecules, organisms
+apps/mobile/src/hooks        # Feature hooks (invoices, exports, upload, etc.)
+apps/mobile/src/lib/api      # Typed API clients (client, invoices, exports, upload)
+apps/mobile/src/store        # Redux store + slices (auth, invoices, upload, exports)
+apps/mobile/src/constants    # Invoice categories, status options, VAT rates, theme tokens
 ```
 
 ### `apps/api`
 
-Serverless API handlers for application workflows:
+Serverless API handlers, each compiled to its own Lambda function:
 
-- Create, list, get, update, and delete invoices.
-- Generate presigned upload URLs.
-- Query invoice data.
-- Validate exports.
-- Create exports.
-- List, get, and download export batches.
-- Retrieve processing jobs and insights.
-- Delete user data.
+| Handler             | Method | Path                                |
+| ------------------- | ------ | ----------------------------------- |
+| `presign`           | POST   | `/uploads/presign`                  |
+| `create-invoice`    | POST   | `/invoices`                         |
+| `list-invoices`     | GET    | `/invoices`                         |
+| `get-invoice`       | GET    | `/invoices/{invoiceId}`             |
+| `update-invoice`    | PATCH  | `/invoices/{invoiceId}`             |
+| `delete-invoice`    | DELETE | `/invoices/{invoiceId}`             |
+| `get-insights`      | GET    | `/invoices/{invoiceId}/insights`    |
+| `query`             | POST   | `/queries`                          |
+| `validate-export`   | POST   | `/exports/validate`                 |
+| `create-export`     | POST   | `/exports`                          |
+| `list-exports`      | GET    | `/exports`                          |
+| `get-export`        | GET    | `/exports/{exportBatchId}`          |
+| `download-export`   | GET    | `/exports/{exportBatchId}/download` |
+| `get-export-report` | GET    | `/exports/{exportBatchId}/report`   |
+| `get-job`           | GET    | `/jobs/{jobId}`                     |
+| `delete-user`       | DELETE | `/users/me`                         |
 
 ### `apps/workers`
 
-Background processing workers for the invoice pipeline:
+Background processing workers triggered by S3 events or SQS queues:
 
-- Ingestion
-- OCR
-- Normalization
-- Enrichment
-- Duplicate detection
-- Anomaly detection
-- Export generation
+| Worker                | Trigger                                     | Responsibility                                                                 |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| `ingestion`           | S3 `OBJECT_CREATED` on `invoices/original/` | Validates file type, creates job, enqueues OCR                                 |
+| `ocr`                 | SQS                                         | Runs Textract, stores raw output in S3, enqueues normalization                 |
+| `normalization`       | SQS                                         | Parses OCR text into structured fields, enqueues enrichment                    |
+| `enrichment`          | SQS                                         | Bedrock AI fill-in, generates SUMMARY insight, enqueues duplicate detection    |
+| `duplicate-detection` | SQS                                         | Checks for duplicates, generates DUPLICATE insight, enqueues anomaly detection |
+| `anomaly-detection`   | SQS                                         | Flags anomalies, generates ANOMALY insight, advances status to COMPLETED       |
+| `export`              | SQS                                         | Generates CSV + ZIP, uploads to S3, marks invoices as exported                 |
 
 ### `packages/contracts`
 
-Shared Zod schemas and TypeScript types used across the system, including invoices, export periods, validation reports, query requests/responses, worker event payloads, and processing job models.
-
-This package keeps the mobile app, API, workers, and domain code aligned around a single source of truth.
+Shared Zod schemas and TypeScript types used across the entire system: invoice entity, export batch, validation report, processing jobs, worker event payloads, query request/response, and insights. Single source of truth for all data shapes.
 
 ### `packages/domain`
 
-Pure business logic for invoice workflows, including invoice ID generation, invoice status transitions, OCR parsing helpers, duplicate detection, anomaly detection, export eligibility, and export period resolution.
+Pure business logic with no infrastructure dependencies:
+
+- Invoice ID generation (`inv_`, `job_`, `ins_`, `exp_`, `file_` prefixes)
+- Invoice status transition validation
+- OCR text parsing (German and English date/amount formats, VAT IDs)
+- Duplicate detection (invoice number match, vendor + amount + date proximity)
+- Anomaly detection (VAT rate, amount math, statistical outlier, future date, low confidence)
+- Export period resolution (month / quarter / year to date range)
+- Export eligibility validation
 
 ### `packages/data-access`
 
-Repository layer for AWS persistence services, including DynamoDB repositories for invoices, processing jobs, export batches, and insights, plus S3 repository helpers.
+Repository layer for AWS persistence:
+
+- `InvoiceRepository` — full CRUD plus GSI-backed list, status update, export marking
+- `ProcessingJobRepository` — job lifecycle with TTL (90 days auto-expiry)
+- `ExportBatchRepository` — batch CRUD, status updates with extra fields
+- `InsightRepository` — list by invoice, delete by type, cascade delete
+- `S3Repository` — put/get/delete objects, presigned upload and download URLs
 
 ### `packages/ai`
 
-AI integration layer for invoice enrichment, query intent parsing, natural-language answer synthesis, and reliability scoring.
+AI integration via Amazon Bedrock (Converse API):
+
+- `enrichInvoice` — fills missing invoice fields and generates a SUMMARY from OCR text
+- `mergeEnrichmentIntoInvoice` — non-destructive merge that never overwrites existing values
+- `parseQueryIntent` — classifies a natural-language question into a structured intent
+- `synthesizeAnswer` — generates a factual answer with reliability scoring
+
+### `packages/errors`
+
+Typed error hierarchy (`AppError`, `NotFoundError`, `ValidationError`, `ConflictError`) with HTTP status codes, plus a `serializeError` helper used in Lambda wrappers.
 
 ### `packages/export`
 
-Export generation utilities for CSV files and ZIP archives.
+Export generation utilities:
+
+- `generateCsv` — produces a UTF-8 with BOM CSV from invoice records, with optional S3 document references
+- `generateZipArchive` — packages CSV + README into a compressed ZIP using JSZip
 
 ### `infra`
 
-AWS CDK app defining Cognito authentication, DynamoDB tables, S3 buckets, API Gateway and Lambda functions, SQS queues and DLQs, worker processing infrastructure, CloudFront-backed web app hosting, monitoring dashboards and alarms, and production pipeline resources.
+AWS CDK app with modular constructs:
+
+- `Auth` — Cognito user pool with email sign-up, SRP auth
+- `Database` — five DynamoDB tables with all GSIs
+- `Storage` — invoice S3 bucket (CORS for presigned PUT) and web app bucket
+- `Processing` — seven Lambda workers, SQS pipeline with DLQs, S3 event notification
+- `Api` — API Gateway REST API with Cognito authorizer, sixteen Lambda handlers, gateway CORS responses
+- `WebAppHosting` — CloudFront distribution with OAC, security headers policy, SPA routing function, separate cache behaviors for HTML and hashed assets
+- `Monitoring` — CloudWatch dashboard with Lambda, SQS, and DynamoDB widgets; alarms on all workers, API 5xx/4xx, and DLQ depth
 
 ## Invoice lifecycle
 
-Invoices move through a defined status model:
-
 ```text
-UPLOADED
-PROCESSING
-EXTRACTED
-ENRICHED
-REVIEW_READY
-COMPLETED
-FAILED_OCR
-FAILED_VALIDATION
-FAILED_AI
-FAILED_INTERNAL
+UPLOADED → PROCESSING → EXTRACTED → ENRICHED → REVIEW_READY → COMPLETED
+                  ↓           ↓           ↓
+           FAILED_OCR  FAILED_AI   FAILED_AI
+           FAILED_INTERNAL  FAILED_VALIDATION
 ```
 
-A typical successful path:
-
-```text
-Upload document
-  -> Create invoice record
-  -> Ingestion worker
-  -> OCR worker
-  -> Normalization worker
-  -> Enrichment worker
-  -> Duplicate detection worker
-  -> Anomaly detection worker
-  -> Review-ready invoice
-  -> User validation/editing
-  -> Export batch
-```
+The `update-invoice` handler re-triggers the enrichment pipeline (clearing SUMMARY, DUPLICATE, and ANOMALY insights) when a user edits an invoice that has already reached `ENRICHED`, `REVIEW_READY`, or `COMPLETED` status.
 
 ## API capabilities
 
-The API layer is organized as small Lambda handlers. Representative workflows include:
-
-| Workflow          | Capability                                                     |
-| ----------------- | -------------------------------------------------------------- |
-| Invoice creation  | Creates invoice metadata and starts the upload/processing flow |
-| Presigned upload  | Allows direct file upload to S3                                |
-| Invoice listing   | Supports filtered invoice retrieval                            |
-| Invoice update    | Allows corrections before export                               |
-| Invoice deletion  | Removes invoice data                                           |
-| Job status        | Tracks processing progress                                     |
-| Query             | Answers natural-language questions over invoice data           |
-| Export validation | Checks whether invoices are ready for export                   |
-| Export creation   | Creates export batches and queues export work                  |
-| Export download   | Returns a time-limited archive download URL                    |
-| Insights          | Retrieves generated invoice insights                           |
+| Workflow          | Capability                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| Presigned upload  | Direct file upload to S3 via time-limited PUT URL                                   |
+| Invoice creation  | Creates invoice metadata; ingestion worker picks up the S3 event                    |
+| Invoice listing   | Filtered retrieval with pagination (status, category, vendor, date range, flags)    |
+| Invoice update    | User corrections with automatic tax recalculation; re-triggers enrichment pipeline  |
+| Invoice deletion  | Cascades to insights and processing jobs; blocked for exported invoices             |
+| Insights          | Per-invoice AI-generated SUMMARY, DUPLICATE, and ANOMALY insights                   |
+| Query             | Natural-language question answering over invoice data with reliability scoring      |
+| Export validation | Validates invoices for a period and returns a detailed report                       |
+| Export creation   | Creates export batch and enqueues CSV/ZIP generation                                |
+| Export download   | Returns a 15-minute presigned download URL for the ZIP archive                      |
+| Job status        | Tracks processing pipeline progress per job                                         |
+| User deletion     | Cascades deletion of all DynamoDB records; S3 cleanup delegated to lifecycle policy |
 
 ## Infrastructure highlights
 
-The CDK infrastructure is designed with production concerns in mind:
+- Cognito-backed authentication with SRP auth flows.
+- Private S3 buckets; all access via presigned URLs or CloudFront OAC.
+- CloudFront distribution with TLS 1.2+, HTTP/2+3, security headers, and SPA routing.
+- DynamoDB tables with point-in-time recovery and GSIs for all query patterns.
+- SQS pipeline with DLQs (14-day retention) and CloudWatch alarms on DLQ depth and message age.
+- Lambda functions with X-Ray tracing, structured logging (Powertools), and per-function error alarms.
+- Processing jobs auto-expire after 90 days via DynamoDB TTL.
+- Production CI/CD pipeline with self-mutation, type-checking, linting, CDK synth, **manual approval gate before production deploy**, and web app deploy steps.
+- SSM parameters under `/sia/prod/` for pipeline-to-app configuration handoff.
+- Environment-specific removal policies (RETAIN for prod, DESTROY for dev).
 
-- Cognito-backed authentication.
-- Private S3 buckets for invoice documents.
-- CloudFront distribution for web app delivery.
-- DynamoDB tables for application entities.
-- SQS queues with dead-letter queues.
-- Lambda functions for API and workers.
-- CloudWatch alarms and dashboard.
-- X-Ray tracing.
-- Environment-specific removal policies.
-- SSM parameters for production deployment outputs.
-- Separate development and production stack flows.
-
-Defined stack names include:
+Stack names:
 
 ```text
 SmartInvoiceAnalyzer-Dev
@@ -318,10 +359,10 @@ SmartInvoiceAnalyzer-Production-AppStack
 
 - Node.js 22+
 - npm 11+
-- AWS CLI configured for deployment workflows
+- AWS CLI configured with appropriate credentials
 - AWS CDK CLI for infrastructure deployment
-- Expo tooling for mobile development
-- EAS CLI for Android build workflows, if building native artifacts
+- Expo CLI for mobile development
+- EAS CLI for Android/iOS native builds
 
 ### Install dependencies
 
@@ -341,54 +382,49 @@ npm run build
 npm run check-types
 ```
 
-### Run lint tasks
+### Lint and format
 
 ```bash
 npm run lint
-```
-
-### Format the repository
-
-```bash
 npm run format
 ```
 
 ## Running the mobile app
 
-From the repository root:
+Copy `.env.example` to `.env.local` in `apps/mobile` and fill in your Cognito and API values:
+
+```env
+EXPO_PUBLIC_USER_POOL_ID=your-pool-id
+EXPO_PUBLIC_USER_POOL_CLIENT_ID=your-client-id
+EXPO_PUBLIC_API_URL=https://your-api-id.execute-api.eu-central-1.amazonaws.com/v1
+```
+
+Start the development server:
 
 ```bash
 npm run dev -- --filter=@smart-invoice-analyzer/mobile
+# or
+cd apps/mobile && npm run start
 ```
 
-Or from the mobile app directory:
+Platform targets:
 
 ```bash
-cd apps/mobile
-npm run start
-```
-
-Common mobile commands:
-
-```bash
-npm run android
-npm run ios
-npm run web
-npm run start:tunnel
+npm run android   # Android emulator / device
+npm run ios       # iOS simulator / device
+npm run web       # Web browser
 ```
 
 Build the web export:
 
 ```bash
-cd apps/mobile
-npm run build:web
+cd apps/mobile && npm run build:web
 ```
 
-Build Android locally with EAS:
+Build Android APK locally with EAS:
 
 ```bash
-cd apps/mobile
-npm run build:android:apk
+cd apps/mobile && npm run build:android:apk
 ```
 
 ## Backend development
@@ -405,161 +441,118 @@ Build worker handlers:
 npm run build -- --filter=@smart-invoice-analyzer/workers
 ```
 
-Type-check API handlers:
+Type-check API or workers:
 
 ```bash
 npm run check-types -- --filter=@smart-invoice-analyzer/api
-```
-
-Type-check worker handlers:
-
-```bash
 npm run check-types -- --filter=@smart-invoice-analyzer/workers
 ```
 
 ## Infrastructure commands
 
-From the `infra` workspace:
-
 ```bash
 cd infra
-npm run synth
+
+npm run synth          # Synthesize all stacks
+npm run synth:dev      # Synthesize development stack only
+npm run deploy:dev     # Deploy development environment
+npm run diff:dev       # Compare local with deployed dev stack
+npm run deploy:pipeline  # Deploy CI/CD pipeline (triggers production deployment)
 ```
 
-Deploy the development stack:
+Access CloudWatch dashboard URL after deployment:
 
 ```bash
-cd infra
-npm run deploy:dev
-```
-
-Compare local infrastructure with the deployed development stack:
-
-```bash
-cd infra
-npm run diff:dev
-```
-
-Deploy the production pipeline:
-
-```bash
-cd infra
-npm run deploy:pipeline
+aws cloudformation describe-stacks \
+  --stack-name SmartInvoiceAnalyzer-Dev \
+  --query 'Stacks[0].Outputs[?OutputKey==`DashboardUrl`].OutputValue' \
+  --output text
 ```
 
 ## Configuration
 
-Runtime configuration is centralized in `packages/config` and consumed by API handlers, workers, and shared packages.
+Runtime configuration is centralized in `packages/config` and validated with Zod at Lambda cold-start. All Lambda functions receive configuration via environment variables injected by CDK. Key variables:
 
-The deployed AWS resources provide values such as DynamoDB table names, S3 bucket names, SQS queue URLs, Cognito identifiers, API URLs, CloudFront distribution details, and export artifact locations.
+| Variable               | Description                                                            |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `INVOICE_TABLE`        | DynamoDB invoice table name                                            |
+| `PROCESSING_JOB_TABLE` | DynamoDB processing job table name                                     |
+| `EXPORT_BATCH_TABLE`   | DynamoDB export batch table name                                       |
+| `INSIGHT_TABLE`        | DynamoDB insight table name                                            |
+| `BUCKET_NAME`          | S3 bucket for invoices and exports                                     |
+| `BEDROCK_MODEL_ID`     | Bedrock model (default: `eu.anthropic.claude-haiku-4-5-20251001-v1:0`) |
+| `BEDROCK_REGION`       | Bedrock region (default: `eu-central-1`)                               |
+| `*_QUEUE_URL`          | SQS queue URLs for each pipeline stage                                 |
 
-Production infrastructure also writes selected outputs to SSM parameters under:
-
-```text
-/sia/prod/
-```
+Production values are written to SSM under `/sia/prod/` and consumed by the deploy pipeline.
 
 ## Data model highlights
 
 ### Invoice
 
-Invoices include structured fields such as:
-
-- `invoiceId`
-- `userId`
-- `vendorName`
-- `invoiceNumber`
-- `invoiceDate`
-- `dueDate`
-- `currency`
-- `netAmount`
-- `taxAmount`
-- `taxRate`
-- `totalAmount`
-- `category`
-- `status`
-- `duplicateFlag`
-- `anomalyFlag`
-- `confidenceScore`
-- `sourceFileId`
-- `exportStatus`
-- `createdAt`
-- `updatedAt`
+Core entity with fields: `invoiceId`, `userId`, `vendorName`, `invoiceNumber`, `invoiceDate`, `dueDate`, `currency`, `netAmount`, `taxAmount`, `taxRate`, `totalAmount`, `vatIdOrTaxNumber`, `category`, `status`, `duplicateFlag`, `anomalyFlag`, `confidenceScore`, `sourceFileId`, `exportBatchId`, `exportedAt`, `exportStatus`, `createdAt`, `updatedAt`.
 
 ### Processing job
 
-Processing jobs track pipeline execution:
-
-- `jobId`
-- `invoiceId`
-- `userId`
-- `stage`
-- `status`
-- `retryCount`
-- `errorCode`
-- `errorMessage`
-- `startedAt`
-- `completedAt`
-- `ttl`
+Tracks pipeline execution per invoice: `jobId`, `invoiceId`, `userId`, `stage`, `status`, `retryCount`, `errorCode`, `errorMessage`, `startedAt`, `completedAt`, `ttl` (auto-expires after 90 days).
 
 ### Export batch
 
-Export batches group validated invoices by reporting period and track export generation status.
+Groups validated invoices by reporting period: `exportBatchId`, `userId`, `periodStart`, `periodEnd`, `format`, `status`, `validationReport`, `archiveS3Key`, `createdAt`, `completedAt`.
 
-## Security and reliability considerations
+### Insight
 
-This project includes several production-minded patterns:
+AI-generated findings attached to an invoice: `insightId`, `userId`, `invoiceId`, `type` (SUMMARY / DUPLICATE / ANOMALY / CATEGORY), `payload` (type-specific JSON), `createdAt`.
 
-- Authenticated user context for API handlers.
-- Runtime request validation with Zod.
-- Presigned S3 upload/download flows.
-- Export immutability protection for already-exported invoices.
-- Dead-letter queues for failed async processing.
-- CloudWatch alarms for operational visibility.
-- X-Ray tracing for distributed debugging.
-- Environment-specific infrastructure policies.
-- Shared DTOs to reduce frontend/backend contract drift.
+## Security and reliability
+
+- Authenticated user context enforced on every API handler via Cognito JWT claims.
+- Runtime request validation with Zod on all API bodies and query parameters.
+- Presigned S3 upload/download flows — Lambda functions never proxy file bytes.
+- Export immutability: exported invoices cannot be edited or deleted.
+- Dead-letter queues for all SQS processing stages with CloudWatch alarms.
+- CloudWatch alarms on Lambda error rates, throttles, DLQ depth, and queue message age.
+- X-Ray tracing for distributed debugging across all Lambda functions.
+- CloudFront security headers (CSP, HSTS, X-Frame-Options, XSS protection).
+- Environment-specific removal policies prevent accidental data loss in production.
+- Shared Zod DTOs eliminate frontend/backend contract drift.
 
 ## What this project demonstrates
 
 - Design and implement a non-trivial product workflow end to end.
-- Build a full-stack TypeScript monorepo.
-- Create reusable frontend components and mobile app flows.
-- Model domain entities with strong runtime validation.
-- Use AWS serverless services to build scalable backend systems.
-- Apply event-driven architecture to document processing.
-- Integrate OCR and generative AI into practical business workflows.
-- Separate infrastructure, domain logic, data access, and presentation concerns.
-- Think about observability, failure handling, deployment, and maintainability.
-- Communicate system architecture clearly through code organization.
+- Build a full-stack TypeScript monorepo with strict type safety across all layers.
+- Create a production-quality mobile app with dark mode, accessibility, and platform-specific UI.
+- Model domain entities with strong runtime validation and pure business logic.
+- Use AWS serverless services to build scalable, event-driven backend systems.
+- Integrate OCR (Textract) and generative AI (Bedrock) into practical business workflows.
+- Apply infrastructure-as-code patterns with CDK for repeatable, environment-aware deployments.
+- Separate infrastructure, domain logic, data access, AI integration, and presentation concerns.
+- Think about observability, failure handling, security, and maintainability from the start.
 
 ## Future improvements
 
-Potential next steps include:
-
-- Add automated unit and integration test coverage.
-- Add screenshots or a short product demo video to the README.
-- Add local development mocks for AWS services.
-- Expand anomaly detection with configurable business rules.
+- Add automated unit and integration test coverage (domain logic, repository layer, API handlers).
+- Add local development mocks for AWS services (DynamoDB Local, LocalStack).
+- Add a natural-language query screen to the mobile app.
+- Expand anomaly detection with user-configurable business rules.
 - Add role-based access control for multi-user organizations.
-- Add accounting platform integrations such as DATEV, QuickBooks, or Xero.
-- Add CI checks for build, type-checking, linting, and CDK synthesis.
+- Add accounting platform integrations (DATEV, QuickBooks, Xero).
+- Add CI checks for build, type-checking, linting, and CDK synthesis on pull requests.
 - Add sample invoice fixtures and a seeded demo environment.
 - Add metrics for extraction accuracy and processing latency.
+- Add more screen recordings covering the full mobile and web experience (see `assets/demo/`).
 
 ## Repository scripts
 
-Root-level scripts:
+Root-level Turborepo scripts (run across all configured workspaces):
 
 ```bash
-npm run build
-npm run dev
-npm run lint
-npm run format
-npm run check-types
+npm run build        # Build all packages and apps
+npm run dev          # Start dev servers (persistent)
+npm run lint         # Run lint checks
+npm run format       # Format with Prettier
+npm run check-types  # TypeScript type-check without emit
 ```
-
-These commands are powered by Turborepo and run across the configured workspaces.
 
 ## License
 
