@@ -27,10 +27,7 @@ export class ProcessingJobRepository {
         return result.Item as ProcessingJob;
     }
 
-    /**
-     * Look up a single job by jobId alone using the jobId-index GSI.
-     * Used by GET /jobs/:id where only the job ID is available.
-     */
+    /** Lookup by jobId alone using the jobId-index GSI — used by GET /teams/:teamId/jobs/:jobId. */
     async getByJobId(jobId: string): Promise<ProcessingJob> {
         const result = await dbClient.send(
             new QueryCommand({
@@ -41,9 +38,8 @@ export class ProcessingJobRepository {
                 Limit: 1,
             })
         );
-        const item = result.Items?.[0];
-        if (!item) throw new NotFoundError('ProcessingJob', jobId);
-        return item as ProcessingJob;
+        if (!result.Items?.length) throw new NotFoundError('ProcessingJob', jobId);
+        return result.Items[0] as ProcessingJob;
     }
 
     async listByInvoice(invoiceId: string): Promise<ProcessingJob[]> {
@@ -86,15 +82,14 @@ export class ProcessingJobRepository {
         );
     }
 
-    async deleteAllForUser(userId: string): Promise<void> {
+    async deleteAllForInvoice(invoiceId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
             const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
-                    IndexName: 'userId-index',
-                    KeyConditionExpression: 'userId = :uid',
-                    ExpressionAttributeValues: { ':uid': userId },
+                    KeyConditionExpression: 'invoiceId = :iid',
+                    ExpressionAttributeValues: { ':iid': invoiceId },
                     ProjectionExpression: 'invoiceId, jobId',
                     ExclusiveStartKey: lastKey,
                 })
@@ -111,14 +106,15 @@ export class ProcessingJobRepository {
         } while (lastKey);
     }
 
-    async deleteAllForInvoice(invoiceId: string): Promise<void> {
+    async deleteAllForTeam(teamId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
             const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
-                    KeyConditionExpression: 'invoiceId = :iid',
-                    ExpressionAttributeValues: { ':iid': invoiceId },
+                    IndexName: 'teamId-index',
+                    KeyConditionExpression: 'teamId = :tid',
+                    ExpressionAttributeValues: { ':tid': teamId },
                     ProjectionExpression: 'invoiceId, jobId',
                     ExclusiveStartKey: lastKey,
                 })

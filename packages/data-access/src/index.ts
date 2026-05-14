@@ -1,6 +1,9 @@
 export { dbClient } from './dynamodb-client';
+export { TeamRepository } from './team-repository';
+export { MembershipRepository } from './membership-repository';
+export { InvitationRepository } from './invitation-repository';
 export { InvoiceRepository } from './invoice-repository';
-export { ProcessingJobRepository } from './processing-job-repository';
-export { ExportBatchRepository } from './export-batch-repository';
+export { ExportRepository } from './export-repository';
 export { InsightRepository } from './insight-repository';
+export { ProcessingJobRepository } from './processing-job-repository';
 export { S3Repository } from './s3-repository';

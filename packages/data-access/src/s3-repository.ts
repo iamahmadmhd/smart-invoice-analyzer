@@ -44,11 +44,7 @@ export class S3Repository {
     ): Promise<string> {
         return getSignedUrl(
             s3,
-            new PutObjectCommand({
-                Bucket: this.bucketName,
-                Key: key,
-                ContentType: contentType,
-            }),
+            new PutObjectCommand({ Bucket: this.bucketName, Key: key, ContentType: contentType }),
             { expiresIn: expiresInSeconds }
         );
     }

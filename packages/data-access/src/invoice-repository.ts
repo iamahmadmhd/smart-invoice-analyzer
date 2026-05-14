@@ -19,30 +19,18 @@ export class InvoiceRepository {
     constructor(private readonly tableName: string) {}
 
     async put(invoice: Invoice): Promise<void> {
-        await dbClient.send(
-            new PutCommand({
-                TableName: this.tableName,
-                Item: invoice,
-            })
-        );
+        await dbClient.send(new PutCommand({ TableName: this.tableName, Item: invoice }));
     }
 
-    async getById(userId: string, invoiceId: string): Promise<Invoice> {
+    async getById(teamId: string, invoiceId: string): Promise<Invoice> {
         const result = await dbClient.send(
-            new GetCommand({
-                TableName: this.tableName,
-                Key: { userId, invoiceId },
-            })
+            new GetCommand({ TableName: this.tableName, Key: { teamId, invoiceId } })
         );
         if (!result.Item) throw new NotFoundError('Invoice', invoiceId);
         return result.Item as Invoice;
     }
 
-    /**
-     * Look up a single invoice by its source file ID using the sourceFileId-index GSI.
-     * Used by the ingestion worker immediately after an S3 upload event.
-     * Returns null if no invoice references the given file yet.
-     */
+    /** Lookup by source file ID — used by the ingestion worker after an S3 upload event. */
     async getBySourceFileId(sourceFileId: string): Promise<Invoice | null> {
         const result = await dbClient.send(
             new QueryCommand({
@@ -53,12 +41,11 @@ export class InvoiceRepository {
                 Limit: 1,
             })
         );
-        const item = result.Items?.[0];
-        return item ? (item as Invoice) : null;
+        return result.Items?.[0] ? (result.Items[0] as Invoice) : null;
     }
 
     async list(
-        userId: string,
+        teamId: string,
         query: ListInvoicesQuery
     ): Promise<{ items: Invoice[]; nextToken?: string }> {
         const useDate = query.dateFrom || query.dateTo;
@@ -67,43 +54,36 @@ export class InvoiceRepository {
         const params: QueryCommandInput = useStatus
             ? {
                   TableName: this.tableName,
-                  IndexName: 'userId-status-index',
-                  KeyConditionExpression: 'userId = :uid AND #s = :status',
+                  IndexName: 'teamId-status-index',
+                  KeyConditionExpression: 'teamId = :tid AND #s = :status',
                   ExpressionAttributeNames: { '#s': 'status' },
-                  ExpressionAttributeValues: { ':uid': userId, ':status': query.status },
+                  ExpressionAttributeValues: { ':tid': teamId, ':status': query.status },
                   Limit: query.limit,
-                  ExclusiveStartKey: query.nextToken
-                      ? JSON.parse(Buffer.from(query.nextToken, 'base64').toString())
-                      : undefined,
+                  ExclusiveStartKey: decodeNextToken(query.nextToken),
               }
             : useDate
               ? {
                     TableName: this.tableName,
-                    IndexName: 'userId-invoiceDate-index',
-                    KeyConditionExpression: 'userId = :uid AND invoiceDate BETWEEN :from AND :to',
+                    IndexName: 'teamId-invoiceDate-index',
+                    KeyConditionExpression: 'teamId = :tid AND invoiceDate BETWEEN :from AND :to',
                     ExpressionAttributeValues: {
-                        ':uid': userId,
+                        ':tid': teamId,
                         ':from': query.dateFrom ?? '0000-00-00',
                         ':to': query.dateTo ?? '9999-99-99',
                     },
                     Limit: query.limit,
-                    ExclusiveStartKey: query.nextToken
-                        ? JSON.parse(Buffer.from(query.nextToken, 'base64').toString())
-                        : undefined,
+                    ExclusiveStartKey: decodeNextToken(query.nextToken),
                 }
               : {
                     TableName: this.tableName,
-                    KeyConditionExpression: 'userId = :uid',
-                    ExpressionAttributeValues: { ':uid': userId },
+                    KeyConditionExpression: 'teamId = :tid',
+                    ExpressionAttributeValues: { ':tid': teamId },
                     ScanIndexForward: false,
                     Limit: query.limit,
-                    ExclusiveStartKey: query.nextToken
-                        ? JSON.parse(Buffer.from(query.nextToken, 'base64').toString())
-                        : undefined,
+                    ExclusiveStartKey: decodeNextToken(query.nextToken),
                 };
 
         const result = await dbClient.send(new QueryCommand(params));
-
         let items = (result.Items ?? []) as Invoice[];
 
         // In-memory post-filters for fields without dedicated GSIs
@@ -111,83 +91,63 @@ export class InvoiceRepository {
             const q = query.vendorName.toLowerCase();
             items = items.filter((i) => i.vendorName?.toLowerCase().includes(q));
         }
-        if (query.category) {
-            items = items.filter((i) => i.category === query.category);
-        }
-        if (query.duplicateFlag !== undefined) {
+        if (query.category) items = items.filter((i) => i.category === query.category);
+        if (query.duplicateFlag !== undefined)
             items = items.filter((i) => i.duplicateFlag === query.duplicateFlag);
-        }
-        if (query.anomalyFlag !== undefined) {
+        if (query.anomalyFlag !== undefined)
             items = items.filter((i) => i.anomalyFlag === query.anomalyFlag);
-        }
-        if (query.exportStatus) {
-            items = items.filter((i) => i.exportStatus === query.exportStatus);
-        }
+        if (query.exportStatus) items = items.filter((i) => i.exportStatus === query.exportStatus);
 
-        const nextToken = result.LastEvaluatedKey
-            ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString('base64')
-            : undefined;
-
-        return { items, nextToken };
+        return {
+            items,
+            nextToken: result.LastEvaluatedKey
+                ? encodeNextToken(result.LastEvaluatedKey)
+                : undefined,
+        };
     }
 
-    async updateStatus(userId: string, invoiceId: string, status: InvoiceStatus): Promise<void> {
+    async updateStatus(teamId: string, invoiceId: string, status: InvoiceStatus): Promise<void> {
         await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
-                Key: { userId, invoiceId },
+                Key: { teamId, invoiceId },
                 UpdateExpression: 'SET #s = :status, updatedAt = :now',
                 ExpressionAttributeNames: { '#s': 'status' },
-                ExpressionAttributeValues: {
-                    ':status': status,
-                    ':now': new Date().toISOString(),
-                },
+                ExpressionAttributeValues: { ':status': status, ':now': new Date().toISOString() },
             })
         );
     }
 
-    async markExported(userId: string, invoiceId: string, exportBatchId: string): Promise<void> {
+    async markExported(teamId: string, invoiceId: string, exportId: string): Promise<void> {
         await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
-                Key: { userId, invoiceId },
+                Key: { teamId, invoiceId },
                 UpdateExpression:
-                    'SET exportStatus = :es, exportBatchId = :bid, exportedAt = :now, updatedAt = :now',
+                    'SET exportStatus = :es, exportId = :eid, exportedAt = :now, updatedAt = :now',
                 ExpressionAttributeValues: {
                     ':es': 'EXPORTED' satisfies ExportStatus,
-                    ':bid': exportBatchId,
+                    ':eid': exportId,
                     ':now': new Date().toISOString(),
                 },
             })
         );
-    }
-
-    async listByExportBatch(exportBatchId: string): Promise<Invoice[]> {
-        const result = await dbClient.send(
-            new QueryCommand({
-                TableName: this.tableName,
-                IndexName: 'exportBatchId-index',
-                KeyConditionExpression: 'exportBatchId = :bid',
-                ExpressionAttributeValues: { ':bid': exportBatchId },
-            })
-        );
-        return (result.Items ?? []) as Invoice[];
     }
 
     async listEligibleForExport(
-        userId: string,
+        teamId: string,
         periodStart: string,
         periodEnd: string
     ): Promise<Invoice[]> {
         const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
-                IndexName: 'userId-invoiceDate-index',
-                KeyConditionExpression: 'userId = :uid AND invoiceDate BETWEEN :from AND :to',
+                IndexName: 'teamId-invoiceDate-index',
+                KeyConditionExpression: 'teamId = :tid AND invoiceDate BETWEEN :from AND :to',
                 FilterExpression: 'exportStatus = :es AND #s = :completed',
                 ExpressionAttributeNames: { '#s': 'status' },
                 ExpressionAttributeValues: {
-                    ':uid': userId,
+                    ':tid': teamId,
                     ':from': periodStart,
                     ':to': periodEnd,
                     ':es': 'NOT_EXPORTED' satisfies ExportStatus,
@@ -198,38 +158,44 @@ export class InvoiceRepository {
         return (result.Items ?? []) as Invoice[];
     }
 
-    async deleteById(userId: string, invoiceId: string): Promise<void> {
+    async deleteById(teamId: string, invoiceId: string): Promise<void> {
         await dbClient.send(
-            new DeleteCommand({
-                TableName: this.tableName,
-                Key: { userId, invoiceId },
-            })
+            new DeleteCommand({ TableName: this.tableName, Key: { teamId, invoiceId } })
         );
     }
 
-    async deleteAllForUser(userId: string): Promise<void> {
+    async deleteAllForTeam(teamId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
             const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
-                    KeyConditionExpression: 'userId = :uid',
-                    ExpressionAttributeValues: { ':uid': userId },
-                    ProjectionExpression: 'userId, invoiceId',
+                    KeyConditionExpression: 'teamId = :tid',
+                    ExpressionAttributeValues: { ':tid': teamId },
+                    ProjectionExpression: 'teamId, invoiceId',
                     ExclusiveStartKey: lastKey,
                 })
             );
-
             for (const item of result.Items ?? []) {
                 await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
-                        Key: { userId: item['userId'], invoiceId: item['invoiceId'] },
+                        Key: { teamId: item['teamId'], invoiceId: item['invoiceId'] },
                     })
                 );
             }
-
             lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
         } while (lastKey);
     }
+}
+
+// ── Pagination helpers ────────────────────────────────────────────────────────
+
+function decodeNextToken(token: string | undefined): Record<string, unknown> | undefined {
+    if (!token) return undefined;
+    return JSON.parse(Buffer.from(token, 'base64').toString());
+}
+
+function encodeNextToken(key: Record<string, unknown>): string {
+    return Buffer.from(JSON.stringify(key)).toString('base64');
 }

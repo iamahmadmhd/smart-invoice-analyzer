@@ -21,41 +21,17 @@ export class InsightRepository {
         return (result.Items ?? []) as Insight[];
     }
 
-    async listByUserAndType(userId: string, type: InsightType): Promise<Insight[]> {
+    async listByTeamAndType(teamId: string, type: InsightType): Promise<Insight[]> {
         const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
-                IndexName: 'userId-type-index',
-                KeyConditionExpression: 'userId = :uid AND #t = :type',
+                IndexName: 'teamId-type-index',
+                KeyConditionExpression: 'teamId = :tid AND #t = :type',
                 ExpressionAttributeNames: { '#t': 'type' },
-                ExpressionAttributeValues: { ':uid': userId, ':type': type },
+                ExpressionAttributeValues: { ':tid': teamId, ':type': type },
             })
         );
         return (result.Items ?? []) as Insight[];
-    }
-
-    async deleteAllForUser(userId: string): Promise<void> {
-        let lastKey: Record<string, unknown> | undefined;
-        do {
-            const result = await dbClient.send(
-                new QueryCommand({
-                    TableName: this.tableName,
-                    KeyConditionExpression: 'userId = :uid',
-                    ExpressionAttributeValues: { ':uid': userId },
-                    ProjectionExpression: 'userId, insightId',
-                    ExclusiveStartKey: lastKey,
-                })
-            );
-            for (const item of result.Items ?? []) {
-                await dbClient.send(
-                    new DeleteCommand({
-                        TableName: this.tableName,
-                        Key: { userId: item['userId'], insightId: item['insightId'] },
-                    })
-                );
-            }
-            lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
-        } while (lastKey);
     }
 
     async deleteAllForInvoice(invoiceId: string): Promise<void> {
@@ -67,7 +43,7 @@ export class InsightRepository {
                     IndexName: 'invoiceId-index',
                     KeyConditionExpression: 'invoiceId = :iid',
                     ExpressionAttributeValues: { ':iid': invoiceId },
-                    ProjectionExpression: 'userId, insightId',
+                    ProjectionExpression: 'teamId, insightId',
                     ExclusiveStartKey: lastKey,
                 })
             );
@@ -75,7 +51,7 @@ export class InsightRepository {
                 await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
-                        Key: { userId: item['userId'], insightId: item['insightId'] },
+                        Key: { teamId: item['teamId'], insightId: item['insightId'] },
                     })
                 );
             }
@@ -84,17 +60,41 @@ export class InsightRepository {
     }
 
     async deleteByTypesForInvoice(invoiceId: string, types: InsightType[]): Promise<void> {
-        const allInsights = await this.listByInvoice(invoiceId);
-        const toDelete = allInsights.filter((i) => types.includes(i.type));
+        const all = await this.listByInvoice(invoiceId);
+        const toDelete = all.filter((i) => types.includes(i.type));
         await Promise.all(
             toDelete.map((i) =>
                 dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
-                        Key: { userId: i.userId, insightId: i.insightId },
+                        Key: { teamId: i.teamId, insightId: i.insightId },
                     })
                 )
             )
         );
+    }
+
+    async deleteAllForTeam(teamId: string): Promise<void> {
+        let lastKey: Record<string, unknown> | undefined;
+        do {
+            const result = await dbClient.send(
+                new QueryCommand({
+                    TableName: this.tableName,
+                    KeyConditionExpression: 'teamId = :tid',
+                    ExpressionAttributeValues: { ':tid': teamId },
+                    ProjectionExpression: 'teamId, insightId',
+                    ExclusiveStartKey: lastKey,
+                })
+            );
+            for (const item of result.Items ?? []) {
+                await dbClient.send(
+                    new DeleteCommand({
+                        TableName: this.tableName,
+                        Key: { teamId: item['teamId'], insightId: item['insightId'] },
+                    })
+                );
+            }
+            lastKey = result.LastEvaluatedKey as Record<string, unknown> | undefined;
+        } while (lastKey);
     }
 }

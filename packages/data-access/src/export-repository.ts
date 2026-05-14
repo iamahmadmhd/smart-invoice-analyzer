@@ -5,62 +5,58 @@ import {
     QueryCommand,
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import {
-    ExportBatch,
-    ExportBatchStatus,
-    ValidationReport,
-} from '@smart-invoice-analyzer/contracts';
+import { Export, ExportJobStatus, ValidationReport } from '@smart-invoice-analyzer/contracts';
 import { NotFoundError } from '@smart-invoice-analyzer/errors';
 import { dbClient } from './dynamodb-client';
 
-export class ExportBatchRepository {
+export class ExportRepository {
     constructor(private readonly tableName: string) {}
 
-    async put(batch: ExportBatch): Promise<void> {
-        await dbClient.send(new PutCommand({ TableName: this.tableName, Item: batch }));
+    async put(exportRecord: Export): Promise<void> {
+        await dbClient.send(new PutCommand({ TableName: this.tableName, Item: exportRecord }));
     }
 
-    async getById(userId: string, exportBatchId: string): Promise<ExportBatch> {
+    async getById(teamId: string, exportId: string): Promise<Export> {
         const result = await dbClient.send(
-            new GetCommand({ TableName: this.tableName, Key: { userId, exportBatchId } })
+            new GetCommand({ TableName: this.tableName, Key: { teamId, exportId } })
         );
-        if (!result.Item) throw new NotFoundError('ExportBatch', exportBatchId);
-        return result.Item as ExportBatch;
+        if (!result.Item) throw new NotFoundError('Export', exportId);
+        return result.Item as Export;
     }
 
-    /** Look up by batch ID alone (used by workers that don't have userId) */
-    async getByBatchId(exportBatchId: string): Promise<ExportBatch> {
+    /** Lookup by exportId alone — used by workers that only have exportId. */
+    async getByExportId(exportId: string): Promise<Export> {
         const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
-                IndexName: 'exportBatchId-index',
-                KeyConditionExpression: 'exportBatchId = :bid',
-                ExpressionAttributeValues: { ':bid': exportBatchId },
+                IndexName: 'exportId-index',
+                KeyConditionExpression: 'exportId = :eid',
+                ExpressionAttributeValues: { ':eid': exportId },
                 Limit: 1,
             })
         );
-        if (!result.Items?.length) throw new NotFoundError('ExportBatch', exportBatchId);
-        return result.Items[0] as ExportBatch;
+        if (!result.Items?.length) throw new NotFoundError('Export', exportId);
+        return result.Items[0] as Export;
     }
 
-    async listByUser(userId: string): Promise<ExportBatch[]> {
+    async listByTeam(teamId: string): Promise<Export[]> {
         const result = await dbClient.send(
             new QueryCommand({
                 TableName: this.tableName,
-                IndexName: 'userId-createdAt-index',
-                KeyConditionExpression: 'userId = :uid',
-                ExpressionAttributeValues: { ':uid': userId },
+                IndexName: 'teamId-createdAt-index',
+                KeyConditionExpression: 'teamId = :tid',
+                ExpressionAttributeValues: { ':tid': teamId },
                 ScanIndexForward: false,
             })
         );
-        return (result.Items ?? []) as ExportBatch[];
+        return (result.Items ?? []) as Export[];
     }
 
     async updateStatus(
-        userId: string,
-        exportBatchId: string,
-        status: ExportBatchStatus,
-        extra?: Partial<Pick<ExportBatch, 'archiveS3Key' | 'completedAt' | 'validationReport'>>
+        teamId: string,
+        exportId: string,
+        status: ExportJobStatus,
+        extra?: Partial<Pick<Export, 'archiveS3Key' | 'completedAt' | 'validationReport'>>
     ): Promise<void> {
         const sets = ['#s = :status'];
         const names: Record<string, string> = { '#s': 'status' };
@@ -82,7 +78,7 @@ export class ExportBatchRepository {
         await dbClient.send(
             new UpdateCommand({
                 TableName: this.tableName,
-                Key: { userId, exportBatchId },
+                Key: { teamId, exportId },
                 UpdateExpression: `SET ${sets.join(', ')}`,
                 ExpressionAttributeNames: names,
                 ExpressionAttributeValues: values,
@@ -91,22 +87,22 @@ export class ExportBatchRepository {
     }
 
     async saveValidationReport(
-        userId: string,
-        exportBatchId: string,
+        teamId: string,
+        exportId: string,
         report: ValidationReport
     ): Promise<void> {
-        await this.updateStatus(userId, exportBatchId, 'READY', { validationReport: report });
+        await this.updateStatus(teamId, exportId, 'READY', { validationReport: report });
     }
 
-    async deleteAllForUser(userId: string): Promise<void> {
+    async deleteAllForTeam(teamId: string): Promise<void> {
         let lastKey: Record<string, unknown> | undefined;
         do {
             const result = await dbClient.send(
                 new QueryCommand({
                     TableName: this.tableName,
-                    KeyConditionExpression: 'userId = :uid',
-                    ExpressionAttributeValues: { ':uid': userId },
-                    ProjectionExpression: 'userId, exportBatchId',
+                    KeyConditionExpression: 'teamId = :tid',
+                    ExpressionAttributeValues: { ':tid': teamId },
+                    ProjectionExpression: 'teamId, exportId',
                     ExclusiveStartKey: lastKey,
                 })
             );
@@ -114,7 +110,7 @@ export class ExportBatchRepository {
                 await dbClient.send(
                     new DeleteCommand({
                         TableName: this.tableName,
-                        Key: { userId: item['userId'], exportBatchId: item['exportBatchId'] },
+                        Key: { teamId: item['teamId'], exportId: item['exportId'] },
                     })
                 );
             }
