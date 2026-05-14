@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-export const ExportBatchStatusSchema = z.enum([
+// Named ExportJobStatus to avoid collision with invoice's ExportStatus (NOT_EXPORTED | EXPORTED)
+export const ExportJobStatusSchema = z.enum([
     'PENDING',
     'VALIDATING',
     'READY',
@@ -10,23 +11,24 @@ export const ExportBatchStatusSchema = z.enum([
     'COMPLETED',
     'FAILED',
 ]);
-export type ExportBatchStatus = z.infer<typeof ExportBatchStatusSchema>;
+export type ExportJobStatus = z.infer<typeof ExportJobStatusSchema>;
 
-// ── Export batch entity ───────────────────────────────────────────────────────
+// ── Export entity ─────────────────────────────────────────────────────────────
 
-export const ExportBatchSchema = z.object({
-    exportBatchId: z.string().min(1),
-    userId: z.string().min(1),
-    periodStart: z.string(), // ISO date YYYY-MM-DD
-    periodEnd: z.string(), // ISO date YYYY-MM-DD
+export const ExportSchema = z.object({
+    exportId: z.string().min(1),
+    teamId: z.string().min(1),
+    createdBy: z.string().min(1), // userId of the member who triggered the export
+    periodStart: z.date(),
+    periodEnd: z.date(),
     format: z.string(),
-    status: ExportBatchStatusSchema,
+    status: ExportJobStatusSchema,
     validationReport: z.any().optional(),
     archiveS3Key: z.string().optional(),
     createdAt: z.string(),
     completedAt: z.string().optional(),
 });
-export type ExportBatch = z.infer<typeof ExportBatchSchema>;
+export type Export = z.infer<typeof ExportSchema>;
 
 // ── Validation report ─────────────────────────────────────────────────────────
 

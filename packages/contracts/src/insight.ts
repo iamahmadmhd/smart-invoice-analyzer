@@ -5,7 +5,8 @@ export type InsightType = z.infer<typeof InsightTypeSchema>;
 
 export const InsightSchema = z.object({
     insightId: z.string().min(1),
-    userId: z.string().min(1),
+    teamId: z.string().min(1),
+    createdBy: z.string().min(1), // userId of the member or system process that created the insight
     invoiceId: z.string().min(1),
     type: InsightTypeSchema,
     payload: z.record(z.string(), z.unknown()),

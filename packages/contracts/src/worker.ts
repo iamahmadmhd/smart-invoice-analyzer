@@ -1,10 +1,13 @@
 import { z } from 'zod';
 
 // ── Base worker event ─────────────────────────────────────────────────────────
+// All pipeline events carry teamId (scope) and uploadedBy (audit) to mirror the
+// Invoice entity. Workers forward these fields through the entire pipeline.
 
 const BaseWorkerEventSchema = z.object({
     invoiceId: z.string().min(1),
-    userId: z.string().min(1),
+    teamId: z.string().min(1),
+    uploadedBy: z.string().min(1), // userId of the member who uploaded the invoice
     jobId: z.string().min(1),
     correlationId: z.string(),
     attempt: z.number().int().min(1).default(1),
@@ -28,12 +31,12 @@ export const OcrEventSchema = BaseWorkerEventSchema.extend({
 export type OcrEvent = z.infer<typeof OcrEventSchema>;
 
 export const NormalizationEventSchema = BaseWorkerEventSchema.extend({
-    rawOutputS3Key: z.string().min(1), // Textract output stored in S3
+    rawOutputS3Key: z.string().min(1),
 });
 export type NormalizationEvent = z.infer<typeof NormalizationEventSchema>;
 
 export const EnrichmentEventSchema = BaseWorkerEventSchema.extend({
-    rawOutputS3Key: z.string().min(1), // passed through so enrichment can make a single AI call
+    rawOutputS3Key: z.string().min(1),
 });
 export type EnrichmentEvent = z.infer<typeof EnrichmentEventSchema>;
 
@@ -44,8 +47,9 @@ export const AnomalyEventSchema = BaseWorkerEventSchema.extend({});
 export type AnomalyEvent = z.infer<typeof AnomalyEventSchema>;
 
 export const ExportWorkerEventSchema = z.object({
-    exportBatchId: z.string().min(1),
-    userId: z.string().min(1),
+    exportId: z.string().min(1),
+    teamId: z.string().min(1),
+    createdBy: z.string().min(1), // userId of the member who triggered the export
     correlationId: z.string(),
     includeDocumentReferences: z.boolean().default(false),
 });
@@ -69,7 +73,8 @@ export type ProcessingJobStatus = z.infer<typeof ProcessingJobStatusSchema>;
 export const ProcessingJobSchema = z.object({
     jobId: z.string().min(1),
     invoiceId: z.string().min(1),
-    userId: z.string().min(1),
+    teamId: z.string().min(1),
+    uploadedBy: z.string().min(1), // userId of the member who uploaded — for access checks
     stage: ProcessingStageSchema,
     status: ProcessingJobStatusSchema,
     retryCount: z.number().int().min(0).default(0),

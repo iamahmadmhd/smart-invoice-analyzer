@@ -23,11 +23,12 @@ export type ExportStatus = z.infer<typeof ExportStatusSchema>;
 
 export const InvoiceSchema = z.object({
     invoiceId: z.string().min(1),
-    userId: z.string().min(1),
+    teamId: z.string().min(1),
+    uploadedBy: z.string().min(1), // userId of the member who uploaded
     vendorName: z.string().optional(),
     invoiceNumber: z.string().optional(),
-    invoiceDate: z.string().optional(), // ISO date string: YYYY-MM-DD
-    dueDate: z.string().optional(),
+    invoiceDate: z.date().optional(),
+    dueDate: z.date().optional(),
     currency: z.string().default('EUR'),
     netAmount: z.number().optional(),
     taxAmount: z.number().optional(),
@@ -40,7 +41,7 @@ export const InvoiceSchema = z.object({
     anomalyFlag: z.boolean().default(false),
     confidenceScore: z.number().min(0).max(1).optional(),
     sourceFileId: z.string().min(1),
-    exportBatchId: z.string().optional(),
+    exportId: z.string().optional(),
     exportedAt: z.string().optional(),
     exportStatus: ExportStatusSchema.default('NOT_EXPORTED'),
     createdAt: z.string(),
@@ -62,8 +63,8 @@ export const ListInvoicesQuerySchema = z.object({
     exportStatus: ExportStatusSchema.optional(),
     category: z.string().optional(),
     vendorName: z.string().optional(),
-    dateFrom: z.string().optional(), // YYYY-MM-DD
-    dateTo: z.string().optional(), // YYYY-MM-DD
+    dateFrom: z.date().optional(),
+    dateTo: z.date().optional(),
     duplicateFlag: z
         .string()
         .transform((v) => v === 'true')
@@ -87,10 +88,7 @@ export type ListInvoicesResponse = z.infer<typeof ListInvoicesResponseSchema>;
 export const UpdateInvoiceRequestSchema = z.object({
     vendorName: z.string().min(1).optional(),
     invoiceNumber: z.string().min(1).optional(),
-    invoiceDate: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
-        .optional(),
+    invoiceDate: z.date().optional(),
     dueDate: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
@@ -114,7 +112,6 @@ export const UpdateInvoiceRequestSchema = z.object({
         ])
         .optional(),
 });
-
 export type UpdateInvoiceRequest = z.infer<typeof UpdateInvoiceRequestSchema>;
 
 export const PresignRequestSchema = z.object({
