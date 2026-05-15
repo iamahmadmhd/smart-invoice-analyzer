@@ -1,47 +1,48 @@
-import { getUserContext, requirePathParam } from '@smart-invoice-analyzer/auth';
+import {
+    assertActiveMembership,
+    requirePathParam,
+    resolveRawTeamRequest,
+} from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import {
     InsightRepository,
     InvoiceRepository,
+    MembershipRepository,
     ProcessingJobRepository,
 } from '@smart-invoice-analyzer/data-access';
 import { ConflictError } from '@smart-invoice-analyzer/errors';
-import { logger, withApiHandler } from '../powertools';
+import { ApiResponse, createHandler, logger, ParsedApiEvent } from '../powertools';
 import { noContent } from '../utils/response';
 
-const handler = withApiHandler(async (event) => {
-    const user = getUserContext(event as never);
-    const invoiceId = requirePathParam(event as never, 'invoiceId');
+const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
+    const { teamId, userId } = resolveRawTeamRequest(event);
+    const invoiceId = requirePathParam(event, 'invoiceId');
     const config = getConfig();
 
-    const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-    const invoice = await invoiceRepo.getById(user.userId, invoiceId);
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+        teamId,
+        userId
+    );
+    assertActiveMembership(membership, teamId, userId);
 
-    // Prevent deleting exported invoices — would break accounting trail
+    const invoice = await new InvoiceRepository(config.INVOICE_TABLE).getById(teamId, invoiceId);
+
     if (invoice.exportStatus === 'EXPORTED') {
         throw new ConflictError('Cannot delete an invoice that has already been exported', {
             invoiceId,
-            exportBatchId: invoice.exportBatchId,
+            exportId: invoice.exportId,
         });
     }
 
-    logger.info('Deleting invoice and related data', { invoiceId, userId: user.userId });
-
-    // Cascade: delete insights and processing jobs for this invoice
-    const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
-    const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
-
     await Promise.all([
-        insightRepo.deleteAllForInvoice(invoiceId),
-        jobRepo.deleteAllForInvoice(invoiceId),
+        new InsightRepository(config.INSIGHT_TABLE).deleteAllForInvoice(invoiceId),
+        new ProcessingJobRepository(config.PROCESSING_JOB_TABLE).deleteAllForInvoice(invoiceId),
     ]);
 
-    // Finally delete the invoice itself
-    await invoiceRepo.deleteById(user.userId, invoiceId);
-
-    logger.info('Invoice deleted', { invoiceId, userId: user.userId });
+    await new InvoiceRepository(config.INVOICE_TABLE).deleteById(teamId, invoiceId);
+    logger.info('Invoice deleted', { invoiceId, teamId, userId });
 
     return noContent();
-});
+};
 
-export { handler };
+export const handler = createHandler(lambdaHandler);

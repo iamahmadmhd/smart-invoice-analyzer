@@ -23,9 +23,9 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
-    const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
+    const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
 
-    const { items: recentInvoices } = await invoiceRepo.list(payload.userId, { limit: 100 });
+    const { items: recentInvoices } = await invoiceRepo.list(payload.teamId, { limit: 100 });
 
     const result = checkForAnomalies(invoice, recentInvoices);
 
@@ -39,11 +39,12 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
         const insight: Insight = {
             insightId: generateInsightId(),
-            userId: payload.userId,
+            teamId: payload.teamId,
             invoiceId: payload.invoiceId,
             type: 'ANOMALY',
             payload: { reasons: result.reasons },
             createdAt: new Date().toISOString(),
+            createdBy: '',
         };
         await insightRepo.put(insight);
 
@@ -51,8 +52,8 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     }
 
     // Advance status through REVIEW_READY → COMPLETED
-    await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'REVIEW_READY');
-    await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'COMPLETED');
+    await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'REVIEW_READY');
+    await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'COMPLETED');
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
     logger.info('Anomaly detection completed — invoice COMPLETED', {

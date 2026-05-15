@@ -1,7 +1,7 @@
 import { getConfig, getS3Config } from '@smart-invoice-analyzer/config';
 import { ExportWorkerEventSchema } from '@smart-invoice-analyzer/contracts';
 import {
-    ExportBatchRepository,
+    ExportRepository,
     InvoiceRepository,
     S3Repository,
 } from '@smart-invoice-analyzer/data-access';
@@ -15,38 +15,38 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const payload = parseRecord(record.body, ExportWorkerEventSchema);
     logger.appendKeys({
         correlationId: payload.correlationId,
-        exportBatchId: payload.exportBatchId,
+        exportId: payload.exportId,
     });
 
     const config = getConfig();
     const s3Config = getS3Config(config);
 
-    const batchRepo = new ExportBatchRepository(config.EXPORT_BATCH_TABLE);
+    const batchRepo = new ExportRepository(config.EXPORT_TABLE);
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
     const s3 = new S3Repository(config.BUCKET_NAME);
 
     logger.info('Export worker started');
 
-    await batchRepo.updateStatus(payload.userId, payload.exportBatchId, 'GENERATING');
+    await batchRepo.updateStatus(payload.teamId, payload.exportId, 'GENERATING');
 
-    const batch = await batchRepo.getById(payload.userId, payload.exportBatchId);
+    const batch = await batchRepo.getById(payload.teamId, payload.exportId);
 
     const invoices = await invoiceRepo.listEligibleForExport(
-        payload.userId,
+        payload.teamId,
         batch.periodStart,
         batch.periodEnd
     );
 
     if (invoices.length === 0) {
         logger.warn('No eligible invoices for export');
-        await batchRepo.updateStatus(payload.userId, payload.exportBatchId, 'FAILED');
+        await batchRepo.updateStatus(payload.teamId, payload.exportId, 'FAILED');
         return;
     }
 
     const report = validateInvoicesForExport(invoices);
     if (!report.canProceed) {
         logger.warn('Export validation failed at generation time', { errors: report.errors });
-        await batchRepo.updateStatus(payload.userId, payload.exportBatchId, 'FAILED');
+        await batchRepo.updateStatus(payload.teamId, payload.exportId, 'FAILED');
         return;
     }
 
@@ -62,11 +62,11 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     await Promise.all(
         invoices.map((inv) =>
-            invoiceRepo.markExported(payload.userId, inv.invoiceId, payload.exportBatchId)
+            invoiceRepo.markExported(payload.teamId, inv.invoiceId, payload.exportId)
         )
     );
 
-    await batchRepo.updateStatus(payload.userId, payload.exportBatchId, 'COMPLETED', {
+    await batchRepo.updateStatus(payload.teamId, payload.exportId, 'COMPLETED', {
         archiveS3Key: zip.s3Key,
         completedAt: new Date().toISOString(),
     });

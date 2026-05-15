@@ -1,8 +1,6 @@
 import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
 import { ValidationError } from '@smart-invoice-analyzer/errors';
 
-// ── Allowed transitions ───────────────────────────────────────────────────────
-
 const TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
     UPLOADED: ['PROCESSING', 'FAILED_INTERNAL'],
     PROCESSING: ['EXTRACTED', 'FAILED_OCR', 'FAILED_INTERNAL'],
@@ -10,9 +8,9 @@ const TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
     ENRICHED: ['REVIEW_READY', 'FAILED_AI'],
     REVIEW_READY: ['COMPLETED'],
     COMPLETED: [],
-    FAILED_OCR: ['PROCESSING'], // allow retry
+    FAILED_OCR: ['PROCESSING'],
     FAILED_VALIDATION: ['PROCESSING'],
-    FAILED_AI: ['ENRICHED'], // allow retry from enrichment
+    FAILED_AI: ['ENRICHED'],
     FAILED_INTERNAL: ['PROCESSING'],
 };
 

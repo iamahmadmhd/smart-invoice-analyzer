@@ -1,50 +1,63 @@
-import { getUserContext, parseBody } from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { ValidateExportRequestSchema } from '@smart-invoice-analyzer/contracts';
-import { ExportBatchRepository, InvoiceRepository } from '@smart-invoice-analyzer/data-access';
 import {
-    generateExportBatchId,
+    assertActiveMembership,
+    parseBody,
+    requireRole,
+    resolveRawTeamRequest,
+} from '@smart-invoice-analyzer/auth';
+import { getConfig } from '@smart-invoice-analyzer/config';
+import { Export, ValidateExportRequestSchema } from '@smart-invoice-analyzer/contracts';
+import {
+    ExportRepository,
+    InvoiceRepository,
+    MembershipRepository,
+} from '@smart-invoice-analyzer/data-access';
+import {
+    generateExportId,
     resolvePeriod,
     validateInvoicesForExport,
 } from '@smart-invoice-analyzer/domain';
-import { withApiHandler } from '../powertools';
+import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { created } from '../utils/response';
 
-const handler = withApiHandler(async (event) => {
-    const user = getUserContext(event as never);
-    const body = parseBody(event as never, ValidateExportRequestSchema);
+const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
+    const { teamId, userId } = resolveRawTeamRequest(event);
+    const body = parseBody(event, ValidateExportRequestSchema);
     const config = getConfig();
 
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+        teamId,
+        userId
+    );
+    assertActiveMembership(membership, teamId, userId);
+    requireRole(membership, 'MEMBER');
+
     const { periodStart, periodEnd } = resolvePeriod(body.period);
-
-    const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-    const invoices = await invoiceRepo.listEligibleForExport(user.userId, periodStart, periodEnd);
-
+    const invoices = await new InvoiceRepository(config.INVOICE_TABLE).listEligibleForExport(
+        teamId,
+        periodStart,
+        periodEnd
+    );
     const report = validateInvoicesForExport(invoices);
 
-    const exportBatchId = generateExportBatchId();
+    const exportId = generateExportId();
     const now = new Date().toISOString();
 
-    const batchRepo = new ExportBatchRepository(config.EXPORT_BATCH_TABLE);
-    await batchRepo.put({
-        exportBatchId,
-        userId: user.userId,
+    const exportRecord: Export = {
+        exportId,
+        teamId,
+        createdBy: userId,
         periodStart,
         periodEnd,
         format: 'CSV',
-        status: 'VALIDATING',
+        status: report.canProceed ? 'READY' : 'FAILED',
         validationReport: report,
         createdAt: now,
-    });
+    };
 
-    await batchRepo.updateStatus(
-        user.userId,
-        exportBatchId,
-        report.canProceed ? 'READY' : 'FAILED',
-        { validationReport: report }
-    );
+    const exportRepo = new ExportRepository(config.EXPORT_TABLE);
+    await exportRepo.put(exportRecord);
 
-    return created({ exportBatchId, report });
-});
+    return created({ exportId, report });
+};
 
-export { handler };
+export const handler = createHandler(lambdaHandler);

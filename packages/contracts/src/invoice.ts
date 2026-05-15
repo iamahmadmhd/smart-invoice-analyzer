@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
-
 export const InvoiceStatusSchema = z.enum([
     'UPLOADED',
     'PROCESSING',
@@ -19,20 +17,18 @@ export type InvoiceStatus = z.infer<typeof InvoiceStatusSchema>;
 export const ExportStatusSchema = z.enum(['NOT_EXPORTED', 'EXPORTED']);
 export type ExportStatus = z.infer<typeof ExportStatusSchema>;
 
-// ── Core invoice entity ───────────────────────────────────────────────────────
-
 export const InvoiceSchema = z.object({
     invoiceId: z.string().min(1),
     teamId: z.string().min(1),
-    uploadedBy: z.string().min(1), // userId of the member who uploaded
+    uploadedBy: z.string().min(1),
     vendorName: z.string().optional(),
     invoiceNumber: z.string().optional(),
-    invoiceDate: z.date().optional(),
-    dueDate: z.date().optional(),
+    invoiceDate: z.iso.date().optional(),
+    dueDate: z.iso.date().optional(),
     currency: z.string().default('EUR'),
     netAmount: z.number().optional(),
     taxAmount: z.number().optional(),
-    taxRate: z.number().optional(), // e.g. 19 for 19%
+    taxRate: z.number().optional(),
     totalAmount: z.number().optional(),
     vatIdOrTaxNumber: z.string().optional(),
     category: z.string().optional(),
@@ -42,14 +38,12 @@ export const InvoiceSchema = z.object({
     confidenceScore: z.number().min(0).max(1).optional(),
     sourceFileId: z.string().min(1),
     exportId: z.string().optional(),
-    exportedAt: z.string().optional(),
+    exportedAt: z.iso.datetime().optional(),
     exportStatus: ExportStatusSchema.default('NOT_EXPORTED'),
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
 });
 export type Invoice = z.infer<typeof InvoiceSchema>;
-
-// ── Request / response DTOs ───────────────────────────────────────────────────
 
 export const CreateInvoiceRequestSchema = z.object({
     sourceFileId: z.string().min(1),
@@ -63,8 +57,8 @@ export const ListInvoicesQuerySchema = z.object({
     exportStatus: ExportStatusSchema.optional(),
     category: z.string().optional(),
     vendorName: z.string().optional(),
-    dateFrom: z.date().optional(),
-    dateTo: z.date().optional(),
+    dateFrom: z.iso.date().optional(),
+    dateTo: z.iso.date().optional(),
     duplicateFlag: z
         .string()
         .transform((v) => v === 'true')
@@ -88,11 +82,8 @@ export type ListInvoicesResponse = z.infer<typeof ListInvoicesResponseSchema>;
 export const UpdateInvoiceRequestSchema = z.object({
     vendorName: z.string().min(1).optional(),
     invoiceNumber: z.string().min(1).optional(),
-    invoiceDate: z.date().optional(),
-    dueDate: z
-        .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD')
-        .optional(),
+    invoiceDate: z.iso.date().optional(),
+    dueDate: z.iso.date().optional(),
     currency: z.string().length(3).optional(),
     netAmount: z.number().nonnegative().optional(),
     taxAmount: z.number().nonnegative().optional(),
@@ -122,8 +113,8 @@ export const PresignRequestSchema = z.object({
 export type PresignRequest = z.infer<typeof PresignRequestSchema>;
 
 export const PresignResponseSchema = z.object({
-    uploadUrl: z.string().url(),
+    uploadUrl: z.url(),
     fileObjectId: z.string().min(1),
-    expiresAt: z.string(),
+    expiresAt: z.iso.datetime(),
 });
 export type PresignResponse = z.infer<typeof PresignResponseSchema>;

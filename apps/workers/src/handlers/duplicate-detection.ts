@@ -24,9 +24,9 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
-    const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
+    const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
 
-    const { items: recentInvoices } = await invoiceRepo.list(payload.userId, {
+    const { items: recentInvoices } = await invoiceRepo.list(payload.teamId, {
         status: 'COMPLETED',
         limit: 100,
     });
@@ -43,7 +43,7 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
         const insight: Insight = {
             insightId: generateInsightId(),
-            userId: payload.userId,
+            teamId: payload.teamId,
             invoiceId: payload.invoiceId,
             type: 'DUPLICATE',
             payload: {
@@ -51,6 +51,7 @@ async function recordHandler(record: SQSRecord): Promise<void> {
                 reason: result.reason,
             },
             createdAt: new Date().toISOString(),
+            createdBy: '',
         };
         await insightRepo.put(insight);
 
@@ -61,7 +62,7 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     await sendToQueue(config.ANOMALY_QUEUE_URL!, {
         invoiceId: payload.invoiceId,
-        userId: payload.userId,
+        userId: payload.teamId,
         jobId: payload.jobId,
         correlationId: payload.correlationId,
         attempt: payload.attempt,

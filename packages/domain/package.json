@@ -11,9 +11,10 @@
     "dependencies": {
         "@smart-invoice-analyzer/contracts": "*",
         "@smart-invoice-analyzer/data-access": "*",
-        "@smart-invoice-analyzer/errors": "*"
+        "@smart-invoice-analyzer/errors": "*",
+        "date-fns": "^4.1.0"
     },
     "devDependencies": {
-        "typescript": "~5.9.2"
+        "typescript": "^6.0.3"
     }
 }

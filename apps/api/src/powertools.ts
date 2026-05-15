@@ -1,95 +1,87 @@
 import { Logger } from '@aws-lambda-powertools/logger';
+import { injectLambdaContext } from '@aws-lambda-powertools/logger/middleware';
 import { Metrics } from '@aws-lambda-powertools/metrics';
+import { logMetrics } from '@aws-lambda-powertools/metrics/middleware';
+import { parser } from '@aws-lambda-powertools/parser/middleware';
+import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas';
 import { Tracer } from '@aws-lambda-powertools/tracer';
-import { AppError, serializeError } from '@smart-invoice-analyzer/errors';
+import { captureLambdaHandler } from '@aws-lambda-powertools/tracer/middleware';
+import middy from '@middy/core';
+import { AppError } from '@smart-invoice-analyzer/errors';
+import type { Context } from 'aws-lambda';
+import { z } from 'zod';
 
 // ── Shared Powertools instances ───────────────────────────────────────────────
-// Created at module scope so they are reused across warm Lambda invocations.
 
 export const logger = new Logger({ serviceName: 'smart-invoice-analyzer-api' });
+export const tracer = new Tracer({ serviceName: 'smart-invoice-analyzer-api' });
 export const metrics = new Metrics({
     namespace: 'SmartInvoiceAnalyzer',
     serviceName: 'smart-invoice-analyzer-api',
 });
-export const tracer = new Tracer({ serviceName: 'smart-invoice-analyzer-api' });
 
-// ── CORS / default headers ────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Content-Type-Options': 'nosniff',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers':
-        'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-};
+export type ParsedApiEvent = z.infer<typeof APIGatewayProxyEventSchema>;
 
-// ── Handler wrapper ───────────────────────────────────────────────────────────
-// Drop-in replacement for the old withObservability from @smart-invoice-analyzer/observability.
-// Logs request/response, injects correlationId into every log entry via appendKeys,
-// and maps AppError subclasses to their HTTP status codes.
-
-interface ApiEvent {
-    requestContext?: { requestId?: string };
-    headers?: Record<string, string | undefined>;
-    httpMethod?: string;
-    path?: string;
-}
-
-interface ApiResponse {
+export interface ApiResponse {
     statusCode: number;
     headers: Record<string, string>;
     body: string;
 }
 
-type ApiHandler = (event: ApiEvent) => Promise<ApiResponse>;
+// ── Default headers ───────────────────────────────────────────────────────────
 
-export function withApiHandler(handler: ApiHandler): ApiHandler {
-    return async (event: ApiEvent): Promise<ApiResponse> => {
-        const correlationId = event.requestContext?.requestId ?? `local-${Date.now()}`;
-        logger.appendKeys({ correlationId });
+export const DEFAULT_HEADERS: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Content-Type-Options': 'nosniff',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers':
+        'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+};
 
-        logger.info('Request started', {
-            method: event.httpMethod,
-            path: event.path,
-        });
+// ── Error handler middleware ──────────────────────────────────────────────────
 
-        const start = Date.now();
+const errorHandlerMiddleware = (): middy.MiddlewareObj<ParsedApiEvent, ApiResponse> => ({
+    onError: async (request) => {
+        const error = request.error;
+        logger.error('Unhandled error', { error: String(error) });
 
-        try {
-            const response = await handler(event);
-
-            logger.info('Request completed', {
-                statusCode: response.statusCode,
-                durationMs: Date.now() - start,
-            });
-
-            return {
-                ...response,
-                headers: { ...defaultHeaders, ...response.headers },
+        if (error instanceof AppError) {
+            request.response = {
+                statusCode: error.statusCode,
+                headers: DEFAULT_HEADERS,
+                body: JSON.stringify({ error: error.code, message: error.message }),
             };
-        } catch (error) {
-            logger.error('Unhandled error', {
-                error: serializeError(error),
-                durationMs: Date.now() - start,
-            });
-
-            if (error instanceof AppError) {
-                return {
-                    statusCode: error.statusCode,
-                    headers: defaultHeaders,
-                    body: JSON.stringify({ error: error.code, message: error.message }),
-                };
-            }
-
-            return {
-                statusCode: 500,
-                headers: defaultHeaders,
-                body: JSON.stringify({
-                    error: 'INTERNAL_ERROR',
-                    message: 'An unexpected error occurred',
-                }),
-            };
+            return;
         }
-    };
+
+        request.response = {
+            statusCode: 500,
+            headers: DEFAULT_HEADERS,
+            body: JSON.stringify({
+                error: 'INTERNAL_ERROR',
+                message: 'An unexpected error occurred',
+            }),
+        };
+    },
+});
+
+// ── createHandler ─────────────────────────────────────────────────────────────
+// Uses the middy `.handler()` chain so the parser middleware's type narrowing
+// (unknown → ParsedApiEvent) flows correctly through the generic chain.
+// Observability middlewares run first (before parsing) so they always capture
+// invocation context; the parser fires next to validate and transform the event.
+
+export function createHandler(
+    fn: (event: ParsedApiEvent, context: Context) => Promise<ApiResponse>
+) {
+    return middy<ParsedApiEvent, ApiResponse, Error, Context>()
+        .use(injectLambdaContext(logger, { clearState: true }))
+        .use(captureLambdaHandler(tracer))
+        .use(logMetrics(metrics))
+        .use(parser({ schema: APIGatewayProxyEventSchema }))
+        .use(errorHandlerMiddleware())
+        .handler(fn);
 }

@@ -5,13 +5,11 @@ import { callBedrock } from './bedrock-client';
 
 const logger = new Logger({ serviceName: 'smart-invoice-analyzer-ai' });
 
-// ── Result schema ─────────────────────────────────────────────────────────────
-
 const EnrichmentResultSchema = z.object({
     vendorName: z.string().nullable().optional(),
     invoiceNumber: z.string().nullable().optional(),
-    invoiceDate: z.string().nullable().optional(), // YYYY-MM-DD
-    dueDate: z.string().nullable().optional(),
+    invoiceDate: z.iso.date().nullable().optional(),
+    dueDate: z.iso.date().nullable().optional(),
     netAmount: z.number().nullable().optional(),
     taxAmount: z.number().nullable().optional(),
     taxRate: z.number().nullable().optional(),
@@ -33,10 +31,7 @@ const EnrichmentResultSchema = z.object({
     confidenceScore: z.number().min(0).max(1),
     summary: z.string(),
 });
-
 export type EnrichmentResult = z.infer<typeof EnrichmentResultSchema>;
-
-// ── Prompt ────────────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are an expert German accounting assistant.
 You receive a partially-parsed invoice and the original OCR text.
@@ -62,7 +57,6 @@ function buildPrompt(invoice: Partial<Invoice>, ocrText: string): string {
         vatIdOrTaxNumber: invoice.vatIdOrTaxNumber ?? null,
         category: invoice.category ?? null,
     };
-
     return `Partially-parsed invoice (null = missing):
 ${JSON.stringify(known, null, 2)}
 
@@ -74,8 +68,6 @@ ${ocrText.slice(0, 3000)}
 Return JSON with all fields from the partial invoice plus: confidenceScore, summary.`;
 }
 
-// ── Fallback ──────────────────────────────────────────────────────────────────
-
 function fallbackResult(invoice: Partial<Invoice>): EnrichmentResult {
     return {
         confidenceScore: 0.3,
@@ -83,17 +75,13 @@ function fallbackResult(invoice: Partial<Invoice>): EnrichmentResult {
     };
 }
 
-// ── Main function ─────────────────────────────────────────────────────────────
-
 export async function enrichInvoice(invoice: Invoice, ocrText: string): Promise<EnrichmentResult> {
     logger.info('Enriching invoice via AI', { invoiceId: invoice.invoiceId });
-
     const raw = await callBedrock(
         buildPrompt(invoice, ocrText),
         { system: SYSTEM_PROMPT, maxTokens: 512, temperature: 0.0, prefill: '{' },
         JSON.stringify(fallbackResult(invoice))
     );
-
     try {
         const parsed = JSON.parse('{' + raw.trim());
         const result = EnrichmentResultSchema.safeParse(parsed);
@@ -108,17 +96,11 @@ export async function enrichInvoice(invoice: Invoice, ocrText: string): Promise<
     }
 }
 
-/**
- * Merge enrichment result into an existing invoice, only filling missing fields.
- * confidenceScore and summary are always applied (they are enrichment products,
- * not structural fields that normalization would have set).
- */
 export function mergeEnrichmentIntoInvoice(
     invoice: Invoice,
     enrichment: EnrichmentResult
 ): Partial<Invoice> {
     const patch: Partial<Invoice> = {};
-
     if (!invoice.vendorName && enrichment.vendorName) patch.vendorName = enrichment.vendorName;
     if (!invoice.invoiceNumber && enrichment.invoiceNumber)
         patch.invoiceNumber = enrichment.invoiceNumber;
@@ -131,9 +113,6 @@ export function mergeEnrichmentIntoInvoice(
     if (!invoice.vatIdOrTaxNumber && enrichment.vatIdOrTaxNumber)
         patch.vatIdOrTaxNumber = enrichment.vatIdOrTaxNumber;
     if (!invoice.category && enrichment.category) patch.category = enrichment.category;
-
-    // Always apply — these are enrichment-only fields
     patch.confidenceScore = enrichment.confidenceScore;
-
     return patch;
 }

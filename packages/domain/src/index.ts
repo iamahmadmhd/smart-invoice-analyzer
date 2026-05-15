@@ -5,3 +5,4 @@ export * from './anomaly-detection';
 export * from './export-period';
 export * from './export-eligibility';
 export * from './ocr-parser';
+export * from './team';

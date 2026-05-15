@@ -1,14 +1,11 @@
 import { z } from 'zod';
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
-
 export const TeamPlanSchema = z.enum(['free', 'pro']);
 export type TeamPlan = z.infer<typeof TeamPlanSchema>;
 
 export const MemberRoleSchema = z.enum(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']);
 export type MemberRole = z.infer<typeof MemberRoleSchema>;
 
-// Role ordering — higher index = more permissions
 export const ROLE_ORDER: Record<MemberRole, number> = {
     VIEWER: 0,
     MEMBER: 1,
@@ -22,15 +19,11 @@ export type MembershipStatus = z.infer<typeof MembershipStatusSchema>;
 export const InvitationStatusSchema = z.enum(['PENDING', 'ACCEPTED', 'EXPIRED', 'CANCELLED']);
 export type InvitationStatus = z.infer<typeof InvitationStatusSchema>;
 
-// ── Slug validation ───────────────────────────────────────────────────────────
-
 const slugSchema = z
     .string()
     .min(2)
     .max(50)
     .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, 'Slug must be lowercase alphanumeric with hyphens');
-
-// ── Domain entities ───────────────────────────────────────────────────────────
 
 export const TeamSchema = z.object({
     teamId: z.string().min(1),
@@ -38,8 +31,8 @@ export const TeamSchema = z.object({
     slug: slugSchema,
     ownerId: z.string().min(1),
     plan: TeamPlanSchema,
-    createdAt: z.string(),
-    updatedAt: z.string(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
 });
 export type Team = z.infer<typeof TeamSchema>;
 
@@ -48,7 +41,7 @@ export const MembershipSchema = z.object({
     userId: z.string().min(1),
     role: MemberRoleSchema,
     status: MembershipStatusSchema,
-    joinedAt: z.string(),
+    joinedAt: z.iso.datetime(),
 });
 export type Membership = z.infer<typeof MembershipSchema>;
 
@@ -60,12 +53,10 @@ export const InvitationSchema = z.object({
     role: MemberRoleSchema,
     token: z.string().min(1),
     status: InvitationStatusSchema,
-    expiresAt: z.string(),
-    createdAt: z.string(),
+    expiresAt: z.iso.datetime(),
+    createdAt: z.iso.datetime(),
 });
 export type Invitation = z.infer<typeof InvitationSchema>;
-
-// ── Request / response DTOs ───────────────────────────────────────────────────
 
 export const CreateTeamRequestSchema = z.object({
     name: z.string().min(1).max(100),
@@ -78,7 +69,6 @@ export const UpdateTeamRequestSchema = z.object({
 });
 export type UpdateTeamRequest = z.infer<typeof UpdateTeamRequestSchema>;
 
-// OWNER role cannot be assigned via invitation — ownership transfers are a separate flow
 export const CreateInvitationRequestSchema = z.object({
     email: z.email(),
     role: z.enum(['ADMIN', 'MEMBER', 'VIEWER']),
@@ -86,7 +76,6 @@ export const CreateInvitationRequestSchema = z.object({
 export type CreateInvitationRequest = z.infer<typeof CreateInvitationRequestSchema>;
 
 export const UpdateMemberRequestSchema = z.object({
-    // Cannot promote/demote to OWNER via this endpoint
     role: z.enum(['ADMIN', 'MEMBER', 'VIEWER']).optional(),
     status: MembershipStatusSchema.optional(),
 });

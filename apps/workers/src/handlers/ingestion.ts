@@ -25,13 +25,13 @@ export const handler = async (event: S3Event): Promise<void> => {
 
         logger.info('Ingestion started', { s3Key, s3Bucket, fileSizeBytes });
 
-        // Key format: invoices/original/{userId}/{fileObjectId}
+        // Key format: invoices/original/{teamId}/{fileObjectId}
         const parts = s3Key.split('/');
-        const userId = parts[2];
+        const teamId = parts[2];
         const fileObjectId = parts[3];
 
-        if (!userId || !fileObjectId) {
-            logger.error('Cannot parse userId/fileObjectId from S3 key', { s3Key });
+        if (!teamId || !fileObjectId) {
+            logger.error('Cannot parse teamId/fileObjectId from S3 key', { s3Key });
             continue;
         }
 
@@ -53,7 +53,7 @@ export const handler = async (event: S3Event): Promise<void> => {
         const invoice = await invoiceRepo.getBySourceFileId(fileObjectId);
 
         if (!invoice) {
-            logger.warn('No invoice found for fileObjectId', { fileObjectId, userId });
+            logger.warn('No invoice found for fileObjectId', { fileObjectId, teamId });
             continue;
         }
 
@@ -63,20 +63,21 @@ export const handler = async (event: S3Event): Promise<void> => {
         const job: ProcessingJob = {
             jobId,
             invoiceId: invoice.invoiceId,
-            userId,
+            teamId,
             stage: 'INGESTION',
             status: 'IN_PROGRESS',
             retryCount: 0,
             startedAt: now,
+            uploadedBy: '',
         };
 
         const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
         await jobRepo.put(job);
-        await invoiceRepo.updateStatus(userId, invoice.invoiceId, 'PROCESSING');
+        await invoiceRepo.updateStatus(teamId, invoice.invoiceId, 'PROCESSING');
 
         await sendToQueue(config.OCR_QUEUE_URL!, {
             invoiceId: invoice.invoiceId,
-            userId,
+            teamId,
             jobId,
             correlationId,
             attempt: 1,

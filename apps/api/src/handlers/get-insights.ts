@@ -1,22 +1,33 @@
-import { getUserContext, requirePathParam } from '@smart-invoice-analyzer/auth';
+import {
+    assertActiveMembership,
+    requirePathParam,
+    resolveRawTeamRequest,
+} from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
-import { InsightRepository, InvoiceRepository } from '@smart-invoice-analyzer/data-access';
-import { withApiHandler } from '../powertools';
+import {
+    InsightRepository,
+    InvoiceRepository,
+    MembershipRepository,
+} from '@smart-invoice-analyzer/data-access';
+import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 
-const handler = withApiHandler(async (event) => {
-    const user = getUserContext(event as never);
-    const invoiceId = requirePathParam(event as never, 'invoiceId');
+const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
+    const { teamId, userId } = resolveRawTeamRequest(event);
+    const invoiceId = requirePathParam(event, 'invoiceId');
     const config = getConfig();
 
-    // Verify invoice belongs to user before returning insights
-    const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-    await invoiceRepo.getById(user.userId, invoiceId);
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+        teamId,
+        userId
+    );
+    assertActiveMembership(membership, teamId, userId);
 
-    const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
-    const insights = await insightRepo.listByInvoice(invoiceId);
+    // Verify invoice belongs to team before returning insights
+    await new InvoiceRepository(config.INVOICE_TABLE).getById(teamId, invoiceId);
 
+    const insights = await new InsightRepository(config.INSIGHT_TABLE).listByInvoice(invoiceId);
     return ok({ insights });
-});
+};
 
-export { handler };
+export const handler = createHandler(lambdaHandler);

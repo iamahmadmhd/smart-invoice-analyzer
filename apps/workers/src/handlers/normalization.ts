@@ -27,19 +27,19 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const ocrJson = await s3.getObjectAsString(payload.rawOutputS3Key);
     const { rawText } = JSON.parse(ocrJson) as { rawText: string };
 
-    const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
+    const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
 
     const parsed = parseOcrText(rawText);
     const patch = mergeOcrParseIntoInvoice(invoice, parsed);
 
     const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
     await invoiceRepo.put(updated);
-    await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'EXTRACTED');
+    await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'EXTRACTED');
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
     await sendToQueue(config.ENRICHMENT_QUEUE_URL!, {
         invoiceId: payload.invoiceId,
-        userId: payload.userId,
+        userId: payload.teamId,
         jobId: payload.jobId,
         correlationId: payload.correlationId,
         attempt: payload.attempt,

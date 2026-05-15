@@ -1,17 +1,15 @@
 import {
     assertActiveMembership,
-    requirePathParam,
+    requireRole,
     resolveRawTeamRequest,
 } from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
-import { MembershipRepository, ProcessingJobRepository } from '@smart-invoice-analyzer/data-access';
-import { NotFoundError } from '@smart-invoice-analyzer/errors';
+import { InvitationRepository, MembershipRepository } from '@smart-invoice-analyzer/data-access';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 
 const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const { teamId, userId } = resolveRawTeamRequest(event);
-    const jobId = requirePathParam(event, 'jobId');
     const config = getConfig();
 
     const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
@@ -19,13 +17,10 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
         userId
     );
     assertActiveMembership(membership, teamId, userId);
+    requireRole(membership, 'ADMIN');
 
-    const job = await new ProcessingJobRepository(config.PROCESSING_JOB_TABLE).getByJobId(jobId);
-
-    // Verify the job belongs to this team
-    if (job.teamId !== teamId) throw new NotFoundError('ProcessingJob', jobId);
-
-    return ok(job);
+    const invitations = await new InvitationRepository(config.INVITATION_TABLE).listByTeam(teamId);
+    return ok({ invitations, total: invitations.length });
 };
 
 export const handler = createHandler(lambdaHandler);

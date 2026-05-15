@@ -1,22 +1,14 @@
 import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { differenceInDays } from 'date-fns/fp';
 
-// ── Thresholds ────────────────────────────────────────────────────────────────
-
-const AMOUNT_TOLERANCE_PERCENT = 0.01; // 1% difference allowed
-const DATE_WINDOW_DAYS = 3; // invoices within 3 days are candidates
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
+const AMOUNT_TOLERANCE_PERCENT = 0.01;
+const DATE_WINDOW_DAYS = 3;
 
 function normaliseVendor(name: string | undefined): string {
     return (name ?? '')
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
         .trim();
-}
-
-function daysBetween(a: string, b: string): number {
-    const msPerDay = 86400000;
-    return Math.abs(new Date(a).getTime() - new Date(b).getTime()) / msPerDay;
 }
 
 function amountsMatch(a: number | undefined, b: number | undefined): boolean {
@@ -26,8 +18,6 @@ function amountsMatch(a: number | undefined, b: number | undefined): boolean {
     return Math.abs(a - b) / max <= AMOUNT_TOLERANCE_PERCENT;
 }
 
-// ── Core logic ────────────────────────────────────────────────────────────────
-
 export interface DuplicateCheckResult {
     isDuplicate: boolean;
     duplicateOfInvoiceId?: string;
@@ -35,11 +25,9 @@ export interface DuplicateCheckResult {
 }
 
 export function checkForDuplicate(candidate: Invoice, existing: Invoice[]): DuplicateCheckResult {
-    // Skip the candidate itself
     const others = existing.filter((i) => i.invoiceId !== candidate.invoiceId);
 
     for (const other of others) {
-        // Exact invoice number match from same vendor → definite duplicate
         if (
             candidate.invoiceNumber &&
             other.invoiceNumber &&
@@ -53,7 +41,6 @@ export function checkForDuplicate(candidate: Invoice, existing: Invoice[]): Dupl
             };
         }
 
-        // Same vendor + same amount + close date → likely duplicate
         const sameVendor =
             normaliseVendor(candidate.vendorName) === normaliseVendor(other.vendorName) &&
             normaliseVendor(candidate.vendorName) !== '';
@@ -63,7 +50,7 @@ export function checkForDuplicate(candidate: Invoice, existing: Invoice[]): Dupl
         const closeDate =
             candidate.invoiceDate &&
             other.invoiceDate &&
-            daysBetween(candidate.invoiceDate, other.invoiceDate) <= DATE_WINDOW_DAYS;
+            differenceInDays(candidate.invoiceDate, other.invoiceDate) <= DATE_WINDOW_DAYS;
 
         if (sameVendor && sameAmount && closeDate) {
             return {

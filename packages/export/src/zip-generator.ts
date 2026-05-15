@@ -1,5 +1,5 @@
 import { Logger } from '@aws-lambda-powertools/logger';
-import { ExportBatch } from '@smart-invoice-analyzer/contracts';
+import { Export } from '@smart-invoice-analyzer/contracts';
 import JSZip from 'jszip';
 import { GeneratedCsv } from './csv-generator';
 
@@ -12,18 +12,17 @@ export interface GeneratedZip {
 }
 
 export async function generateZipArchive(
-    batch: ExportBatch,
+    exportRecord: Export,
     csv: GeneratedCsv
 ): Promise<GeneratedZip> {
     logger.info('Generating ZIP archive', {
-        exportBatchId: batch.exportBatchId,
+        exportId: exportRecord.exportId,
         csvFilename: csv.filename,
     });
 
     const zip = new JSZip();
-
     zip.file(csv.filename, csv.buffer);
-    zip.file('README.txt', buildReadme(batch, csv));
+    zip.file('README.txt', buildReadme(exportRecord, csv));
 
     const buffer = await zip.generateAsync({
         type: 'nodebuffer',
@@ -31,11 +30,11 @@ export async function generateZipArchive(
         compressionOptions: { level: 6 },
     });
 
-    const filename = buildZipFilename(batch);
-    const s3Key = buildS3Key(batch);
+    const filename = buildZipFilename(exportRecord);
+    const s3Key = buildS3Key(exportRecord);
 
     logger.info('ZIP archive generated', {
-        exportBatchId: batch.exportBatchId,
+        exportId: exportRecord.exportId,
         sizeBytes: buffer.length,
         s3Key,
     });
@@ -43,22 +42,23 @@ export async function generateZipArchive(
     return { buffer, s3Key, filename };
 }
 
-function buildZipFilename(batch: ExportBatch): string {
-    const period = batch.periodStart.slice(0, 7).replace('-', '_');
-    return `InvoiceExport_${period}_${batch.exportBatchId}.zip`;
+function buildZipFilename(exportRecord: Export): string {
+    const period = exportRecord.periodStart.slice(0, 7).replace('-', '_');
+    return `InvoiceExport_${period}_${exportRecord.exportId}.zip`;
 }
 
-function buildS3Key(batch: ExportBatch): string {
-    return `exports/${batch.userId}/${batch.exportBatchId}.zip`;
+function buildS3Key(exportRecord: Export): string {
+    // Scoped under teamId so per-team S3 lifecycle rules can target the prefix
+    return `exports/${exportRecord.teamId}/${exportRecord.exportId}.zip`;
 }
 
-function buildReadme(batch: ExportBatch, csv: GeneratedCsv): string {
+function buildReadme(exportRecord: Export, csv: GeneratedCsv): string {
     return [
         'Invoice CSV Export',
         '==================',
         '',
-        `Export Batch ID : ${batch.exportBatchId}`,
-        `Period          : ${batch.periodStart} – ${batch.periodEnd}`,
+        `Export ID       : ${exportRecord.exportId}`,
+        `Period          : ${exportRecord.periodStart} – ${exportRecord.periodEnd}`,
         `Invoices        : ${csv.rowCount}`,
         `Created at      : ${new Date().toISOString()}`,
         '',

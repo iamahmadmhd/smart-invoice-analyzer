@@ -5,7 +5,6 @@ export function validateInvoicesForExport(invoices: Invoice[]): ValidationReport
     const errors: ValidationWarning[] = [];
 
     for (const invoice of invoices) {
-        // Already exported — hard error, prevents double booking
         if (invoice.exportStatus === 'EXPORTED') {
             errors.push({
                 invoiceId: invoice.invoiceId,
@@ -15,20 +14,12 @@ export function validateInvoicesForExport(invoices: Invoice[]): ValidationReport
             });
         }
 
-        // Missing required fields
         if (!invoice.invoiceDate) {
             errors.push({
                 invoiceId: invoice.invoiceId,
                 field: 'invoiceDate',
                 code: 'MISSING_INVOICE_DATE',
                 message: 'Invoice date is required for export',
-            });
-        } else if (isNaN(Date.parse(invoice.invoiceDate))) {
-            errors.push({
-                invoiceId: invoice.invoiceId,
-                field: 'invoiceDate',
-                code: 'UNREADABLE_DATE',
-                message: `Invoice date "${invoice.invoiceDate}" could not be parsed`,
             });
         }
 
@@ -41,7 +32,6 @@ export function validateInvoicesForExport(invoices: Invoice[]): ValidationReport
             });
         }
 
-        // Warnings — export can proceed but should be reviewed
         if (!invoice.invoiceNumber) {
             warnings.push({
                 invoiceId: invoice.invoiceId,

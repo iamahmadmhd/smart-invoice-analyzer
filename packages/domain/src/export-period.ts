@@ -1,43 +1,52 @@
 import { ExportPeriod } from '@smart-invoice-analyzer/contracts';
 import { ValidationError } from '@smart-invoice-analyzer/errors';
+import {
+    endOfMonth,
+    endOfQuarter,
+    endOfYear,
+    format,
+    startOfMonth,
+    startOfQuarter,
+    startOfYear,
+} from 'date-fns';
 
 export interface DateRange {
     periodStart: string; // YYYY-MM-DD
     periodEnd: string; // YYYY-MM-DD
 }
 
+const ISO_DATE = 'yyyy-MM-dd';
+
 export function resolvePeriod(period: ExportPeriod): DateRange {
     const { type, year } = period;
 
     if (type === 'year') {
+        const base = new Date(year, 0, 1);
         return {
-            periodStart: `${year}-01-01`,
-            periodEnd: `${year}-12-31`,
+            periodStart: format(startOfYear(base), ISO_DATE),
+            periodEnd: format(endOfYear(base), ISO_DATE),
         };
     }
 
     if (type === 'quarter') {
-        if (!period.quarter) throw new ValidationError('quarter is required for type=quarter');
-        const startMonth = (period.quarter - 1) * 3 + 1;
-        const endMonth = startMonth + 2;
+        if (!period.quarter) throw new ValidationError('quarter is required for type: quarter');
+        // Set month to first month of the quarter (0-indexed: Q1→0, Q2→3, Q3→6, Q4→9)
+        const firstMonthOfQuarter = (period.quarter - 1) * 3;
+        const base = new Date(year, firstMonthOfQuarter, 1);
         return {
-            periodStart: `${year}-${String(startMonth).padStart(2, '0')}-01`,
-            periodEnd: lastDayOf(year, endMonth),
+            periodStart: format(startOfQuarter(base), ISO_DATE),
+            periodEnd: format(endOfQuarter(base), ISO_DATE),
         };
     }
 
     if (type === 'month') {
-        if (!period.month) throw new ValidationError('month is required for type=month');
+        if (!period.month) throw new ValidationError('month is required for type: month');
+        const base = new Date(year, period.month - 1, 1);
         return {
-            periodStart: `${year}-${String(period.month).padStart(2, '0')}-01`,
-            periodEnd: lastDayOf(year, period.month),
+            periodStart: format(startOfMonth(base), ISO_DATE),
+            periodEnd: format(endOfMonth(base), ISO_DATE),
         };
     }
 
     throw new ValidationError(`Unknown period type: ${type}`);
-}
-
-function lastDayOf(year: number, month: number): string {
-    const date = new Date(year, month, 0);
-    return `${year}-${String(month).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

@@ -1,5 +1,5 @@
 import { Logger } from '@aws-lambda-powertools/logger';
-import { ExportBatch, Invoice } from '@smart-invoice-analyzer/contracts';
+import { Export, Invoice } from '@smart-invoice-analyzer/contracts';
 
 const logger = new Logger({ serviceName: 'smart-invoice-analyzer-export' });
 
@@ -10,7 +10,6 @@ export interface CsvGeneratorOptions {
 }
 
 export interface GeneratedCsv {
-    /** Raw CSV content as a Buffer (UTF-8 with BOM) */
     buffer: Buffer;
     filename: string;
     rowCount: number;
@@ -30,7 +29,7 @@ const HEADERS = [
     'VAT/Tax ID',
     'Category',
     'Status',
-    'Export Batch ID',
+    'Export ID',
     'Document Reference',
 ];
 
@@ -43,7 +42,8 @@ function escapeField(value: string): string {
 
 function buildDocumentReference(invoice: Invoice, options: CsvGeneratorOptions): string {
     if (!options.includeDocumentReferences) return '';
-    return `https://s3.amazonaws.com/${options.bucketName}/${options.invoicePrefix}${invoice.userId}/${invoice.sourceFileId}`;
+    // S3 key: invoices/original/{teamId}/{fileObjectId}
+    return `https://s3.amazonaws.com/${options.bucketName}/${options.invoicePrefix}${invoice.teamId}/${invoice.sourceFileId}`;
 }
 
 function invoiceToRow(invoice: Invoice, options: CsvGeneratorOptions): string {
@@ -61,7 +61,7 @@ function invoiceToRow(invoice: Invoice, options: CsvGeneratorOptions): string {
         invoice.vatIdOrTaxNumber ?? '',
         invoice.category ?? '',
         invoice.status,
-        invoice.exportBatchId ?? '',
+        invoice.exportId ?? '',
         buildDocumentReference(invoice, options),
     ];
     return fields.map(escapeField).join(',');
@@ -69,11 +69,11 @@ function invoiceToRow(invoice: Invoice, options: CsvGeneratorOptions): string {
 
 export function generateCsv(
     invoices: Invoice[],
-    batch: ExportBatch,
+    exportRecord: Export,
     options: CsvGeneratorOptions
 ): GeneratedCsv {
     logger.info('Generating CSV', {
-        exportBatchId: batch.exportBatchId,
+        exportId: exportRecord.exportId,
         invoiceCount: invoices.length,
     });
 
@@ -85,7 +85,7 @@ export function generateCsv(
     const bom = Buffer.from([0xef, 0xbb, 0xbf]);
     const buffer = Buffer.concat([bom, Buffer.from(content, 'utf-8')]);
 
-    const period = batch.periodStart.slice(0, 7).replace('-', '_');
+    const period = exportRecord.periodStart.slice(0, 7).replace('-', '_');
     const filename = `InvoiceExport_${period}.csv`;
 
     return { buffer, filename, rowCount: dataRows.length };

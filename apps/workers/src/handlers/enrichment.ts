@@ -27,7 +27,7 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
-    const invoice = await invoiceRepo.getById(payload.userId, payload.invoiceId);
+    const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
 
     const ocrJson = await s3.getObjectAsString(payload.rawOutputS3Key);
     const { rawText } = JSON.parse(ocrJson) as { rawText: string };
@@ -36,11 +36,12 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     const insight: Insight = {
         insightId: generateInsightId(),
-        userId: payload.userId,
+        teamId: payload.teamId,
         invoiceId: payload.invoiceId,
         type: 'SUMMARY',
         payload: { summary: enrichment.summary },
         createdAt: new Date().toISOString(),
+        createdBy: '',
     };
     await insightRepo.put(insight);
 
@@ -48,12 +49,12 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
     await invoiceRepo.put(updated);
 
-    await invoiceRepo.updateStatus(payload.userId, payload.invoiceId, 'ENRICHED');
+    await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'ENRICHED');
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
     await sendToQueue(config.DUPLICATE_QUEUE_URL!, {
         invoiceId: payload.invoiceId,
-        userId: payload.userId,
+        userId: payload.teamId,
         jobId: payload.jobId,
         correlationId: payload.correlationId,
         attempt: payload.attempt,

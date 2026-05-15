@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-// ── Enums ─────────────────────────────────────────────────────────────────────
-
-// Named ExportJobStatus to avoid collision with invoice's ExportStatus (NOT_EXPORTED | EXPORTED)
 export const ExportJobStatusSchema = z.enum([
     'PENDING',
     'VALIDATING',
@@ -13,24 +10,20 @@ export const ExportJobStatusSchema = z.enum([
 ]);
 export type ExportJobStatus = z.infer<typeof ExportJobStatusSchema>;
 
-// ── Export entity ─────────────────────────────────────────────────────────────
-
 export const ExportSchema = z.object({
     exportId: z.string().min(1),
     teamId: z.string().min(1),
-    createdBy: z.string().min(1), // userId of the member who triggered the export
-    periodStart: z.date(),
-    periodEnd: z.date(),
+    createdBy: z.string().min(1),
+    periodStart: z.iso.date(),
+    periodEnd: z.iso.date(),
     format: z.string(),
     status: ExportJobStatusSchema,
     validationReport: z.any().optional(),
     archiveS3Key: z.string().optional(),
-    createdAt: z.string(),
-    completedAt: z.string().optional(),
+    createdAt: z.iso.datetime(),
+    completedAt: z.iso.datetime().optional(),
 });
 export type Export = z.infer<typeof ExportSchema>;
-
-// ── Validation report ─────────────────────────────────────────────────────────
 
 export const ValidationWarningSchema = z.object({
     invoiceId: z.string(),
@@ -57,13 +50,11 @@ export const ValidationReportSchema = z.object({
 });
 export type ValidationReport = z.infer<typeof ValidationReportSchema>;
 
-// ── Request / response DTOs ───────────────────────────────────────────────────
-
 export const ExportPeriodSchema = z.object({
     type: z.enum(['month', 'quarter', 'year']),
     year: z.number().int().min(2000).max(2100),
-    month: z.number().int().min(1).max(12).optional(), // required for month
-    quarter: z.number().int().min(1).max(4).optional(), // required for quarter
+    month: z.number().int().min(1).max(12).optional(),
+    quarter: z.number().int().min(1).max(4).optional(),
 });
 export type ExportPeriod = z.infer<typeof ExportPeriodSchema>;
 
@@ -77,8 +68,8 @@ export const ValidateExportRequestSchema = CreateExportRequestSchema;
 export type ValidateExportRequest = z.infer<typeof ValidateExportRequestSchema>;
 
 export const ExportDownloadResponseSchema = z.object({
-    downloadUrl: z.string().url(),
-    expiresAt: z.string(),
+    downloadUrl: z.url(),
+    expiresAt: z.iso.datetime(),
     archiveFilename: z.string(),
 });
 export type ExportDownloadResponse = z.infer<typeof ExportDownloadResponseSchema>;

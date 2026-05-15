@@ -1,20 +1,29 @@
 import { parseQueryIntent, synthesizeAnswer } from '@smart-invoice-analyzer/ai';
-import { getUserContext, parseBody } from '@smart-invoice-analyzer/auth';
+import {
+    assertActiveMembership,
+    parseBody,
+    resolveRawTeamRequest,
+} from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { QueryRequestSchema } from '@smart-invoice-analyzer/contracts';
-import { InvoiceRepository } from '@smart-invoice-analyzer/data-access';
-import { withApiHandler } from '../powertools';
+import { InvoiceRepository, MembershipRepository } from '@smart-invoice-analyzer/data-access';
+import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 
-const handler = withApiHandler(async (event) => {
-    const user = getUserContext(event as never);
-    const { question } = parseBody(event as never, QueryRequestSchema);
+const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
+    const { teamId, userId } = resolveRawTeamRequest(event);
+    const { question } = parseBody(event, QueryRequestSchema);
     const config = getConfig();
+
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+        teamId,
+        userId
+    );
+    assertActiveMembership(membership, teamId, userId);
 
     const intent = await parseQueryIntent(question);
 
-    const repo = new InvoiceRepository(config.INVOICE_TABLE);
-    const { items: invoices } = await repo.list(user.userId, {
+    const { items: invoices } = await new InvoiceRepository(config.INVOICE_TABLE).list(teamId, {
         dateFrom: intent.filters?.dateFrom,
         dateTo: intent.filters?.dateTo,
         category: intent.filters?.category,
@@ -30,9 +39,7 @@ const handler = withApiHandler(async (event) => {
               }
             : undefined;
 
-    const result = await synthesizeAnswer({ question, invoices, aggregates });
+    return ok(await synthesizeAnswer({ question, invoices, aggregates }));
+};
 
-    return ok(result);
-});
-
-export { handler };
+export const handler = createHandler(lambdaHandler);

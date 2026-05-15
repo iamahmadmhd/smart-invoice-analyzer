@@ -1,39 +1,44 @@
 import { randomUUID } from 'crypto';
-import { SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
-import { getUserContext, parseBody, requirePathParam } from '@smart-invoice-analyzer/auth';
+import {
+    assertActiveMembership,
+    parseBody,
+    requirePathParam,
+    resolveRawTeamRequest,
+} from '@smart-invoice-analyzer/auth';
 import { getConfig } from '@smart-invoice-analyzer/config';
 import { UpdateInvoiceRequestSchema } from '@smart-invoice-analyzer/contracts';
 import {
     InsightRepository,
     InvoiceRepository,
+    MembershipRepository,
     ProcessingJobRepository,
 } from '@smart-invoice-analyzer/data-access';
 import { generateJobId } from '@smart-invoice-analyzer/domain';
-import { ConflictError, NotFoundError } from '@smart-invoice-analyzer/errors';
-import { logger, withApiHandler } from '../powertools';
+import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { ApiResponse, createHandler, logger, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 import { sendToQueue } from '../utils/sqs';
 
-/** Statuses where OCR + enrichment have already run — safe to re-trigger detection. */
-const REPROCESSABLE_STATUSES = new Set(['ENRICHED', 'REVIEW_READY', 'COMPLETED']);
+const REPROCESSABLE = new Set(['ENRICHED', 'REVIEW_READY', 'COMPLETED']);
 
-const handler = withApiHandler(async (event) => {
-    const user = getUserContext(event as never);
-    const invoiceId = requirePathParam(event as never, 'invoiceId');
-    const body = parseBody(event as never, UpdateInvoiceRequestSchema);
+const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
+    const { teamId, userId } = resolveRawTeamRequest(event);
+    const invoiceId = requirePathParam(event, 'invoiceId');
+    const body = parseBody(event, UpdateInvoiceRequestSchema);
     const config = getConfig();
 
-    const repo = new InvoiceRepository(config.INVOICE_TABLE);
-    const invoice = await repo.getById(user.userId, invoiceId);
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+        teamId,
+        userId
+    );
+    assertActiveMembership(membership, teamId, userId);
 
-    if (!invoice) {
-        throw new NotFoundError('Invoice', invoiceId);
-    }
+    const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
+    const invoice = await invoiceRepo.getById(teamId, invoiceId);
 
     if (invoice.exportStatus === 'EXPORTED') {
         throw new ConflictError('Cannot edit an invoice that has already been exported', {
             invoiceId,
-            exportStatus: invoice.exportStatus,
         });
     }
 
@@ -41,12 +46,13 @@ const handler = withApiHandler(async (event) => {
     const updated = {
         ...invoice,
         ...body,
-        // Immutable fields — never overwritten by user input
+        // Immutable fields
         invoiceId: invoice.invoiceId,
-        userId: invoice.userId,
+        teamId: invoice.teamId,
+        uploadedBy: invoice.uploadedBy,
         status: invoice.status,
         exportStatus: invoice.exportStatus,
-        exportBatchId: invoice.exportBatchId,
+        exportId: invoice.exportId,
         exportedAt: invoice.exportedAt,
         duplicateFlag: invoice.duplicateFlag,
         anomalyFlag: invoice.anomalyFlag,
@@ -56,10 +62,9 @@ const handler = withApiHandler(async (event) => {
         updatedAt: now,
     };
 
-    // ── Tax recalculation ─────────────────────────────────────────────────
+    // Tax recalculation
     const effectiveNet = body.netAmount ?? invoice.netAmount;
     const effectiveTaxRate = body.taxRate ?? invoice.taxRate;
-
     if (
         effectiveNet !== undefined &&
         effectiveTaxRate !== undefined &&
@@ -67,7 +72,6 @@ const handler = withApiHandler(async (event) => {
     ) {
         updated.taxAmount = parseFloat(((effectiveNet * effectiveTaxRate) / 100).toFixed(2));
     }
-
     const effectiveTax = updated.taxAmount ?? invoice.taxAmount;
     const effectiveNet2 = updated.netAmount ?? invoice.netAmount;
     if (
@@ -78,41 +82,40 @@ const handler = withApiHandler(async (event) => {
         updated.totalAmount = parseFloat((effectiveNet2 + effectiveTax).toFixed(2));
     }
 
-    await repo.put(updated);
+    await invoiceRepo.put(updated);
 
-    if (REPROCESSABLE_STATUSES.has(invoice.status) && config.ENRICHMENT_QUEUE_URL) {
+    if (REPROCESSABLE.has(invoice.status) && config.ENRICHMENT_QUEUE_URL) {
         const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
         await insightRepo.deleteByTypesForInvoice(invoiceId, ['SUMMARY', 'DUPLICATE', 'ANOMALY']);
-
-        await repo.put({ ...updated, duplicateFlag: false, anomalyFlag: false });
+        await invoiceRepo.put({ ...updated, duplicateFlag: false, anomalyFlag: false });
 
         const jobId = generateJobId();
-        const correlationId = randomUUID();
-
-        const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
-        await jobRepo.put({
+        const now2 = new Date().toISOString();
+        await new ProcessingJobRepository(config.PROCESSING_JOB_TABLE).put({
             jobId,
             invoiceId,
-            userId: user.userId,
+            teamId,
+            uploadedBy: userId,
             stage: 'ENRICHMENT',
             status: 'PENDING',
             retryCount: 0,
-            startedAt: now,
+            startedAt: now2,
         });
 
         await sendToQueue(config.ENRICHMENT_QUEUE_URL, {
             invoiceId,
-            userId: user.userId,
+            teamId,
+            uploadedBy: userId,
             jobId,
-            correlationId,
+            correlationId: randomUUID(),
             attempt: 1,
-            rawOutputS3Key: `${config.DERIVED_PREFIX}${user.userId}/${invoiceId}/ocr.json`,
+            rawOutputS3Key: `${config.DERIVED_PREFIX}${teamId}/${invoiceId}/ocr.json`,
         });
 
-        logger.info('Re-triggered enrichment pipeline after invoice update', { invoiceId, jobId });
+        logger.info('Re-triggered enrichment after invoice update', { invoiceId, jobId });
     }
 
     return ok(updated);
-});
+};
 
-export { handler };
+export const handler = createHandler(lambdaHandler);
