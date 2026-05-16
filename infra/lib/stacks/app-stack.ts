@@ -32,33 +32,29 @@ export class AppStack extends cdk.Stack {
             processingJobTable: database.processingJobTable,
             exportTable: database.exportTable,
             insightTable: database.insightTable,
-            userTable: database.userTable,
         });
 
         const api = new Api(this, 'Api', {
             prefix,
             prod,
             userPool: auth.userPool,
-            orchestratorFunction: processing.orchestratorFunction,
             invoiceBucket: storage.invoiceBucket,
+            teamTable: database.teamTable,
+            membershipTable: database.membershipTable,
+            invitationTable: database.invitationTable,
             invoiceTable: database.invoiceTable,
             processingJobTable: database.processingJobTable,
             exportTable: database.exportTable,
             insightTable: database.insightTable,
-            userTable: database.userTable,
             exportQueue: processing.exportQueue,
             enrichmentQueue: processing.enrichmentQueue,
         });
 
-        // ── Web app hosting ────────────────────────────────────────────────
-        // CloudFront distribution with OAC in front of the S3 web app bucket.
-        // The bucket itself has no public access; all traffic goes via the CDN.
         const webApp = new WebAppHosting(this, 'WebAppHosting', {
             webAppBucket: storage.webAppBucket,
             prod,
         });
 
-        // ── Monitoring ─────────────────────────────────────────────────────
         new Monitoring(this, 'Monitoring', {
             prefix,
             lambdaFunctions: [
@@ -68,15 +64,16 @@ export class AppStack extends cdk.Stack {
             ],
             queues: processing.queues,
             tables: [
+                database.teamTable,
+                database.membershipTable,
+                database.invitationTable,
                 database.invoiceTable,
                 database.processingJobTable,
                 database.exportTable,
                 database.insightTable,
-                database.userTable,
             ],
         });
 
-        // ── SSM parameters (production only, consumed by the deploy pipeline) ──
         if (prod) {
             this.putParameter('ApiUrlParameter', 'api-url', api.apiUrl);
             this.putParameter('UserPoolIdParameter', 'user-pool-id', auth.userPool.userPoolId);
@@ -90,8 +87,6 @@ export class AppStack extends cdk.Stack {
                 'web-app-bucket-name',
                 storage.webAppBucket.bucketName
             );
-            // Distribution ID is needed for `aws cloudfront create-invalidation`
-            // after each web deploy so stale HTML is purged from edge caches.
             this.putParameter(
                 'CloudFrontDistributionIdParameter',
                 'cloudfront-distribution-id',

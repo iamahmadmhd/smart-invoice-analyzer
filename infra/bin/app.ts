@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib/core';
-import { PipelineStack } from '../lib/pipeline-stack';
 import { AppStack } from '../lib/stacks/app-stack';
 
 const app = new cdk.App();
@@ -19,9 +18,10 @@ new AppStack(app, 'SmartInvoiceAnalyzer-Dev', {
     description: 'Smart Invoice Analyzer - Development Environment',
 });
 
-// CI/CD Pipeline stack
-new PipelineStack(app, 'SmartInvoiceAnalyzer-Pipeline', {
+// Production stack
+new AppStack(app, 'SmartInvoiceAnalyzer-Prod', {
     env,
-    stackName: 'SmartInvoiceAnalyzer-Pipeline',
-    description: 'Smart Invoice Analyzer - CI/CD Pipeline for Production',
+    stage: 'prod',
+    stackName: 'SmartInvoiceAnalyzer-Prod',
+    description: 'Smart Invoice Analyzer - Production Environment',
 });
