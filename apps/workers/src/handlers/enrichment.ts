@@ -9,8 +9,7 @@ import {
 } from '@smart-invoice-analyzer/data-access';
 import { generateInsightId } from '@smart-invoice-analyzer/domain';
 import type { SQSRecord } from 'aws-lambda';
-import { logger } from '../powertools';
-import { parseRecord, processor, processPartialResponse } from '../utils/parse-event';
+import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';
 
 async function recordHandler(record: SQSRecord): Promise<void> {
@@ -21,15 +20,13 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
     const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
-    const s3 = new S3Repository(config.BUCKET_NAME);
-
-    logger.info('Enrichment started');
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
     const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
-
-    const ocrJson = await s3.getObjectAsString(payload.rawOutputS3Key);
+    const ocrJson = await new S3Repository(config.BUCKET_NAME).getObjectAsString(
+        payload.rawOutputS3Key
+    );
     const { rawText } = JSON.parse(ocrJson) as { rawText: string };
 
     const enrichment = await enrichInvoice(invoice, rawText);
@@ -37,24 +34,23 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const insight: Insight = {
         insightId: generateInsightId(),
         teamId: payload.teamId,
+        createdBy: payload.uploadedBy,
         invoiceId: payload.invoiceId,
         type: 'SUMMARY',
         payload: { summary: enrichment.summary },
         createdAt: new Date().toISOString(),
-        createdBy: '',
     };
     await insightRepo.put(insight);
 
     const patch = mergeEnrichmentIntoInvoice(invoice, enrichment);
-    const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
-    await invoiceRepo.put(updated);
-
+    await invoiceRepo.put({ ...invoice, ...patch, updatedAt: new Date().toISOString() });
     await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'ENRICHED');
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
     await sendToQueue(config.DUPLICATE_QUEUE_URL!, {
         invoiceId: payload.invoiceId,
-        userId: payload.teamId,
+        teamId: payload.teamId,
+        uploadedBy: payload.uploadedBy,
         jobId: payload.jobId,
         correlationId: payload.correlationId,
         attempt: payload.attempt,

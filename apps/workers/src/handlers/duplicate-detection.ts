@@ -7,8 +7,7 @@ import {
 } from '@smart-invoice-analyzer/data-access';
 import { checkForDuplicate, generateInsightId } from '@smart-invoice-analyzer/domain';
 import type { SQSRecord } from 'aws-lambda';
-import { logger } from '../powertools';
-import { parseRecord, processor, processPartialResponse } from '../utils/parse-event';
+import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';
 
 async function recordHandler(record: SQSRecord): Promise<void> {
@@ -18,43 +17,33 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const config = getConfig();
     const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-    const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
-
-    logger.info('Duplicate detection started');
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
     const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
-
     const { items: recentInvoices } = await invoiceRepo.list(payload.teamId, {
         status: 'COMPLETED',
         limit: 100,
     });
-
     const result = checkForDuplicate(invoice, recentInvoices);
 
     if (result.isDuplicate) {
-        const updatedInvoice = {
+        await invoiceRepo.put({
             ...invoice,
             duplicateFlag: true,
             updatedAt: new Date().toISOString(),
-        };
-        await invoiceRepo.put(updatedInvoice);
+        });
 
         const insight: Insight = {
             insightId: generateInsightId(),
             teamId: payload.teamId,
+            createdBy: payload.uploadedBy,
             invoiceId: payload.invoiceId,
             type: 'DUPLICATE',
-            payload: {
-                duplicateOfInvoiceId: result.duplicateOfInvoiceId,
-                reason: result.reason,
-            },
+            payload: { duplicateOfInvoiceId: result.duplicateOfInvoiceId, reason: result.reason },
             createdAt: new Date().toISOString(),
-            createdBy: '',
         };
-        await insightRepo.put(insight);
-
+        await new InsightRepository(config.INSIGHT_TABLE).put(insight);
         logger.warn('Duplicate detected', { duplicateOf: result.duplicateOfInvoiceId });
     }
 
@@ -62,7 +51,8 @@ async function recordHandler(record: SQSRecord): Promise<void> {
 
     await sendToQueue(config.ANOMALY_QUEUE_URL!, {
         invoiceId: payload.invoiceId,
-        userId: payload.teamId,
+        teamId: payload.teamId,
+        uploadedBy: payload.uploadedBy,
         jobId: payload.jobId,
         correlationId: payload.correlationId,
         attempt: payload.attempt,

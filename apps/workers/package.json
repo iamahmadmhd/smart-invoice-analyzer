@@ -20,13 +20,13 @@
         "@smart-invoice-analyzer/contracts": "*",
         "@smart-invoice-analyzer/data-access": "*",
         "@smart-invoice-analyzer/domain": "*",
-        "@smart-invoice-analyzer/export": "*",
         "@smart-invoice-analyzer/errors": "*",
+        "@smart-invoice-analyzer/export": "*",
         "zod": "^4.3.6"
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.161",
         "esbuild": "^0.24.0",
-        "typescript": "~5.9.2"
+        "typescript": "^6.0.3"
     }
 }

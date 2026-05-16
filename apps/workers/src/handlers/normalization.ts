@@ -7,8 +7,7 @@ import {
 } from '@smart-invoice-analyzer/data-access';
 import { mergeOcrParseIntoInvoice, parseOcrText } from '@smart-invoice-analyzer/domain';
 import type { SQSRecord } from 'aws-lambda';
-import { logger } from '../powertools';
-import { parseRecord, processor, processPartialResponse } from '../utils/parse-event';
+import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';
 
 async function recordHandler(record: SQSRecord): Promise<void> {
@@ -18,28 +17,25 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const config = getConfig();
     const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-    const s3 = new S3Repository(config.BUCKET_NAME);
-
-    logger.info('Normalization started');
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
-    const ocrJson = await s3.getObjectAsString(payload.rawOutputS3Key);
+    const ocrJson = await new S3Repository(config.BUCKET_NAME).getObjectAsString(
+        payload.rawOutputS3Key
+    );
     const { rawText } = JSON.parse(ocrJson) as { rawText: string };
 
     const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
+    const patch = mergeOcrParseIntoInvoice(invoice, parseOcrText(rawText));
 
-    const parsed = parseOcrText(rawText);
-    const patch = mergeOcrParseIntoInvoice(invoice, parsed);
-
-    const updated = { ...invoice, ...patch, updatedAt: new Date().toISOString() };
-    await invoiceRepo.put(updated);
+    await invoiceRepo.put({ ...invoice, ...patch, updatedAt: new Date().toISOString() });
     await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'EXTRACTED');
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
     await sendToQueue(config.ENRICHMENT_QUEUE_URL!, {
         invoiceId: payload.invoiceId,
-        userId: payload.teamId,
+        teamId: payload.teamId,
+        uploadedBy: payload.uploadedBy,
         jobId: payload.jobId,
         correlationId: payload.correlationId,
         attempt: payload.attempt,

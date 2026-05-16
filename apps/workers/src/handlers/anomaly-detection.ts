@@ -7,8 +7,7 @@ import {
 } from '@smart-invoice-analyzer/data-access';
 import { checkForAnomalies, generateInsightId } from '@smart-invoice-analyzer/domain';
 import type { SQSRecord } from 'aws-lambda';
-import { logger } from '../powertools';
-import { parseRecord, processor, processPartialResponse } from '../utils/parse-event';
+import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 
 async function recordHandler(record: SQSRecord): Promise<void> {
     const payload = parseRecord(record.body, AnomalyEventSchema);
@@ -17,48 +16,38 @@ async function recordHandler(record: SQSRecord): Promise<void> {
     const config = getConfig();
     const jobRepo = new ProcessingJobRepository(config.PROCESSING_JOB_TABLE);
     const invoiceRepo = new InvoiceRepository(config.INVOICE_TABLE);
-    const insightRepo = new InsightRepository(config.INSIGHT_TABLE);
-
-    logger.info('Anomaly detection started');
 
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'IN_PROGRESS');
 
     const invoice = await invoiceRepo.getById(payload.teamId, payload.invoiceId);
-
     const { items: recentInvoices } = await invoiceRepo.list(payload.teamId, { limit: 100 });
-
     const result = checkForAnomalies(invoice, recentInvoices);
 
     if (result.isAnomaly) {
-        const updatedInvoice = {
+        await invoiceRepo.put({
             ...invoice,
             anomalyFlag: true,
             updatedAt: new Date().toISOString(),
-        };
-        await invoiceRepo.put(updatedInvoice);
+        });
 
         const insight: Insight = {
             insightId: generateInsightId(),
             teamId: payload.teamId,
+            createdBy: payload.uploadedBy,
             invoiceId: payload.invoiceId,
             type: 'ANOMALY',
             payload: { reasons: result.reasons },
             createdAt: new Date().toISOString(),
-            createdBy: '',
         };
-        await insightRepo.put(insight);
-
+        await new InsightRepository(config.INSIGHT_TABLE).put(insight);
         logger.warn('Anomaly detected', { reasons: result.reasons });
     }
 
-    // Advance status through REVIEW_READY → COMPLETED
     await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'REVIEW_READY');
     await invoiceRepo.updateStatus(payload.teamId, payload.invoiceId, 'COMPLETED');
     await jobRepo.updateStatus(payload.invoiceId, payload.jobId, 'COMPLETED');
 
-    logger.info('Anomaly detection completed — invoice COMPLETED', {
-        isAnomaly: result.isAnomaly,
-    });
+    logger.info('Anomaly detection completed', { isAnomaly: result.isAnomaly });
 }
 
 export const handler = async (event: { Records: SQSRecord[] }) =>
