@@ -10,7 +10,12 @@
     "plugins": ["@ianvs/prettier-plugin-sort-imports"],
     "overrides": [
         {
-            "files": ["apps/mobile/**/*.{js,jsx,ts,tsx,css}", "apps/mobile/src/app/global.css"],
+            "files": [
+                "apps/dashboard/**/*.{js,jsx,ts,tsx,css}",
+                "apps/dashboard/src/app/global.css",
+                "apps/mobile/**/*.{js,jsx,ts,tsx,css}",
+                "apps/mobile/src/app/global.css"
+            ],
             "options": {
                 "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
                 "tailwindStylesheet": "./apps/mobile/src/app/global.css"
