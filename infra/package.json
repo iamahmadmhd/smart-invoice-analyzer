@@ -7,7 +7,7 @@
         "build": "echo 'No build for infra'",
         "watch": "tsc -w",
         "lint": "echo 'No lint for infra'",
-        "check-types": "tsc --noEmit",
+        "typecheck": "tsc --noEmit",
         "dev:synth": "cdk synth SmartInvoiceAnalyzer-Dev",
         "dev:diff": "cdk diff SmartInvoiceAnalyzer-Dev",
         "dev:deploy": "cdk deploy SmartInvoiceAnalyzer-Dev --require-approval never",

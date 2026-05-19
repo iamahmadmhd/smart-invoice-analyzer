@@ -381,7 +381,7 @@ npm run build
 ### Type-check all workspaces
 
 ```bash
-npm run check-types
+npm run typecheck
 ```
 
 ### Lint and format
@@ -446,8 +446,8 @@ npm run build -- --filter=@smart-invoice-analyzer/workers
 Type-check API or workers:
 
 ```bash
-npm run check-types -- --filter=@smart-invoice-analyzer/api
-npm run check-types -- --filter=@smart-invoice-analyzer/workers
+npm run typecheck -- --filter=@smart-invoice-analyzer/api
+npm run typecheck -- --filter=@smart-invoice-analyzer/workers
 ```
 
 ## Infrastructure commands
@@ -553,7 +553,7 @@ npm run build        # Build all packages and apps
 npm run dev          # Start dev servers (persistent)
 npm run lint         # Run lint checks
 npm run format       # Format with Prettier
-npm run check-types  # TypeScript type-check without emit
+npm run typecheck  # TypeScript type-check without emit
 ```
 
 ## License

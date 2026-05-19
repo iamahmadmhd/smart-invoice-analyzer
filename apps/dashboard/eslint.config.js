@@ -10,7 +10,7 @@ export default [
             // via the root .prettierrc. Keeping both active causes conflicting auto-fixes.
             'import/order': 'off',
             'sort-imports': 'off',
-            '@typescript-eslint/consistent-type-imports': 'off',
+            'import/consistent-type-specifier-style': 'off',
         },
     },
 ];

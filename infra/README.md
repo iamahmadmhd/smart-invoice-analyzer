@@ -38,7 +38,7 @@ npm run deploy:pipeline
 
 - `npm run build` - Compile TypeScript (no-op for infra)
 - `npm run watch` - Watch for changes and compile
-- `npm run check-types` - Type check without emitting files
+- `npm run typecheck` - Type check without emitting files
 - `npm run synth` - Synthesize all stacks
 - `npm run synth:dev` - Synthesize development stack
 - `npm run synth:pipeline` - Synthesize pipeline stack
