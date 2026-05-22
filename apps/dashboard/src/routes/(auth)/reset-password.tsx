@@ -5,7 +5,7 @@ import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError } from '@/components/ui/field';
+import { Field, FieldError } from '@/components/ui/field';
 import {
     InputOTP,
     InputOTPGroup,
@@ -72,7 +72,15 @@ function ResetPasswordPage() {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex flex-col gap-6'>
+            <div className='flex items-center justify-center'>
+                <Link
+                    to='/signin'
+                    className='text-sm'
+                >
+                    Back to sign in
+                </Link>
+            </div>
+            <div className='flex flex-col gap-6 glass-card'>
                 <div className='flex flex-col gap-2'>
                     <h1 className='text-2xl font-bold'>Set new password</h1>
                     <p className='text-sm text-muted-foreground'>
@@ -198,10 +206,6 @@ function ResetPasswordPage() {
                         )}
                     />
                 </form>
-
-                <FieldDescription className='text-center'>
-                    <Link to='/signin'>Back to sign in</Link>
-                </FieldDescription>
             </div>
         </div>
     );

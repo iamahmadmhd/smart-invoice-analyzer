@@ -94,8 +94,6 @@
     --color-input: var(--wire);
     --color-ring: var(--brand);
 
-    --radius: 0.75rem;
-
     --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, sans-serif, system-ui;
 
     /* utility colors */
@@ -154,4 +152,8 @@
     input[type='submit'] {
         @apply cursor-pointer;
     }
+}
+
+@utility glass-card {
+    @apply rounded-xl border border-border/80 bg-primary/5 p-8 backdrop-blur-xs;
 }

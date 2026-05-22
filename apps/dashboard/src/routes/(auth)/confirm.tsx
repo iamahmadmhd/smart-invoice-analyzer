@@ -61,11 +61,11 @@ function ConfirmPage() {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex flex-col gap-6'>
+            <div className='flex flex-col gap-6 glass-card'>
                 <div className='flex flex-col gap-2'>
-                    <h1 className='text-2xl font-bold'>Confirm account</h1>
+                    <h1 className='text-2xl font-bold'>Verify account</h1>
                     <p className='text-sm text-muted-foreground'>
-                        We've sent a confirmation code to{' '}
+                        We've sent a verification code to{' '}
                         <span className='font-semibold'>{email}</span>
                     </p>
                 </div>
@@ -132,7 +132,7 @@ function ConfirmPage() {
                     />
                 </form>
 
-                <div className='flex items-center justify-between'>
+                <div className='flex items-center justify-center'>
                     <Button
                         type='button'
                         variant='link'
@@ -142,13 +142,15 @@ function ConfirmPage() {
                     >
                         Resend code
                     </Button>
-                    <Link
-                        to='/signin'
-                        className='text-sm'
-                    >
-                        Back to sign in
-                    </Link>
                 </div>
+            </div>
+            <div className='flex items-center justify-center'>
+                <Link
+                    to='/signin'
+                    className='text-sm'
+                >
+                    Back to sign in
+                </Link>
             </div>
         </div>
     );

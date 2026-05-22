@@ -4,7 +4,7 @@ import { fetchAuthSession, getCurrentUser, signIn } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError } from '@/components/ui/field';
+import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
 import { Label } from '@/components/ui/label';
@@ -56,7 +56,10 @@ function SignInPage() {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex flex-col gap-6'>
+            <p className='text-center text-sm'>
+                Don&apos;t have an account? <Link to='/signup'>Sign up</Link>
+            </p>
+            <div className='flex flex-col gap-6 glass-card'>
                 <div className='flex flex-col gap-2'>
                     <h1 className='text-2xl font-bold'>Welcome back</h1>
                     <p className='text-sm text-muted-foreground'>
@@ -101,7 +104,7 @@ function SignInPage() {
                                     <Label htmlFor={field.name}>Password</Label>
                                     <Link
                                         to='/forgot-password'
-                                        className='text-sm'
+                                        className='text-sm text-muted-foreground'
                                     >
                                         Forgot password?
                                     </Link>
@@ -136,10 +139,6 @@ function SignInPage() {
                         )}
                     />
                 </form>
-
-                <FieldDescription className='text-center'>
-                    Don&apos;t have an account? <Link to='/signup'>Sign up</Link>
-                </FieldDescription>
             </div>
         </div>
     );

@@ -1,14 +1,15 @@
 import { useForm } from '@tanstack/react-form';
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { signUp } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError } from '@/components/ui/field';
+import { Field, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/ui/loader';
+import { Link } from '#/components/ui/link';
 
 export const Route = createFileRoute('/(auth)/signup')({
     component: SignUpPage,
@@ -67,7 +68,10 @@ function SignUpPage() {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex flex-col gap-6'>
+            <p className='text-center text-sm'>
+                Already have an account? <Link to='/signin'>Sign in</Link>
+            </p>
+            <div className='flex flex-col gap-6 glass-card'>
                 <div className='flex flex-col gap-2'>
                     <h1 className='text-2xl font-bold'>Create account</h1>
                     <p className='text-sm text-muted-foreground'>
@@ -165,17 +169,12 @@ function SignUpPage() {
                         )}
                     />
                 </form>
-
-                <FieldDescription className='text-center'>
-                    Already have an account? <Link to='/signin'>Sign in</Link>
-                </FieldDescription>
-
-                <FieldDescription className='text-center'>
-                    By clicking continue, you agree to our{' '}
-                    <Link to='/signup'>terms of service</Link> and{' '}
-                    <Link to='/signup'>privacy policy</Link>.
-                </FieldDescription>
             </div>
+
+            <p className='text-center text-sm text-muted-foreground'>
+                By clicking continue, you agree to our <Link to='/'>terms of service</Link> and{' '}
+                <Link to='/'>privacy policy</Link>.
+            </p>
         </div>
     );
 }
