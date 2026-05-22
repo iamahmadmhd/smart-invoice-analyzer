@@ -8,6 +8,9 @@ ios
 android
 # Ignore all dotfiles
 .*
+!.cta.json
 # Generated files
 **/uniwind-types.d.ts
 **/expo-env.d.ts
+
+routeTree.gen.ts

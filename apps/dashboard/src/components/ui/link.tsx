@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
 import { Link as UnstyledLink } from '@tanstack/react-router';
+import { cn } from '@/lib/utils';
 
 function Link({ className, ...props }: Parameters<typeof UnstyledLink>[0]) {
     return (

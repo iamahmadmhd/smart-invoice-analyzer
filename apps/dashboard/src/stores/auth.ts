@@ -1,5 +1,6 @@
 import { signOut as amplifySignOut, fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import { create } from 'zustand';
+import { router } from '@/router';
 
 export interface AuthUser {
     userId: string;
@@ -43,6 +44,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     signOut: async () => {
         await amplifySignOut();
         set({ user: null });
+        router.update({
+            context: { isAuthenticated: false },
+        });
+        await router.invalidate();
     },
 
     getToken: async () => {

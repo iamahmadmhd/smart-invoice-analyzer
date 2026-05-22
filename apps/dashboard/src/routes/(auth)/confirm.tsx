@@ -1,3 +1,9 @@
+import { useForm } from '@tanstack/react-form';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { confirmSignUp, resendSignUpCode } from 'aws-amplify/auth';
+import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
+import { useState } from 'react';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
 import {
@@ -9,12 +15,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Link } from '@/components/ui/link';
 import { Loader } from '@/components/ui/loader';
-import { useForm } from '@tanstack/react-form';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { confirmSignUp, resendSignUpCode } from 'aws-amplify/auth';
-import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp';
-import { useState } from 'react';
-import { z } from 'zod';
 
 const searchSchema = z.object({ email: z.string().default('') });
 

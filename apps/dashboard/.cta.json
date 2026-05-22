@@ -1,16 +1,16 @@
 {
-  "projectName": "start-app",
-  "mode": "file-router",
-  "typescript": true,
-  "tailwind": true,
-  "packageManager": "pnpm",
-  "addOnOptions": {},
-  "git": true,
-  "version": 1,
-  "framework": "react-cra",
-  "chosenAddOns": [
-    "eslint",
-    "nitro",
-    "start"
-  ]
+    "projectName": "dashboard",
+    "mode": "file-router",
+    "typescript": true,
+    "packageManager": "npm",
+    "includeExamples": false,
+    "tailwind": true,
+    "addOnOptions": {},
+    "envVarValues": {},
+    "git": false,
+    "install": true,
+    "routerOnly": true,
+    "version": 1,
+    "framework": "react",
+    "chosenAddOns": ["eslint"]
 }

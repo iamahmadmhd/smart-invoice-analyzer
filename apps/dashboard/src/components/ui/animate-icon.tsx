@@ -1,16 +1,32 @@
-import { Slot, type WithAsChild } from '@/components/ui/animate-slot';
+import { motion, useAnimation } from 'motion/react';
+import {
+    createContext,
+    isValidElement,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
+import type {
+    ComponentType,
+    MouseEvent,
+    PointerEvent,
+    ReactElement,
+    ReactNode,
+    SyntheticEvent,
+} from 'react';
+import type {
+    HTMLMotionProps,
+    LegacyAnimationControls,
+    SVGMotionProps,
+    UseInViewOptions,
+    Variants,
+} from 'motion/react';
+import type { WithAsChild } from '@/components/ui/animate-slot';
+import { Slot } from '@/components/ui/animate-slot';
 import { useIsInView } from '@/hooks/use-is-in-view';
 import { cn } from '@/lib/utils';
-import {
-    motion,
-    useAnimation,
-    type HTMLMotionProps,
-    type LegacyAnimationControls,
-    type SVGMotionProps,
-    type UseInViewOptions,
-    type Variants,
-} from 'motion/react';
-import * as React from 'react';
 
 const staticAnimations = {
     path: {
@@ -71,7 +87,7 @@ type DefaultIconProps<T = string> = {
 type AnimateIconProps<T = string> = WithAsChild<
     HTMLMotionProps<'span'> &
         DefaultIconProps<T> & {
-            children: React.ReactNode;
+            children: ReactNode;
             asChild?: boolean;
         }
 >;
@@ -82,13 +98,13 @@ type IconProps<T> = DefaultIconProps<T> &
     };
 
 type IconWrapperProps<T> = IconProps<T> & {
-    icon: React.ComponentType<IconProps<T>>;
+    icon: ComponentType<IconProps<T>>;
 };
 
-const AnimateIconContext = React.createContext<AnimateIconContextValue | null>(null);
+const AnimateIconContext = createContext<AnimateIconContextValue | null>(null);
 
 function useAnimateIconContext() {
-    const context = React.useContext(AnimateIconContext);
+    const context = useContext(AnimateIconContext);
     if (!context)
         return {
             controls: undefined,
@@ -105,7 +121,7 @@ function useAnimateIconContext() {
     return context;
 }
 
-function composeEventHandlers<T extends React.SyntheticEvent<unknown>>(
+function composeEventHandlers<T extends SyntheticEvent<unknown>>(
     theirs?: (event: T) => void,
     ours?: (event: T) => void
 ) {
@@ -137,30 +153,30 @@ function AnimateIcon({
 }: AnimateIconProps) {
     const controls = useAnimation();
 
-    const [localAnimate, setLocalAnimate] = React.useState<boolean>(() => {
+    const [localAnimate, setLocalAnimate] = useState<boolean>(() => {
         if (animate === false) return false;
         return delay <= 0;
     });
-    const [currentAnimation, setCurrentAnimation] = React.useState<string | StaticAnimations>(
+    const [currentAnimation, setCurrentAnimation] = useState<string | StaticAnimations>(
         typeof animate === 'string' ? animate : animation
     );
-    const [status, setStatus] = React.useState<'initial' | 'animate'>('initial');
+    const [status, setStatus] = useState<'initial' | 'animate'>('initial');
 
-    const delayRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-    const loopDelayRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isAnimateInProgressRef = React.useRef<boolean>(false);
-    const animateEndPromiseRef = React.useRef<Promise<void> | null>(null);
-    const resolveAnimateEndRef = React.useRef<(() => void) | null>(null);
-    const activeRef = React.useRef<boolean>(localAnimate);
+    const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const loopDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isAnimateInProgressRef = useRef<boolean>(false);
+    const animateEndPromiseRef = useRef<Promise<void> | null>(null);
+    const resolveAnimateEndRef = useRef<(() => void) | null>(null);
+    const activeRef = useRef<boolean>(localAnimate);
 
-    const runGenRef = React.useRef(0);
-    const cancelledRef = React.useRef(false);
+    const runGenRef = useRef(0);
+    const cancelledRef = useRef(false);
 
-    const bumpGeneration = React.useCallback(() => {
+    const bumpGeneration = useCallback(() => {
         runGenRef.current++;
     }, []);
 
-    const startAnimation = React.useCallback(
+    const startAnimation = useCallback(
         (trigger: TriggerProp) => {
             const next = typeof trigger === 'string' ? trigger : animation;
             bumpGeneration();
@@ -181,7 +197,7 @@ function AnimateIcon({
         [animation, delay, bumpGeneration]
     );
 
-    const stopAnimation = React.useCallback(() => {
+    const stopAnimation = useCallback(() => {
         bumpGeneration();
         if (delayRef.current) {
             clearTimeout(delayRef.current);
@@ -194,32 +210,32 @@ function AnimateIcon({
         setLocalAnimate(false);
     }, [bumpGeneration]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         activeRef.current = localAnimate;
     }, [localAnimate]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (animate === false) return;
         setCurrentAnimation(typeof animate === 'string' ? animate : animation);
         if (animate) startAnimation(animate);
         else stopAnimation();
     }, [animate]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         return () => {
             if (delayRef.current) clearTimeout(delayRef.current);
             if (loopDelayRef.current) clearTimeout(loopDelayRef.current);
         };
     }, []);
 
-    const viewOuterRef = React.useRef<HTMLElement>(null);
+    const viewOuterRef = useRef<HTMLElement>(null);
     const { ref: inViewRef, isInView } = useIsInView(viewOuterRef, {
         inView: !!animateOnView,
         inViewOnce: animateOnViewOnce,
         inViewMargin: animateOnViewMargin,
     });
 
-    const startAnim = React.useCallback(
+    const startAnim = useCallback(
         async (anim: 'initial' | 'animate', method: 'start' | 'set' = 'start') => {
             try {
                 await controls[method](anim);
@@ -231,13 +247,13 @@ function AnimateIcon({
         [controls]
     );
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!animateOnView) return;
         if (isInView) startAnimation(animateOnView);
         else stopAnimation();
     }, [isInView, animateOnView, startAnimation, stopAnimation]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const gen = ++runGenRef.current;
         cancelledRef.current = false;
 
@@ -364,31 +380,31 @@ function AnimateIcon({
     }, [localAnimate, controls]);
 
     const childProps = (
-        React.isValidElement(children) ? (children as React.ReactElement).props : {}
+        isValidElement(children) ? (children as ReactElement).props : {}
     ) as AnyProps;
 
-    const handleMouseEnter = composeEventHandlers<React.MouseEvent<HTMLElement>>(
+    const handleMouseEnter = composeEventHandlers<MouseEvent<HTMLElement>>(
         childProps.onMouseEnter,
         () => {
             if (animateOnHover) startAnimation(animateOnHover);
         }
     );
 
-    const handleMouseLeave = composeEventHandlers<React.MouseEvent<HTMLElement>>(
+    const handleMouseLeave = composeEventHandlers<MouseEvent<HTMLElement>>(
         childProps.onMouseLeave,
         () => {
             if (animateOnHover || animateOnTap) stopAnimation();
         }
     );
 
-    const handlePointerDown = composeEventHandlers<React.PointerEvent<HTMLElement>>(
+    const handlePointerDown = composeEventHandlers<PointerEvent<HTMLElement>>(
         childProps.onPointerDown,
         () => {
             if (animateOnTap) startAnimation(animateOnTap);
         }
     );
 
-    const handlePointerUp = composeEventHandlers<React.PointerEvent<HTMLElement>>(
+    const handlePointerUp = composeEventHandlers<PointerEvent<HTMLElement>>(
         childProps.onPointerUp,
         () => {
             if (animateOnTap) stopAnimation();
@@ -459,7 +475,7 @@ function IconWrapper<T extends string>({
     className,
     ...props
 }: IconWrapperProps<T>) {
-    const context = React.useContext(AnimateIconContext);
+    const context = useContext(AnimateIconContext);
 
     if (context) {
         const {

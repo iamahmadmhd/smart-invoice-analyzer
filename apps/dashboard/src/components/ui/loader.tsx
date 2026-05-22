@@ -1,10 +1,7 @@
-import {
-    getVariants,
-    IconWrapper,
-    useAnimateIconContext,
-    type IconProps,
-} from '@/components/ui/animate-icon';
-import { motion, type Variants } from 'motion/react';
+import { motion } from 'motion/react';
+import type { Variants } from 'motion/react';
+import type { IconProps } from '@/components/ui/animate-icon';
+import { IconWrapper, getVariants, useAnimateIconContext } from '@/components/ui/animate-icon';
 
 type LoaderProps = IconProps<keyof typeof animations>;
 

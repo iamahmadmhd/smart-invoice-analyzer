@@ -19,7 +19,7 @@
         {
             "files": ["apps/dashboard/**/*.{js,jsx,ts,tsx,css}"],
             "options": {
-                "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
+                "plugins": ["prettier-plugin-tailwindcss"],
                 "tailwindStylesheet": "./apps/dashboard/src/styles.css"
             }
         }

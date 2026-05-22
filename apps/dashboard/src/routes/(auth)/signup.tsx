@@ -1,14 +1,14 @@
+import { useForm } from '@tanstack/react-form';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { signUp } from 'aws-amplify/auth';
+import { useState } from 'react';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/ui/loader';
-import { useForm } from '@tanstack/react-form';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { signUp } from 'aws-amplify/auth';
-import { useState } from 'react';
-import { z } from 'zod';
 
 export const Route = createFileRoute('/(auth)/signup')({
     component: SignUpPage,
