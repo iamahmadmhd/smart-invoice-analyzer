@@ -17,6 +17,8 @@ import { Route as authSigninRouteImport } from './routes/(auth)/signin'
 import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-password'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authConfirmRouteImport } from './routes/(auth)/confirm'
+import { Route as appTeamIdRouteRouteImport } from './routes/(app)/$teamId/route'
+import { Route as appTeamIdInvoicesIndexRouteImport } from './routes/(app)/$teamId/invoices/index'
 
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
@@ -56,61 +58,83 @@ const authConfirmRoute = authConfirmRouteImport.update({
   path: '/confirm',
   getParentRoute: () => authRouteRoute,
 } as any)
+const appTeamIdRouteRoute = appTeamIdRouteRouteImport.update({
+  id: '/$teamId',
+  path: '/$teamId',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appTeamIdInvoicesIndexRoute = appTeamIdInvoicesIndexRouteImport.update({
+  id: '/invoices/',
+  path: '/invoices/',
+  getParentRoute: () => appTeamIdRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/$teamId': typeof appTeamIdRouteRouteWithChildren
   '/confirm': typeof authConfirmRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signin': typeof authSigninRoute
   '/signup': typeof authSignupRoute
   '/': typeof appIndexRoute
+  '/$teamId/invoices/': typeof appTeamIdInvoicesIndexRoute
 }
 export interface FileRoutesByTo {
+  '/$teamId': typeof appTeamIdRouteRouteWithChildren
   '/confirm': typeof authConfirmRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/reset-password': typeof authResetPasswordRoute
   '/signin': typeof authSigninRoute
   '/signup': typeof authSignupRoute
   '/': typeof appIndexRoute
+  '/$teamId/invoices': typeof appTeamIdInvoicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(app)': typeof appRouteRouteWithChildren
   '/(auth)': typeof authRouteRouteWithChildren
+  '/(app)/$teamId': typeof appTeamIdRouteRouteWithChildren
   '/(auth)/confirm': typeof authConfirmRoute
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/reset-password': typeof authResetPasswordRoute
   '/(auth)/signin': typeof authSigninRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(app)/': typeof appIndexRoute
+  '/(app)/$teamId/invoices/': typeof appTeamIdInvoicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/$teamId'
     | '/confirm'
     | '/forgot-password'
     | '/reset-password'
     | '/signin'
     | '/signup'
     | '/'
+    | '/$teamId/invoices/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/$teamId'
     | '/confirm'
     | '/forgot-password'
     | '/reset-password'
     | '/signin'
     | '/signup'
     | '/'
+    | '/$teamId/invoices'
   id:
     | '__root__'
     | '/(app)'
     | '/(auth)'
+    | '/(app)/$teamId'
     | '/(auth)/confirm'
     | '/(auth)/forgot-password'
     | '/(auth)/reset-password'
     | '/(auth)/signin'
     | '/(auth)/signup'
     | '/(app)/'
+    | '/(app)/$teamId/invoices/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -176,14 +200,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authConfirmRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(app)/$teamId': {
+      id: '/(app)/$teamId'
+      path: '/$teamId'
+      fullPath: '/$teamId'
+      preLoaderRoute: typeof appTeamIdRouteRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/$teamId/invoices/': {
+      id: '/(app)/$teamId/invoices/'
+      path: '/invoices'
+      fullPath: '/$teamId/invoices/'
+      preLoaderRoute: typeof appTeamIdInvoicesIndexRouteImport
+      parentRoute: typeof appTeamIdRouteRoute
+    }
   }
 }
 
+interface appTeamIdRouteRouteChildren {
+  appTeamIdInvoicesIndexRoute: typeof appTeamIdInvoicesIndexRoute
+}
+
+const appTeamIdRouteRouteChildren: appTeamIdRouteRouteChildren = {
+  appTeamIdInvoicesIndexRoute: appTeamIdInvoicesIndexRoute,
+}
+
+const appTeamIdRouteRouteWithChildren = appTeamIdRouteRoute._addFileChildren(
+  appTeamIdRouteRouteChildren,
+)
+
 interface appRouteRouteChildren {
+  appTeamIdRouteRoute: typeof appTeamIdRouteRouteWithChildren
   appIndexRoute: typeof appIndexRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
+  appTeamIdRouteRoute: appTeamIdRouteRouteWithChildren,
   appIndexRoute: appIndexRoute,
 }
 

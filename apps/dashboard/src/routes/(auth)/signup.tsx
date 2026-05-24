@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { InputPassword } from '@/components/ui/input-password';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/ui/loader';
-import { Link } from '#/components/ui/link';
+import { Link } from '@/components/ui/link';
 
 export const Route = createFileRoute('/(auth)/signup')({
     component: SignUpPage,

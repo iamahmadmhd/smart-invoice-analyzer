@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -5,6 +6,7 @@ import { Loader } from './components/ui/loader';
 import { configureAmplify } from './lib/amplify';
 import { router } from './router';
 import { useAuthStore } from './stores/auth';
+import { queryClient } from '@/lib/query-client';
 import './styles.css';
 
 configureAmplify();
@@ -30,10 +32,12 @@ function App() {
     }
 
     return (
-        <RouterProvider
-            router={router}
-            context={{ isAuthenticated: !!user }}
-        />
+        <QueryClientProvider client={queryClient}>
+            <RouterProvider
+                router={router}
+                context={{ isAuthenticated: !!user }}
+            />
+        </QueryClientProvider>
     );
 }
 

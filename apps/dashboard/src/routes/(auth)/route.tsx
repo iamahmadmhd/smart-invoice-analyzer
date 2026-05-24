@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
-import { GridPattern } from '#/components/ui/grid-pattern';
-import { cn } from '#/lib/utils';
+import { GridPattern } from '@/components/ui/grid-pattern';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/(auth)')({
     beforeLoad({ context }) {

@@ -6,7 +6,6 @@ const configSchema = z.object({
     PROCESSING_JOB_TABLE: z.string().min(1),
     EXPORT_TABLE: z.string().min(1),
     INSIGHT_TABLE: z.string().min(1),
-    USER_TABLE: z.string().min(1),
     TEAM_TABLE: z.string().min(1),
     MEMBERSHIP_TABLE: z.string().min(1),
     INVITATION_TABLE: z.string().min(1),

@@ -58,7 +58,7 @@
     --ink: #edf2f7;
     --ink-muted: #a0b0c5;
     --ink-faint: #6b7fa3;
-    --ink-inverse: #ffffff;
+    --ink-inverse: #0a2540;
 
     --wire: #2d3748;
     --wire-strong: #3d4f6a;
@@ -81,10 +81,10 @@
     --color-secondary: var(--canvas-subtle);
     --color-secondary-foreground: var(--ink);
 
-    --color-muted: var(--canvas-subtle);
-    --color-muted-foreground: var(--ink-muted);
+    --color-muted: var(--ink-muted);
+    --color-muted-foreground: var(--ink);
 
-    --color-accent: var(--brand-subtle);
+    --color-accent: var(--ink-faint);
     --color-accent-foreground: var(--ink);
 
     --color-destructive: var(--crimson);
