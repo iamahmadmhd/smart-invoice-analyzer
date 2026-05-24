@@ -10,7 +10,7 @@ function InvoicesPage() {
         <div className='flex flex-1 flex-col'>
             {/* Empty state — replaced in the next step */}
             <div className='flex flex-1 flex-col items-center justify-center gap-3 text-center'>
-                <div className='bg-canvas flex size-12 items-center justify-center rounded-xl border border-wire'>
+                <div className='flex size-12 items-center justify-center rounded-xl border border-wire bg-canvas'>
                     <IconReceipt
                         size={22}
                         className='text-ink-faint'

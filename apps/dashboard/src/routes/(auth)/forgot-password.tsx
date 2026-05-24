@@ -42,14 +42,6 @@ function ForgotPasswordPage() {
 
     return (
         <div className='flex flex-col gap-6'>
-            <div className='flex items-center justify-center'>
-                <Link
-                    to='/signin'
-                    className='text-sm'
-                >
-                    Back to sign in
-                </Link>
-            </div>
             <div className='flex flex-col gap-6 glass-card'>
                 <div className='flex flex-col gap-2'>
                     <h1 className='text-2xl font-bold'>Forgot password</h1>
@@ -101,6 +93,14 @@ function ForgotPasswordPage() {
                         )}
                     />
                 </form>
+            </div>
+            <div className='flex items-center justify-center'>
+                <Link
+                    to='/signin'
+                    className='text-sm'
+                >
+                    Back to sign in
+                </Link>
             </div>
         </div>
     );

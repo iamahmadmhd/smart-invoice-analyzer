@@ -2,10 +2,10 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
-import { Loader } from './components/ui/loader';
-import { configureAmplify } from './lib/amplify';
 import { router } from './router';
-import { useAuthStore } from './stores/auth';
+import { configureAmplify } from '@/lib/amplify';
+import { useAuthStore } from '@/stores/auth';
+import { PageLoader } from '@/components/ui/page-loader';
 import { queryClient } from '@/lib/query-client';
 import './styles.css';
 
@@ -21,14 +21,7 @@ function App() {
     }, [initialize]);
 
     if (!isInitialized) {
-        return (
-            <div className='flex min-h-svh items-center justify-center'>
-                <Loader
-                    size={48}
-                    animateOnView
-                />
-            </div>
-        );
+        return <PageLoader />;
     }
 
     return (

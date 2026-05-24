@@ -2,6 +2,7 @@ import {
     IconBuildingBank,
     IconCheck,
     IconChevronDown,
+    IconChevronRight,
     IconFileInvoice,
     IconLogout,
     IconReceipt,
@@ -45,6 +46,7 @@ import { Loader } from '@/components/ui/loader';
 import { useBootstrap } from '@/hooks/use-bootstrap';
 import { useTeamStore } from '@/stores/team';
 import { useAuthStore } from '@/stores/auth';
+import { PageLoader } from '#/components/ui/page-loader';
 
 export const Route = createFileRoute('/(app)/$teamId')({
     beforeLoad({ context }) {
@@ -52,7 +54,7 @@ export const Route = createFileRoute('/(app)/$teamId')({
             throw redirect({ to: '/signin' });
         }
     },
-    component: TeamShell,
+    component: AppShell,
 });
 
 const NAV = [
@@ -61,9 +63,9 @@ const NAV = [
     { to: 'members', label: 'Members', icon: IconUsers },
 ] as const;
 
-function TeamShell() {
-    const { teamId } = useParams({ from: '/(app)/$teamId' });
+function AppShell() {
     const navigate = useNavigate();
+    const { teamId } = useParams({ from: '/(app)/$teamId' });
     const { isReady, isError, teams } = useBootstrap();
     const { setActiveTeamId, getActiveTeam } = useTeamStore();
     const { user, signOut } = useAuthStore();
@@ -79,14 +81,7 @@ function TeamShell() {
     }, [isReady, teams, teamId, navigate, setActiveTeamId]);
 
     if (!isReady) {
-        return (
-            <div className='flex min-h-svh items-center justify-center'>
-                <Loader
-                    size={36}
-                    animateOnView
-                />
-            </div>
-        );
+        return <PageLoader message='Loading your workspace' />;
     }
 
     if (isError) {
@@ -168,6 +163,10 @@ function TeamShell() {
                                         <Link
                                             to='/$teamId/settings'
                                             params={{ teamId }}
+                                            activeProps={{
+                                                className:
+                                                    'bg-sidebar-accent text-sidebar-accent-foreground',
+                                            }}
                                         >
                                             <IconSettings size={16} />
                                             Settings
@@ -191,29 +190,31 @@ function TeamShell() {
                                         <span className='min-w-0 flex-1 truncate text-xs'>
                                             {user?.email}
                                         </span>
-                                        <IconChevronDown
+                                        <IconChevronRight
                                             size={13}
                                             className='ml-auto text-muted-foreground'
                                         />
                                     </SidebarMenuButton>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
-                                    side='top'
-                                    align='start'
+                                    side='right'
+                                    sideOffset={12}
+                                    align='end'
                                     className='w-52'
                                 >
-                                    <DropdownMenuLabel className='font-normal'>
-                                        <p className='truncate text-xs text-muted-foreground'>
-                                            {user?.email}
-                                        </p>
+                                    <DropdownMenuLabel className='truncate'>
+                                        {user?.email}
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        className='text-destructive focus:text-destructive'
                                         onClick={signOut}
+                                        variant='destructive'
+                                        asChild
                                     >
-                                        <IconLogout size={15} />
-                                        Sign out
+                                        <button className='flex w-full items-center gap-2'>
+                                            <IconLogout size={15} />
+                                            Sign out
+                                        </button>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -244,7 +245,7 @@ function TeamSwitcher({ teams, activeTeam, onSelect }: TeamSwitcherProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className='w-full'>
+                <SidebarMenuButton className='w-full [&[data-state=open]>svg]:rotate-180'>
                     <div className='flex size-5 shrink-0 items-center justify-center rounded bg-primary/15 text-[10px] font-bold text-primary uppercase'>
                         {activeTeam?.name[0] ?? '?'}
                     </div>
@@ -257,27 +258,27 @@ function TeamSwitcher({ teams, activeTeam, onSelect }: TeamSwitcherProps) {
                     />
                 </SidebarMenuButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-                align='start'
-                className='w-52'
-            >
+            <DropdownMenuContent align='start'>
                 <DropdownMenuLabel>Teams</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {teams.map((team) => (
                     <DropdownMenuItem
                         key={team.teamId}
                         onClick={() => onSelect(team.teamId)}
+                        asChild
                     >
-                        <div className='flex size-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary uppercase'>
-                            {team.name[0]}
-                        </div>
-                        <span className='min-w-0 flex-1 truncate'>{team.name}</span>
-                        {team.teamId === activeTeam?.teamId && (
-                            <IconCheck
-                                size={14}
-                                className='text-primary'
-                            />
-                        )}
+                        <button className='w-full'>
+                            <div className='flex size-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary uppercase'>
+                                {team.name[0]}
+                            </div>
+                            <span className='min-w-0 flex-1 truncate'>{team.name}</span>
+                            {team.teamId === activeTeam?.teamId && (
+                                <IconCheck
+                                    size={14}
+                                    className='text-primary'
+                                />
+                            )}
+                        </button>
                     </DropdownMenuItem>
                 ))}
             </DropdownMenuContent>

@@ -4,7 +4,10 @@ import { cn } from '@/lib/utils';
 function Link({ className, ...props }: Parameters<typeof UnstyledLink>[0]) {
     return (
         <UnstyledLink
-            className={cn(['underline underline-offset-4 hover:text-brand', className])}
+            className={cn(
+                'text-brand underline-offset-4 transition-colors duration-150 hover:text-brand-hover hover:underline',
+                className
+            )}
             {...props}
         />
     );

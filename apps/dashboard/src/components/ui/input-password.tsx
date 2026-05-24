@@ -10,14 +10,20 @@ function InputPassword({ className, ...props }: InputPasswordProps) {
         <InputGroup>
             <InputGroupInput
                 type={isVisible ? 'text' : 'password'}
+                className={className}
                 {...props}
             />
             <InputGroupAddon align='inline-end'>
                 <InputGroupButton
                     size='icon-sm'
-                    onClick={() => setIsVisible(!isVisible)}
+                    aria-label={isVisible ? 'Hide password' : 'Show password'}
+                    onClick={() => setIsVisible((v) => !v)}
                 >
-                    {isVisible ? <IconEyeOff /> : <IconEye />}
+                    {isVisible ? (
+                        <IconEyeOff className='text-muted-foreground' />
+                    ) : (
+                        <IconEye className='text-muted-foreground' />
+                    )}
                 </InputGroupButton>
             </InputGroupAddon>
         </InputGroup>

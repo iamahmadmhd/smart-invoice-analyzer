@@ -5,44 +5,54 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* raw tokens */
+/* ── Raw design tokens ─────────────────────────────────────────────────────── */
+
 :root {
+    /* Brand */
     --brand: #5469d4;
     --brand-hover: #4254b8;
     --brand-subtle: #eef2ff;
     --brand-border: #c7d2fe;
     --brand-muted: #818cf8;
 
+    /* Surface */
     --canvas: #ffffff;
     --canvas-subtle: #f6f9fc;
     --canvas-inset: #eef0f4;
+    --canvas-raised: #ffffff;
 
+    /* Text */
     --ink: #0a2540;
     --ink-muted: #425466;
     --ink-faint: #697386;
     --ink-inverse: #ffffff;
 
+    /* Border */
     --wire: #e3e8ee;
     --wire-strong: #c1c9d2;
 
+    /* Semantic — success */
     --jade: #1a9c3e;
     --jade-hover: #158234;
     --jade-subtle: #edfaf1;
     --jade-night-subtle: #052e16;
     --jade-border: #bbf7d0;
 
+    /* Semantic — warning */
     --amber: #b45309;
     --amber-hover: #92400e;
     --amber-subtle: #fffbeb;
     --amber-night-subtle: #1c0f00;
     --amber-border: #fde68a;
 
+    /* Semantic — error */
     --crimson: #df1b41;
     --crimson-hover: #b91c3b;
     --crimson-subtle: #fff1f2;
     --crimson-night-subtle: #2d0a14;
     --crimson-border: #fecdd3;
 
+    /* Semantic — info */
     --azure: #0570de;
     --azure-subtle: #eff8ff;
     --azure-night-subtle: #0c1a3b;
@@ -64,49 +74,76 @@
     --wire-strong: #3d4f6a;
 }
 
-/* shadcn semantic tokens */
+/* ── Shadcn semantic tokens ───────────────────────────────────────────────── */
+/*
+ * Mapping rules:
+ *   muted   = subtle surface  +  muted text   (NOT a text color itself)
+ *   accent  = inset surface   +  normal text  (NOT a text color itself)
+ *   popover = raised surface in dark, base canvas in light
+ */
+
 @theme inline {
+    /* Core surfaces */
     --color-background: var(--canvas);
     --color-foreground: var(--ink);
 
     --color-card: var(--canvas);
     --color-card-foreground: var(--ink);
 
-    --color-popover: var(--canvas);
+    /* Popover: use raised surface so it lifts above the page in dark mode */
+    --color-popover: var(--canvas-raised);
     --color-popover-foreground: var(--ink);
 
+    /* Primary action */
     --color-primary: var(--brand);
     --color-primary-foreground: var(--ink-inverse);
 
+    /* Secondary / outlined */
     --color-secondary: var(--canvas-subtle);
     --color-secondary-foreground: var(--ink);
 
-    --color-muted: var(--ink-muted);
-    --color-muted-foreground: var(--ink);
+    /* Muted: subtle background + muted text ← was incorrectly set to ink-muted */
+    --color-muted: var(--canvas-subtle);
+    --color-muted-foreground: var(--ink-muted);
 
-    --color-accent: var(--ink-faint);
+    /* Accent: inset background + normal text ← was incorrectly set to ink-faint */
+    --color-accent: var(--canvas-inset);
     --color-accent-foreground: var(--ink);
 
+    /* Destructive */
     --color-destructive: var(--crimson);
     --color-destructive-foreground: var(--ink-inverse);
 
+    /* Form primitives */
     --color-border: var(--wire);
     --color-input: var(--wire);
     --color-ring: var(--brand);
 
+    /* Sidebar — needs its own slot so it can differ from page background */
+    --color-sidebar: var(--canvas-subtle);
+    --color-sidebar-foreground: var(--ink);
+    --color-sidebar-accent: var(--canvas-inset);
+    --color-sidebar-accent-foreground: var(--ink);
+    --color-sidebar-border: var(--wire);
+    --color-sidebar-ring: var(--brand);
+
+    /* Typography */
     --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, sans-serif, system-ui;
 
-    /* utility colors */
+    /* ── Utility token aliases (use in components via text-brand, bg-canvas-subtle, etc.) */
+
     --color-brand: var(--brand);
     --color-brand-hover: var(--brand-hover);
     --color-brand-subtle: var(--brand-subtle);
     --color-brand-border: var(--brand-border);
     --color-brand-muted: var(--brand-muted);
 
+    --color-canvas: var(--canvas);
     --color-canvas-subtle: var(--canvas-subtle);
     --color-canvas-inset: var(--canvas-inset);
     --color-canvas-raised: var(--canvas-raised);
 
+    --color-ink: var(--ink);
     --color-ink-muted: var(--ink-muted);
     --color-ink-faint: var(--ink-faint);
     --color-ink-inverse: var(--ink-inverse);
@@ -138,13 +175,15 @@
     --color-azure-border: var(--azure-border);
 }
 
+/* ── Base styles ─────────────────────────────────────────────────────────── */
+
 @layer base {
     * {
         @apply border-border;
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased;
     }
 
     button,
@@ -153,6 +192,8 @@
         @apply cursor-pointer;
     }
 }
+
+/* ── Utility classes ─────────────────────────────────────────────────────── */
 
 @utility glass-card {
     @apply rounded-xl border border-border/80 bg-primary/5 p-8 backdrop-blur-xs;

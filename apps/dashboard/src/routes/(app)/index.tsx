@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
-import { Loader } from '@/components/ui/loader';
 import { useBootstrap } from '@/hooks/use-bootstrap';
 import { useTeamStore } from '@/stores/team';
+import { PageLoader } from '#/components/ui/page-loader';
+import { Button } from '#/components/ui/button';
 
 export const Route = createFileRoute('/(app)/')({ component: AppIndex });
 
@@ -27,22 +28,15 @@ function AppIndex() {
                 <p className='text-xs text-muted-foreground'>
                     {error instanceof Error ? error.message : 'Unknown error'}
                 </p>
-                <button
-                    className='text-xs underline underline-offset-4 hover:text-brand'
+                <Button
+                    variant='link'
                     onClick={() => window.location.reload()}
                 >
-                    Retry
-                </button>
+                    Try again
+                </Button>
             </div>
         );
     }
 
-    return (
-        <div className='flex min-h-svh items-center justify-center'>
-            <Loader
-                size={40}
-                animateOnView
-            />
-        </div>
-    );
+    return <PageLoader />;
 }

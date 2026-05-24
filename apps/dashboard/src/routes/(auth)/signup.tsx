@@ -68,9 +68,6 @@ function SignUpPage() {
 
     return (
         <div className='flex flex-col gap-6'>
-            <p className='text-center text-sm'>
-                Already have an account? <Link to='/signin'>Sign in</Link>
-            </p>
             <div className='flex flex-col gap-6 glass-card'>
                 <div className='flex flex-col gap-2'>
                     <h1 className='text-2xl font-bold'>Create account</h1>
@@ -169,6 +166,9 @@ function SignUpPage() {
                         )}
                     />
                 </form>
+                <p className='text-center text-sm'>
+                    Already have an account? <Link to='/signin'>Sign in</Link>
+                </p>
             </div>
 
             <p className='text-center text-sm text-muted-foreground'>
