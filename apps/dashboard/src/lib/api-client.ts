@@ -72,7 +72,7 @@ async function apiFetch<T>(
 
 // ── Convenience methods ───────────────────────────────────────────────────────
 
-export const apiCleint = {
+export const apiClient = {
     get<T>(
         path: string,
         params?: Record<string, string | number | boolean | undefined>

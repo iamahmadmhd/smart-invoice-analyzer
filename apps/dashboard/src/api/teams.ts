@@ -1,4 +1,4 @@
-import { apiCleint } from '#/lib/api-client';
+import { apiClient } from '#/lib/api-client';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -20,11 +20,11 @@ export type BootstrapResult =
 // ── API calls ─────────────────────────────────────────────────────────────────
 
 export async function bootstrap(): Promise<BootstrapResult> {
-    return apiCleint.post<BootstrapResult>('/bootstrap');
+    return apiClient.post<BootstrapResult>('/bootstrap');
 }
 
 export async function listTeams(): Promise<Array<Team>> {
-    const res = await apiCleint.get<{ teams: Array<Team>; total: number }>('/teams');
+    const res = await apiClient.get<{ teams: Array<Team>; total: number }>('/teams');
     return res.teams;
 }
 
@@ -32,5 +32,5 @@ export async function createTeam(
     name: string,
     slug: string
 ): Promise<{ teamId: string; slug: string }> {
-    return apiCleint.post('/teams', { name, slug });
+    return apiClient.post('/teams', { name, slug });
 }
