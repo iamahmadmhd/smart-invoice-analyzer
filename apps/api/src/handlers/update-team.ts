@@ -15,14 +15,14 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const body = parseBody(event, UpdateTeamRequestSchema);
     const config = getConfig();
 
-    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE!).findByIds(
         teamId,
         userId
     );
     assertActiveMembership(membership, teamId, userId);
     requireRole(membership, 'ADMIN');
 
-    const teamRepo = new TeamRepository(config.TEAM_TABLE);
+    const teamRepo = new TeamRepository(config.TEAM_TABLE!);
     if (body.name) await teamRepo.updateName(teamId, body.name);
 
     return ok(await teamRepo.getById(teamId));

@@ -17,14 +17,14 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const body = parseBody(event, CreateInvitationRequestSchema);
     const config = getConfig();
 
-    const callerMembership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+    const callerMembership = await new MembershipRepository(config.MEMBERSHIP_TABLE!).findByIds(
         teamId,
         userId
     );
     assertActiveMembership(callerMembership, teamId, userId);
     requireRole(callerMembership, 'ADMIN');
 
-    const invitationRepo = new InvitationRepository(config.INVITATION_TABLE);
+    const invitationRepo = new InvitationRepository(config.INVITATION_TABLE!);
     const existing = await invitationRepo.listByTeam(teamId);
     const duplicate = existing.find((i) => i.email === body.email && i.status === 'PENDING');
     if (duplicate)

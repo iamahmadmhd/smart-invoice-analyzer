@@ -15,7 +15,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const { question } = parseBody(event, QueryRequestSchema);
     const config = getConfig();
 
-    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE!).findByIds(
         teamId,
         userId
     );

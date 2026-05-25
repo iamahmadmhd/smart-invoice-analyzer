@@ -14,7 +14,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const { token } = parseBody(event, AcceptBodySchema);
     const config = getConfig();
 
-    const invitationRepo = new InvitationRepository(config.INVITATION_TABLE);
+    const invitationRepo = new InvitationRepository(config.INVITATION_TABLE!);
     const invitation = await invitationRepo.getByToken(token);
 
     if (!invitation) throw new NotFoundError('Invitation', token);
@@ -27,7 +27,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
         throw new ConflictError('Invitation has expired');
     }
 
-    const membershipRepo = new MembershipRepository(config.MEMBERSHIP_TABLE);
+    const membershipRepo = new MembershipRepository(config.MEMBERSHIP_TABLE!);
     const existing = await membershipRepo.findByIds(invitation.teamId, userId);
     if (existing) throw new ConflictError('You are already a member of this team');
 

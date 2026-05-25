@@ -13,7 +13,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const exportId = requirePathParam(event, 'exportId');
     const config = getConfig();
 
-    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE).findByIds(
+    const membership = await new MembershipRepository(config.MEMBERSHIP_TABLE!).findByIds(
         teamId,
         userId
     );

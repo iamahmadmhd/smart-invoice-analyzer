@@ -8,7 +8,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const { teamId, userId } = resolveRawTeamRequest(event);
     const config = getConfig();
 
-    const repo = new MembershipRepository(config.MEMBERSHIP_TABLE);
+    const repo = new MembershipRepository(config.MEMBERSHIP_TABLE!);
     const membership = await repo.findByIds(teamId, userId);
     assertActiveMembership(membership, teamId, userId);
 

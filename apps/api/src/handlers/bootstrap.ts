@@ -9,7 +9,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const { userId, username } = getUserContext(event);
     const config = getConfig();
 
-    const membershipRepo = new MembershipRepository(config.MEMBERSHIP_TABLE);
+    const membershipRepo = new MembershipRepository(config.MEMBERSHIP_TABLE!!);
     const existing = await membershipRepo.listByUser(userId);
 
     if (existing.length > 0) {
@@ -23,7 +23,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
         .slice(0, 48)
         .padEnd(2, '0');
 
-    const teamRepo = new TeamRepository(config.TEAM_TABLE);
+    const teamRepo = new TeamRepository(config.TEAM_TABLE!!);
     const existingSlug = await teamRepo.getBySlug(slug);
     const finalSlug = existingSlug ? `${slug}-${Date.now().toString(36)}` : slug;
 

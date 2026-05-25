@@ -18,7 +18,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const body = parseBody(event, UpdateMemberRequestSchema);
     const config = getConfig();
 
-    const repo = new MembershipRepository(config.MEMBERSHIP_TABLE);
+    const repo = new MembershipRepository(config.MEMBERSHIP_TABLE!);
     const callerMembership = await repo.findByIds(teamId, userId);
     assertActiveMembership(callerMembership, teamId, userId);
     requireRole(callerMembership, 'ADMIN');

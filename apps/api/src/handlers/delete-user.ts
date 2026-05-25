@@ -17,7 +17,7 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const config = getConfig();
 
     // Collect all teams the user is a member of
-    const membershipRepo = new MembershipRepository(config.MEMBERSHIP_TABLE);
+    const membershipRepo = new MembershipRepository(config.MEMBERSHIP_TABLE!);
     const memberships = await membershipRepo.listByUser(userId);
     const teamIds = memberships.map((m) => m.teamId);
 

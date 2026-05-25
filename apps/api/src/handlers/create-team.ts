@@ -11,14 +11,14 @@ const lambdaHandler = async (event: ParsedApiEvent): Promise<ApiResponse> => {
     const body = parseBody(event, CreateTeamRequestSchema);
     const config = getConfig();
 
-    const teamRepo = new TeamRepository(config.TEAM_TABLE);
+    const teamRepo = new TeamRepository(config.TEAM_TABLE!);
     await teamRepo.assertSlugAvailable(body.slug);
 
     const team = buildTeam({ name: body.name, slug: body.slug, ownerId: userId });
     const membership = buildOwnerMembership(team.teamId, userId);
 
     await teamRepo.put(team);
-    await new MembershipRepository(config.MEMBERSHIP_TABLE).put(membership);
+    await new MembershipRepository(config.MEMBERSHIP_TABLE!).put(membership);
 
     return created({ teamId: team.teamId, slug: team.slug });
 };
