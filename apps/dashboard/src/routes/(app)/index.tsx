@@ -4,6 +4,13 @@ import { useBootstrap } from '@/hooks/use-bootstrap';
 import { useTeamStore } from '@/stores/team';
 import { PageLoader } from '#/components/ui/page-loader';
 import { Button } from '#/components/ui/button';
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyTitle,
+} from '#/components/ui/empty';
 
 export const Route = createFileRoute('/(app)/')({ component: AppIndex });
 
@@ -21,20 +28,24 @@ function AppIndex() {
 
     if (isError) {
         return (
-            <div className='flex min-h-svh flex-col items-center justify-center gap-3'>
-                <p className='text-sm font-medium text-destructive'>
-                    Failed to load your workspace
-                </p>
-                <p className='text-xs text-muted-foreground'>
-                    {error instanceof Error ? error.message : 'Unknown error'}
-                </p>
-                <Button
-                    variant='link'
-                    onClick={() => window.location.reload()}
-                >
-                    Try again
-                </Button>
-            </div>
+            <Empty className='min-h-svh'>
+                <EmptyHeader>
+                    <EmptyTitle className='text-destructive'>
+                        Failed to load your workspace
+                    </EmptyTitle>
+                    <EmptyDescription>
+                        {error instanceof Error ? error.message : 'Unknown error'}
+                    </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                    <Button
+                        variant='outline'
+                        onClick={() => window.location.reload()}
+                    >
+                        Try again
+                    </Button>
+                </EmptyContent>
+            </Empty>
         );
     }
 

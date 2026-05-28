@@ -85,6 +85,20 @@ export interface CreateInvoiceResponse {
     status: InvoiceStatus;
 }
 
+export interface UpdateInvoiceRequest {
+    vendorName?: string;
+    invoiceNumber?: string;
+    invoiceDate?: string;
+    dueDate?: string;
+    currency?: string;
+    netAmount?: number;
+    taxAmount?: number;
+    taxRate?: number;
+    totalAmount?: number;
+    vatIdOrTaxNumber?: string;
+    category?: InvoiceCategory;
+}
+
 // ── API calls ─────────────────────────────────────────────────────────────────
 
 export function listInvoices(
@@ -108,6 +122,18 @@ export function listInvoices(
 
 export function getInvoice(teamId: string, invoiceId: string): Promise<Invoice> {
     return apiClient.get<Invoice>(`/teams/${teamId}/invoices/${invoiceId}`);
+}
+
+export function updateInvoice(
+    teamId: string,
+    invoiceId: string,
+    body: UpdateInvoiceRequest
+): Promise<Invoice> {
+    return apiClient.patch<Invoice>(`/teams/${teamId}/invoices/${invoiceId}`, body);
+}
+
+export function deleteInvoice(teamId: string, invoiceId: string): Promise<void> {
+    return apiClient.delete<void>(`/teams/${teamId}/invoices/${invoiceId}`);
 }
 
 export function presignUpload(

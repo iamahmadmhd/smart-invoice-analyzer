@@ -19,6 +19,7 @@ import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-p
 import { Route as authConfirmRouteImport } from './routes/(auth)/confirm'
 import { Route as appTeamIdRouteRouteImport } from './routes/(app)/$teamId/route'
 import { Route as appTeamIdInvoicesIndexRouteImport } from './routes/(app)/$teamId/invoices/index'
+import { Route as appTeamIdInvoicesInvoiceIdRouteImport } from './routes/(app)/$teamId/invoices/$invoiceId'
 
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
@@ -68,6 +69,12 @@ const appTeamIdInvoicesIndexRoute = appTeamIdInvoicesIndexRouteImport.update({
   path: '/invoices/',
   getParentRoute: () => appTeamIdRouteRoute,
 } as any)
+const appTeamIdInvoicesInvoiceIdRoute =
+  appTeamIdInvoicesInvoiceIdRouteImport.update({
+    id: '/invoices/$invoiceId',
+    path: '/invoices/$invoiceId',
+    getParentRoute: () => appTeamIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/$teamId': typeof appTeamIdRouteRouteWithChildren
@@ -77,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof authSigninRoute
   '/signup': typeof authSignupRoute
   '/': typeof appIndexRoute
+  '/$teamId/invoices/$invoiceId': typeof appTeamIdInvoicesInvoiceIdRoute
   '/$teamId/invoices/': typeof appTeamIdInvoicesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -87,6 +95,7 @@ export interface FileRoutesByTo {
   '/signin': typeof authSigninRoute
   '/signup': typeof authSignupRoute
   '/': typeof appIndexRoute
+  '/$teamId/invoices/$invoiceId': typeof appTeamIdInvoicesInvoiceIdRoute
   '/$teamId/invoices': typeof appTeamIdInvoicesIndexRoute
 }
 export interface FileRoutesById {
@@ -100,6 +109,7 @@ export interface FileRoutesById {
   '/(auth)/signin': typeof authSigninRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(app)/': typeof appIndexRoute
+  '/(app)/$teamId/invoices/$invoiceId': typeof appTeamIdInvoicesInvoiceIdRoute
   '/(app)/$teamId/invoices/': typeof appTeamIdInvoicesIndexRoute
 }
 export interface FileRouteTypes {
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/'
+    | '/$teamId/invoices/$invoiceId'
     | '/$teamId/invoices/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/'
+    | '/$teamId/invoices/$invoiceId'
     | '/$teamId/invoices'
   id:
     | '__root__'
@@ -134,6 +146,7 @@ export interface FileRouteTypes {
     | '/(auth)/signin'
     | '/(auth)/signup'
     | '/(app)/'
+    | '/(app)/$teamId/invoices/$invoiceId'
     | '/(app)/$teamId/invoices/'
   fileRoutesById: FileRoutesById
 }
@@ -214,14 +227,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appTeamIdInvoicesIndexRouteImport
       parentRoute: typeof appTeamIdRouteRoute
     }
+    '/(app)/$teamId/invoices/$invoiceId': {
+      id: '/(app)/$teamId/invoices/$invoiceId'
+      path: '/invoices/$invoiceId'
+      fullPath: '/$teamId/invoices/$invoiceId'
+      preLoaderRoute: typeof appTeamIdInvoicesInvoiceIdRouteImport
+      parentRoute: typeof appTeamIdRouteRoute
+    }
   }
 }
 
 interface appTeamIdRouteRouteChildren {
+  appTeamIdInvoicesInvoiceIdRoute: typeof appTeamIdInvoicesInvoiceIdRoute
   appTeamIdInvoicesIndexRoute: typeof appTeamIdInvoicesIndexRoute
 }
 
 const appTeamIdRouteRouteChildren: appTeamIdRouteRouteChildren = {
+  appTeamIdInvoicesInvoiceIdRoute: appTeamIdInvoicesInvoiceIdRoute,
   appTeamIdInvoicesIndexRoute: appTeamIdInvoicesIndexRoute,
 }
 
