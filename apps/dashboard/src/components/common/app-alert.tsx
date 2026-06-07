@@ -1,15 +1,15 @@
-import { AlertDescription, AlertTitle, Alert as UIAlert } from '../ui/alert';
-import { Item, ItemContent, ItemDescription } from '../ui/item';
 import type { ComponentProps, ReactNode } from 'react';
+import { AlertDescription, AlertTitle, Alert as UIAlert } from '@/components/ui/alert';
+import { Item, ItemContent, ItemDescription } from '@/components/ui/item';
 
-interface AlertProps extends ComponentProps<'div'> {
+interface AppAlertProps extends ComponentProps<'div'> {
     title?: string;
     description?: Array<string>;
     variant?: 'default' | 'danger' | 'destructive';
     icon?: ReactNode;
 }
 
-function Alert({ title, description, variant = 'default', icon, ...props }: AlertProps) {
+export function AppAlert({ title, description, variant = 'default', icon, ...props }: AppAlertProps) {
     return (
         <UIAlert
             variant={variant}
@@ -36,5 +36,3 @@ function Alert({ title, description, variant = 'default', icon, ...props }: Aler
         </UIAlert>
     );
 }
-
-export { Alert };

@@ -8,61 +8,25 @@ import {
 } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { useState } from 'react';
-import { Row } from './row';
+import { useEffect, useState } from 'react';
 import { ConfidenceBar } from './confidence-bar';
 import { DeleteDialog } from './delete-dialog';
 import { EditSheet } from './edit-sheet';
-import { DetailSkeleton } from './detail-skeleton';
-import { EmptyDetail } from './empty-detail';
+import { InvoiceDetailSkeleton } from './invoice-detail-skeleton';
 import type { AnomalyPayload, DuplicatePayload, SummaryPayload } from '@/api/insights';
-import type { InvoiceCategory, InvoiceStatus } from '@/api/invoices';
 import { getInsights } from '@/api/insights';
 import { getInvoice } from '@/api/invoices';
-import { Alert } from '#/components/app';
+import { AppAlert } from '@/components/common/app-alert';
+import { DataRow } from '@/components/common/data-row';
+import { InvoiceEmptyDetail } from '@/components/common/invoice-empty-detail';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { CATEGORY_LABELS, STATUS_CONFIG } from '@/constants/invoice';
+import { formatters } from '@/lib/formatters';
 
-const STATUS_CONFIG: Record<
-    InvoiceStatus,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-    UPLOADED: { label: 'Uploaded', variant: 'secondary' },
-    PROCESSING: { label: 'Processing', variant: 'secondary' },
-    EXTRACTED: { label: 'Extracted', variant: 'secondary' },
-    ENRICHED: { label: 'Enriched', variant: 'secondary' },
-    REVIEW_READY: { label: 'Review Ready', variant: 'outline' },
-    COMPLETED: { label: 'Completed', variant: 'default' },
-    FAILED_OCR: { label: 'OCR Failed', variant: 'destructive' },
-    FAILED_VALIDATION: { label: 'Validation Failed', variant: 'destructive' },
-    FAILED_AI: { label: 'AI Failed', variant: 'destructive' },
-    FAILED_INTERNAL: { label: 'Internal Error', variant: 'destructive' },
-};
-
-const CATEGORY_LABELS: Record<InvoiceCategory, string> = {
-    software: 'Software',
-    hardware: 'Hardware',
-    office: 'Office',
-    travel: 'Travel',
-    marketing: 'Marketing',
-    utilities: 'Utilities',
-    consulting: 'Consulting',
-    other: 'Other',
-};
-
-function formatAmount(amount: number | undefined, currency: string) {
-    if (amount === undefined) return '—';
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(amount);
-}
-
-function formatDate(date: string | undefined) {
-    if (!date) return '—';
-    return new Intl.DateTimeFormat('de-DE').format(new Date(date));
-}
-
-export function InvoiceDetailPage() {
+export function InvoiceDetail() {
     const { teamId, invoiceId } = useParams({ from: '/(app)/$teamId/invoices/$invoiceId' });
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -80,10 +44,14 @@ export function InvoiceDetailPage() {
         enabled: invoiceQuery.isSuccess,
     });
 
-    if (invoiceQuery.isPending) return <DetailSkeleton />;
+    useEffect(() => {
+        console.log('insights', insightsQuery.data);
+    }, [insightsQuery]);
+
+    if (invoiceQuery.isPending) return <InvoiceDetailSkeleton />;
 
     if (invoiceQuery.isError || !invoiceQuery.data) {
-        return <EmptyDetail teamId={teamId} />;
+        return <InvoiceEmptyDetail teamId={teamId} />;
     }
 
     const invoice = invoiceQuery.data;
@@ -156,28 +124,26 @@ export function InvoiceDetailPage() {
             {/* Flag callouts */}
             {(invoice.duplicateFlag || invoice.anomalyFlag || summary) && (
                 <div className='space-y-2'>
-                    {/* AI Summary */}
                     {summary && (
-                        <Alert
+                        <AppAlert
                             title='AI Summary'
                             description={[(summary.payload as unknown as SummaryPayload).summary]}
                             icon={<IconSparkles />}
                         />
                     )}
                     {invoice.duplicateFlag && (
-                        <Alert
+                        <AppAlert
                             title='Possible Duplicate'
-                            description={[
-                                duplicate
-                                    ? (duplicate.payload as unknown as DuplicatePayload).reason
-                                    : 'A similar invoice was found in your records.',
-                            ]}
+                            description={
+                                (duplicate?.payload as unknown as DuplicatePayload).reasons ??
+                                'A similar invoice was found in your records.'
+                            }
                             variant='danger'
                             icon={<IconCopy />}
                         />
                     )}
                     {invoice.anomalyFlag && (
-                        <Alert
+                        <AppAlert
                             title='Anomaly Detected'
                             description={
                                 (anomaly?.payload as unknown as AnomalyPayload).reasons ?? []
@@ -190,7 +156,7 @@ export function InvoiceDetailPage() {
             )}
 
             {/* Exported notice */}
-            {isExported && <Alert />}
+            {isExported && <AppAlert />}
 
             {/* Content grid */}
             <div className='grid gap-4 lg:grid-cols-2'>
@@ -203,21 +169,21 @@ export function InvoiceDetailPage() {
                         <div className='flex items-baseline justify-between py-1'>
                             <span className='text-sm text-ink-muted'>Total</span>
                             <span className='text-2xl font-semibold tabular-nums'>
-                                {formatAmount(invoice.totalAmount, invoice.currency)}
+                                {formatters.amount(invoice.totalAmount, invoice.currency)}
                             </span>
                         </div>
                         <Separator className='my-1' />
-                        <Row label='Net amount'>
-                            {formatAmount(invoice.netAmount, invoice.currency)}
-                        </Row>
-                        <Row
+                        <DataRow label='Net amount'>
+                            {formatters.amount(invoice.netAmount, invoice.currency)}
+                        </DataRow>
+                        <DataRow
                             label={
                                 invoice.taxRate !== undefined ? `Tax (${invoice.taxRate}%)` : 'Tax'
                             }
                         >
-                            {formatAmount(invoice.taxAmount, invoice.currency)}
-                        </Row>
-                        <Row label='Currency'>{invoice.currency}</Row>
+                            {formatters.amount(invoice.taxAmount, invoice.currency)}
+                        </DataRow>
+                        <DataRow label='Currency'>{invoice.currency}</DataRow>
                     </CardContent>
                 </Card>
 
@@ -227,9 +193,11 @@ export function InvoiceDetailPage() {
                         <CardTitle className='text-sm font-semibold'>Invoice Details</CardTitle>
                     </CardHeader>
                     <CardContent className='flex flex-col gap-1'>
-                        <Row label='Invoice date'>{formatDate(invoice.invoiceDate)}</Row>
-                        <Row label='Due date'>{formatDate(invoice.dueDate)}</Row>
-                        <Row label='Category'>
+                        <DataRow label='Invoice date'>
+                            {formatters.date(invoice.invoiceDate)}
+                        </DataRow>
+                        <DataRow label='Due date'>{formatters.date(invoice.dueDate)}</DataRow>
+                        <DataRow label='Category'>
                             {invoice.category ? (
                                 <span className='rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-medium text-brand capitalize'>
                                     {CATEGORY_LABELS[invoice.category]}
@@ -237,9 +205,9 @@ export function InvoiceDetailPage() {
                             ) : (
                                 '—'
                             )}
-                        </Row>
+                        </DataRow>
                         {invoice.vatIdOrTaxNumber && (
-                            <Row label='VAT / Tax ID'>{invoice.vatIdOrTaxNumber}</Row>
+                            <DataRow label='VAT / Tax ID'>{invoice.vatIdOrTaxNumber}</DataRow>
                         )}
                         {invoice.confidenceScore !== undefined && (
                             <>

@@ -21,7 +21,7 @@ function amountsMatch(a: number | undefined, b: number | undefined): boolean {
 export interface DuplicateCheckResult {
     isDuplicate: boolean;
     duplicateOfInvoiceId?: string;
-    reason?: string;
+    reasons?: string[];
 }
 
 export function checkForDuplicate(candidate: Invoice, existing: Invoice[]): DuplicateCheckResult {
@@ -37,7 +37,9 @@ export function checkForDuplicate(candidate: Invoice, existing: Invoice[]): Dupl
             return {
                 isDuplicate: true,
                 duplicateOfInvoiceId: other.invoiceId,
-                reason: `Duplicate invoice number ${candidate.invoiceNumber} from ${candidate.vendorName}`,
+                reasons: [
+                    `Duplicate invoice number ${candidate.invoiceNumber} from ${candidate.vendorName}`,
+                ],
             };
         }
 
@@ -56,7 +58,7 @@ export function checkForDuplicate(candidate: Invoice, existing: Invoice[]): Dupl
             return {
                 isDuplicate: true,
                 duplicateOfInvoiceId: other.invoiceId,
-                reason: `Same vendor, amount, and date window as invoice ${other.invoiceId}`,
+                reasons: [`Same vendor, amount, and date window as invoice ${other.invoiceId}`],
             };
         }
     }

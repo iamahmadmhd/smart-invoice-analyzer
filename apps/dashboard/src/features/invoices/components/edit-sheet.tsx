@@ -5,7 +5,6 @@ import type { Invoice, InvoiceCategory } from '@/api/invoices';
 import { updateInvoice } from '@/api/invoices';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -16,19 +15,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-
-const CATEGORY_LABELS: Record<InvoiceCategory, string> = {
-    software: 'Software',
-    hardware: 'Hardware',
-    office: 'Office',
-    travel: 'Travel',
-    marketing: 'Marketing',
-    utilities: 'Utilities',
-    consulting: 'Consulting',
-    other: 'Other',
-};
-
-const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS) as Array<[InvoiceCategory, string]>;
+import { CATEGORY_OPTIONS } from '@/constants/invoice';
+import { FormField } from '@/components/forms/FormField';
 
 const editSchema = z.object({
     vendorName: z.string().optional(),
@@ -106,30 +94,22 @@ export function EditSheet({ open, onOpenChange, invoice, teamId }: EditSheetProp
                     <form.Field
                         name='vendorName'
                         children={(field) => (
-                            <Field>
-                                <Label htmlFor={field.name}>Vendor name</Label>
-                                <Input
-                                    id={field.name}
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
-                                    placeholder='Acme GmbH'
-                                />
-                            </Field>
+                            <FormField
+                                field={field}
+                                label='Vendor name'
+                                placeholder='Acme GmbH'
+                            />
                         )}
                     />
 
                     <form.Field
                         name='invoiceNumber'
                         children={(field) => (
-                            <Field>
-                                <Label htmlFor={field.name}>Invoice number</Label>
-                                <Input
-                                    id={field.name}
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
-                                    placeholder='RE-2024-001'
-                                />
-                            </Field>
+                            <FormField
+                                field={field}
+                                label='Invoice number'
+                                placeholder='RE-2024-001'
+                            />
                         )}
                     />
 
@@ -137,29 +117,21 @@ export function EditSheet({ open, onOpenChange, invoice, teamId }: EditSheetProp
                         <form.Field
                             name='invoiceDate'
                             children={(field) => (
-                                <Field>
-                                    <Label htmlFor={field.name}>Invoice date</Label>
-                                    <Input
-                                        id={field.name}
-                                        type='date'
-                                        value={field.state.value}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                    />
-                                </Field>
+                                <FormField
+                                    field={field}
+                                    label='Invoice date'
+                                    type='date'
+                                />
                             )}
                         />
                         <form.Field
                             name='dueDate'
                             children={(field) => (
-                                <Field>
-                                    <Label htmlFor={field.name}>Due date</Label>
-                                    <Input
-                                        id={field.name}
-                                        type='date'
-                                        value={field.state.value}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                    />
-                                </Field>
+                                <FormField
+                                    field={field}
+                                    label='Due date'
+                                    type='date'
+                                />
                             )}
                         />
                     </div>
@@ -170,36 +142,28 @@ export function EditSheet({ open, onOpenChange, invoice, teamId }: EditSheetProp
                         <form.Field
                             name='netAmount'
                             children={(field) => (
-                                <Field>
-                                    <Label htmlFor={field.name}>Net amount (€)</Label>
-                                    <Input
-                                        id={field.name}
-                                        type='number'
-                                        min='0'
-                                        step='0.01'
-                                        value={field.state.value}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        placeholder='0.00'
-                                    />
-                                </Field>
+                                <FormField
+                                    field={field}
+                                    label='Net amount (€)'
+                                    type='number'
+                                    placeholder='0.00'
+                                    min='0'
+                                    step='0.01'
+                                />
                             )}
                         />
                         <form.Field
                             name='taxRate'
                             children={(field) => (
-                                <Field>
-                                    <Label htmlFor={field.name}>Tax rate (%)</Label>
-                                    <Input
-                                        id={field.name}
-                                        type='number'
-                                        min='0'
-                                        max='100'
-                                        step='1'
-                                        value={field.state.value}
-                                        onChange={(e) => field.handleChange(e.target.value)}
-                                        placeholder='19'
-                                    />
-                                </Field>
+                                <FormField
+                                    field={field}
+                                    label='Tax rate (%)'
+                                    type='number'
+                                    placeholder='19'
+                                    min='0'
+                                    max='100'
+                                    step='1'
+                                />
                             )}
                         />
                     </div>
@@ -239,15 +203,11 @@ export function EditSheet({ open, onOpenChange, invoice, teamId }: EditSheetProp
                     <form.Field
                         name='vatIdOrTaxNumber'
                         children={(field) => (
-                            <Field>
-                                <Label htmlFor={field.name}>VAT / Tax number</Label>
-                                <Input
-                                    id={field.name}
-                                    value={field.state.value}
-                                    onChange={(e) => field.handleChange(e.target.value)}
-                                    placeholder='DE123456789'
-                                />
-                            </Field>
+                            <FormField
+                                field={field}
+                                label='VAT / Tax number'
+                                placeholder='DE123456789'
+                            />
                         )}
                     />
 

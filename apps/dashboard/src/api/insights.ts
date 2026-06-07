@@ -21,7 +21,7 @@ export interface SummaryPayload {
 
 export interface DuplicatePayload {
     duplicateOfInvoiceId: string;
-    reason: string;
+    reasons: Array<string>;
 }
 
 export interface AnomalyPayload {

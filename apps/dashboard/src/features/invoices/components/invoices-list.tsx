@@ -2,9 +2,9 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { IconAlertTriangle, IconCopy, IconFilter, IconSearch, IconX } from '@tabler/icons-react';
 import { useRef, useState } from 'react';
 import { UploadDialog } from './upload-dialog';
-import { InvoicesTableSkeleton } from './invoices-table-skeleton';
-import type { InvoiceCategory, InvoiceStatus, ListInvoicesQuery } from '@/api/invoices';
-import { useInvoices } from '@/hooks/use-invoices';
+import { InvoiceTableSkeleton } from './invoice-table-skeleton';
+import type { Invoice, InvoiceCategory, InvoiceStatus, ListInvoicesQuery } from '@/api/invoices';
+import { useInvoices } from '@/features/invoices/hooks/use-invoices';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
-
 import {
     Table,
     TableBody,
@@ -26,55 +25,13 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-
-const STATUS_CONFIG: Record<
-    InvoiceStatus,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-    UPLOADED: { label: 'Uploaded', variant: 'secondary' },
-    PROCESSING: { label: 'Processing', variant: 'secondary' },
-    EXTRACTED: { label: 'Extracted', variant: 'secondary' },
-    ENRICHED: { label: 'Enriched', variant: 'secondary' },
-    REVIEW_READY: { label: 'Review Ready', variant: 'outline' },
-    COMPLETED: { label: 'Completed', variant: 'default' },
-    FAILED_OCR: { label: 'OCR Failed', variant: 'destructive' },
-    FAILED_VALIDATION: { label: 'Validation Failed', variant: 'destructive' },
-    FAILED_AI: { label: 'AI Failed', variant: 'destructive' },
-    FAILED_INTERNAL: { label: 'Internal Error', variant: 'destructive' },
-};
-
-const CATEGORY_LABELS: Record<InvoiceCategory, string> = {
-    software: 'Software',
-    hardware: 'Hardware',
-    office: 'Office',
-    travel: 'Travel',
-    marketing: 'Marketing',
-    utilities: 'Utilities',
-    consulting: 'Consulting',
-    other: 'Other',
-};
-
-const STATUS_OPTIONS: Array<InvoiceStatus> = [
-    'COMPLETED',
-    'REVIEW_READY',
-    'PROCESSING',
-    'UPLOADED',
-    'FAILED_OCR',
-    'FAILED_AI',
-    'FAILED_VALIDATION',
-    'FAILED_INTERNAL',
-];
-
-const CATEGORY_OPTIONS: Array<InvoiceCategory> = [
-    'software',
-    'hardware',
-    'office',
-    'travel',
-    'marketing',
-    'utilities',
-    'consulting',
-    'other',
-];
+import { InvoiceEmptyListing } from '@/components/common/invoice-empty-listing';
+import {
+    CATEGORY_LABELS,
+    CATEGORY_OPTIONS,
+    STATUS_CONFIG,
+    STATUS_OPTIONS,
+} from '@/constants/invoice';
 
 function formatAmount(amount: number | undefined, currency: string) {
     if (amount === undefined) return '—';
@@ -86,7 +43,7 @@ function formatDate(date: string | undefined) {
     return new Intl.DateTimeFormat('de-DE').format(new Date(date));
 }
 
-export function InvoicesPage() {
+export function InvoicesList() {
     const { teamId } = useParams({ from: '/(app)/$teamId/invoices/' });
     const navigate = useNavigate();
 
@@ -129,7 +86,8 @@ export function InvoicesPage() {
         setDebouncedVendor('');
     };
 
-    const invoices = data?.invoices ?? [];
+    const invoices: Array<Invoice> = data?.invoices ?? [];
+    const hasFilters = activeFilterCount > 0 || !!debouncedVendor;
 
     return (
         <div className='flex flex-1 flex-col gap-0'>
@@ -248,7 +206,11 @@ export function InvoicesPage() {
 
             {/* Content */}
             <div className='mx-auto flex w-full max-w-5xl flex-1 flex-col overflow-auto px-6'>
-                {isLoading && <InvoicesTableSkeleton />}
+                {isLoading && (
+                    <div className='overflow-hidden rounded-lg border'>
+                        <InvoiceTableSkeleton />
+                    </div>
+                )}
                 {isError && (
                     <Empty className='flex-1'>
                         <EmptyHeader>
@@ -267,7 +229,13 @@ export function InvoicesPage() {
                         </EmptyContent>
                     </Empty>
                 )}
-                {!isLoading && !isError && (
+                {!isLoading && !isError && invoices.length === 0 && (
+                    <InvoiceEmptyListing
+                        hasFilters={hasFilters}
+                        onClear={clearFilters}
+                    />
+                )}
+                {!isLoading && !isError && invoices.length > 0 && (
                     <div className='overflow-hidden rounded-lg border'>
                         <Table>
                             <TableHeader>

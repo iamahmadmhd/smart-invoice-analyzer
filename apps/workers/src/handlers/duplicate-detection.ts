@@ -40,7 +40,7 @@ async function recordHandler(record: SQSRecord): Promise<void> {
             createdBy: payload.uploadedBy,
             invoiceId: payload.invoiceId,
             type: 'DUPLICATE',
-            payload: { duplicateOfInvoiceId: result.duplicateOfInvoiceId, reason: result.reason },
+            payload: { duplicateOfInvoiceId: result.duplicateOfInvoiceId, reasons: result.reasons },
             createdAt: new Date().toISOString(),
         };
         await new InsightRepository(config.INSIGHT_TABLE).put(insight);

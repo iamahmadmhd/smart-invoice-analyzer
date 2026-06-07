@@ -1,5 +1,5 @@
 import { IconReceipt } from '@tabler/icons-react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyContent,
@@ -7,14 +7,14 @@ import {
     EmptyHeader,
     EmptyMedia,
     EmptyTitle,
-} from '../ui/empty';
+} from '@/components/ui/empty';
 
-interface EmptyListingProps {
+interface InvoiceEmptyListingProps {
     hasFilters: boolean;
     onClear: () => void;
 }
 
-function EmptyListing({ hasFilters, onClear }: EmptyListingProps) {
+export function InvoiceEmptyListing({ hasFilters, onClear }: InvoiceEmptyListingProps) {
     return (
         <Empty className='flex-1'>
             <EmptyHeader>
@@ -42,5 +42,3 @@ function EmptyListing({ hasFilters, onClear }: EmptyListingProps) {
         </Empty>
     );
 }
-
-export { EmptyListing };

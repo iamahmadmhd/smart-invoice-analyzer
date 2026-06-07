@@ -18,6 +18,8 @@ import { Route as authResetPasswordRouteImport } from './routes/(auth)/reset-pas
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as authConfirmRouteImport } from './routes/(auth)/confirm'
 import { Route as appTeamIdRouteRouteImport } from './routes/(app)/$teamId/route'
+import { Route as appTeamIdSettingsRouteImport } from './routes/(app)/$teamId/settings'
+import { Route as appTeamIdSectionRouteImport } from './routes/(app)/$teamId/$section'
 import { Route as appTeamIdInvoicesIndexRouteImport } from './routes/(app)/$teamId/invoices/index'
 import { Route as appTeamIdInvoicesInvoiceIdRouteImport } from './routes/(app)/$teamId/invoices/$invoiceId'
 
@@ -64,6 +66,16 @@ const appTeamIdRouteRoute = appTeamIdRouteRouteImport.update({
   path: '/$teamId',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appTeamIdSettingsRoute = appTeamIdSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => appTeamIdRouteRoute,
+} as any)
+const appTeamIdSectionRoute = appTeamIdSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => appTeamIdRouteRoute,
+} as any)
 const appTeamIdInvoicesIndexRoute = appTeamIdInvoicesIndexRouteImport.update({
   id: '/invoices/',
   path: '/invoices/',
@@ -84,6 +96,8 @@ export interface FileRoutesByFullPath {
   '/signin': typeof authSigninRoute
   '/signup': typeof authSignupRoute
   '/': typeof appIndexRoute
+  '/$teamId/$section': typeof appTeamIdSectionRoute
+  '/$teamId/settings': typeof appTeamIdSettingsRoute
   '/$teamId/invoices/$invoiceId': typeof appTeamIdInvoicesInvoiceIdRoute
   '/$teamId/invoices/': typeof appTeamIdInvoicesIndexRoute
 }
@@ -95,6 +109,8 @@ export interface FileRoutesByTo {
   '/signin': typeof authSigninRoute
   '/signup': typeof authSignupRoute
   '/': typeof appIndexRoute
+  '/$teamId/$section': typeof appTeamIdSectionRoute
+  '/$teamId/settings': typeof appTeamIdSettingsRoute
   '/$teamId/invoices/$invoiceId': typeof appTeamIdInvoicesInvoiceIdRoute
   '/$teamId/invoices': typeof appTeamIdInvoicesIndexRoute
 }
@@ -109,6 +125,8 @@ export interface FileRoutesById {
   '/(auth)/signin': typeof authSigninRoute
   '/(auth)/signup': typeof authSignupRoute
   '/(app)/': typeof appIndexRoute
+  '/(app)/$teamId/$section': typeof appTeamIdSectionRoute
+  '/(app)/$teamId/settings': typeof appTeamIdSettingsRoute
   '/(app)/$teamId/invoices/$invoiceId': typeof appTeamIdInvoicesInvoiceIdRoute
   '/(app)/$teamId/invoices/': typeof appTeamIdInvoicesIndexRoute
 }
@@ -122,6 +140,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/'
+    | '/$teamId/$section'
+    | '/$teamId/settings'
     | '/$teamId/invoices/$invoiceId'
     | '/$teamId/invoices/'
   fileRoutesByTo: FileRoutesByTo
@@ -133,6 +153,8 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/'
+    | '/$teamId/$section'
+    | '/$teamId/settings'
     | '/$teamId/invoices/$invoiceId'
     | '/$teamId/invoices'
   id:
@@ -146,6 +168,8 @@ export interface FileRouteTypes {
     | '/(auth)/signin'
     | '/(auth)/signup'
     | '/(app)/'
+    | '/(app)/$teamId/$section'
+    | '/(app)/$teamId/settings'
     | '/(app)/$teamId/invoices/$invoiceId'
     | '/(app)/$teamId/invoices/'
   fileRoutesById: FileRoutesById
@@ -220,6 +244,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appTeamIdRouteRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/$teamId/settings': {
+      id: '/(app)/$teamId/settings'
+      path: '/settings'
+      fullPath: '/$teamId/settings'
+      preLoaderRoute: typeof appTeamIdSettingsRouteImport
+      parentRoute: typeof appTeamIdRouteRoute
+    }
+    '/(app)/$teamId/$section': {
+      id: '/(app)/$teamId/$section'
+      path: '/$section'
+      fullPath: '/$teamId/$section'
+      preLoaderRoute: typeof appTeamIdSectionRouteImport
+      parentRoute: typeof appTeamIdRouteRoute
+    }
     '/(app)/$teamId/invoices/': {
       id: '/(app)/$teamId/invoices/'
       path: '/invoices'
@@ -238,11 +276,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface appTeamIdRouteRouteChildren {
+  appTeamIdSectionRoute: typeof appTeamIdSectionRoute
+  appTeamIdSettingsRoute: typeof appTeamIdSettingsRoute
   appTeamIdInvoicesInvoiceIdRoute: typeof appTeamIdInvoicesInvoiceIdRoute
   appTeamIdInvoicesIndexRoute: typeof appTeamIdInvoicesIndexRoute
 }
 
 const appTeamIdRouteRouteChildren: appTeamIdRouteRouteChildren = {
+  appTeamIdSectionRoute: appTeamIdSectionRoute,
+  appTeamIdSettingsRoute: appTeamIdSettingsRoute,
   appTeamIdInvoicesInvoiceIdRoute: appTeamIdInvoicesInvoiceIdRoute,
   appTeamIdInvoicesIndexRoute: appTeamIdInvoicesIndexRoute,
 }

@@ -1,8 +1,12 @@
 import { Link } from '@tanstack/react-router';
-import { Button } from '../ui/button';
-import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '../ui/empty';
+import { Button } from '@/components/ui/button';
+import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 
-function EmptyDetail({ teamId }: { teamId: string }) {
+interface InvoiceEmptyDetailProps {
+    teamId: string;
+}
+
+export function InvoiceEmptyDetail({ teamId }: InvoiceEmptyDetailProps) {
     return (
         <Empty className='flex-1'>
             <EmptyHeader>
@@ -25,5 +29,3 @@ function EmptyDetail({ teamId }: { teamId: string }) {
         </Empty>
     );
 }
-
-export { EmptyDetail };

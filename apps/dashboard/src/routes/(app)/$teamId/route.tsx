@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { AppShell } from '@/components/app/app-shell';
+import { AppShell } from '@/components/layouts';
 
 export const Route = createFileRoute('/(app)/$teamId')({
     beforeLoad({ context }) {

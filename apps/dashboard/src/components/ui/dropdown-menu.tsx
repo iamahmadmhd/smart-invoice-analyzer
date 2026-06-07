@@ -273,7 +273,7 @@ function DropdownMenuSubContent({
         <DropdownMenuPrimitive.SubContent
             data-slot='dropdown-menu-sub-content'
             className={cn(
-                'z-50 min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden',
+                'z-50 min-w-24 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden',
                 'rounded-lg bg-popover p-1 text-sm text-popover-foreground',
                 'shadow-lg ring-1 ring-wire/60 dark:ring-wire',
                 'duration-100',
