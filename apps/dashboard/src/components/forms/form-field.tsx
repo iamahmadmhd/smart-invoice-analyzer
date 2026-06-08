@@ -17,15 +17,7 @@ interface FormFieldProps {
     step?: string;
 }
 
-export function FormField({ 
-    field, 
-    label, 
-    type = 'text', 
-    placeholder,
-    min,
-    max,
-    step
-}: FormFieldProps) {
+function FormField({ field, label, type = 'text', placeholder, min, max, step }: FormFieldProps) {
     return (
         <Field>
             <Label htmlFor={field.name}>{label}</Label>
@@ -42,3 +34,6 @@ export function FormField({
         </Field>
     );
 }
+
+export { FormField };
+export type { FormFieldProps };

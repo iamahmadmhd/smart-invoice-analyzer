@@ -1,5 +1,5 @@
-import { createTeamResourceHook } from '@/hooks/useTeamResource';
 import type { ListInvoicesQuery } from '@/api/invoices';
+import { createTeamResourceHook } from '@/hooks/use-team-resource';
 import { listInvoices } from '@/api/invoices';
 
 export const useInvoices = createTeamResourceHook<

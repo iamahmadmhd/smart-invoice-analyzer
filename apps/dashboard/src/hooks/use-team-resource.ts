@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
-export function createTeamResourceHook<T, Q = void>(
+export function createTeamResourceHook<TData, TQuery = void>(
     resourceName: string,
-    fetcher: (teamId: string, query?: Q) => Promise<T>,
+    fetcher: (teamId: string, query?: TQuery) => Promise<TData>,
     options: { staleTime?: number } = {}
 ) {
-    return function(teamId: string | null, query?: Q) {
+    return function (teamId: string | null, query?: TQuery) {
         return useQuery({
             queryKey: [resourceName, teamId, query],
             queryFn: () => fetcher(teamId!, query),

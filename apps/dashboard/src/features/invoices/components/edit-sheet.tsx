@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import type { Invoice, InvoiceCategory } from '@/api/invoices';
+import { FormField } from '@/components/forms';
 import { updateInvoice } from '@/api/invoices';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError } from '@/components/ui/field';
@@ -16,7 +17,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { CATEGORY_OPTIONS } from '@/constants/invoice';
-import { FormField } from '@/components/forms/FormField';
 
 const editSchema = z.object({
     vendorName: z.string().optional(),
