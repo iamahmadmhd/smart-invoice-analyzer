@@ -11,7 +11,7 @@ import { Link } from '@/components/ui/link';
 import { Loader } from '@/components/ui/loader';
 
 const schema = z.object({
-    email: z.string().email('Enter a valid email'),
+    email: z.email('Enter a valid email'),
 });
 
 export function ForgotPasswordPage() {

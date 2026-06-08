@@ -8,17 +8,16 @@ import {
 } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ConfidenceBar } from './confidence-bar';
 import { DeleteDialog } from './delete-dialog';
 import { EditSheet } from './edit-sheet';
 import { InvoiceDetailSkeleton } from './invoice-detail-skeleton';
+import { InvoiceEmptyDetail } from './invoice-empty-detail';
 import type { AnomalyPayload, DuplicatePayload, SummaryPayload } from '@/api/insights';
 import { getInsights } from '@/api/insights';
 import { getInvoice } from '@/api/invoices';
-import { AppAlert } from '@/components/common/app-alert';
-import { DataRow } from '@/components/common/data-row';
-import { InvoiceEmptyDetail } from '@/components/common/invoice-empty-detail';
+import { AppAlert, DataRow } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,10 +42,6 @@ export function InvoiceDetail() {
         staleTime: 60_000,
         enabled: invoiceQuery.isSuccess,
     });
-
-    useEffect(() => {
-        console.log('insights', insightsQuery.data);
-    }, [insightsQuery]);
 
     if (invoiceQuery.isPending) return <InvoiceDetailSkeleton />;
 
@@ -93,9 +88,7 @@ export function InvoiceDetail() {
                         <Badge variant={statusVariant}>{statusLabel}</Badge>
                     </div>
                     {invoice.invoiceNumber && (
-                        <div>
-                            <p className='text-sm text-ink-muted'>#{invoice.invoiceNumber}</p>
-                        </div>
+                        <p className='text-sm text-ink-muted'>#{invoice.invoiceNumber}</p>
                     )}
                 </div>
                 <div className='flex shrink-0 items-center gap-2'>
@@ -121,6 +114,14 @@ export function InvoiceDetail() {
                 </div>
             </div>
 
+            {/* Exported notice */}
+            {isExported && (
+                <AppAlert
+                    title='Already exported'
+                    description={['This invoice has been exported and cannot be edited.']}
+                />
+            )}
+
             {/* Flag callouts */}
             {(invoice.duplicateFlag || invoice.anomalyFlag || summary) && (
                 <div className='space-y-2'>
@@ -135,8 +136,8 @@ export function InvoiceDetail() {
                         <AppAlert
                             title='Possible Duplicate'
                             description={
-                                (duplicate?.payload as unknown as DuplicatePayload).reasons ??
-                                'A similar invoice was found in your records.'
+                                (duplicate?.payload as unknown as DuplicatePayload | undefined)
+                                    ?.reasons ?? ['A similar invoice was found in your records.']
                             }
                             variant='danger'
                             icon={<IconCopy />}
@@ -146,7 +147,8 @@ export function InvoiceDetail() {
                         <AppAlert
                             title='Anomaly Detected'
                             description={
-                                (anomaly?.payload as unknown as AnomalyPayload).reasons ?? []
+                                (anomaly?.payload as unknown as AnomalyPayload | undefined)
+                                    ?.reasons ?? []
                             }
                             variant='danger'
                             icon={<IconAlertTriangle />}
@@ -154,9 +156,6 @@ export function InvoiceDetail() {
                     )}
                 </div>
             )}
-
-            {/* Exported notice */}
-            {isExported && <AppAlert />}
 
             {/* Content grid */}
             <div className='grid gap-4 lg:grid-cols-2'>

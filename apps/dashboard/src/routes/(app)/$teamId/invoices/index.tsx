@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import type { Invoice } from '@/api/invoices';
 import {
     InvoiceDataTable,
+    InvoiceEmptyListing,
     InvoiceTableSkeleton,
     UploadDialog,
     invoiceColumns,
     useInvoices,
 } from '@/features/invoices';
-import { ErrorState, InvoiceEmptyListing } from '@/components/common';
+import { ErrorState } from '@/components/common';
 
 export const Route = createFileRoute('/(app)/$teamId/invoices/')({
     component: InvoicesList,

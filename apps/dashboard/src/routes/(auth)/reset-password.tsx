@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { ResetPasswordPage } from '@/components/auth/reset-password-page';
+import { ResetPasswordPage } from '@/features/auth';
 
 const searchSchema = z.object({ email: z.string().default('') });
 

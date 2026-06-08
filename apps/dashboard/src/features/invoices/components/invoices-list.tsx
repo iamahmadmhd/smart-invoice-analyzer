@@ -25,7 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { InvoiceEmptyListing } from '@/components/common/invoice-empty-listing';
+import { InvoiceEmptyListing } from '#/features/invoices/components/invoice-empty-listing';
 import {
     CATEGORY_LABELS,
     CATEGORY_OPTIONS,

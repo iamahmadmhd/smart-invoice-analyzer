@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CATEGORY_LABELS, STATUS_CONFIG } from '@/constants/invoice';
 import { formatters } from '@/lib/formatters';
 
-export const invoiceColumns: ColumnDef<Invoice>[] = [
+export const invoiceColumns: Array<ColumnDef<Invoice>> = [
     {
         accessorKey: 'vendorName',
         header: ({ column }) => {

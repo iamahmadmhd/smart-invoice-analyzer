@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { ConfirmPage } from '@/components/auth/confirm-page';
+import { ConfirmPage } from '@/features/auth';
 
 const searchSchema = z.object({ email: z.string().default('') });
 
