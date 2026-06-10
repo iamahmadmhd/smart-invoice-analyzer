@@ -1,26 +1,39 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router';
-import type { Invoice } from '@/api/invoices';
+import type { Invoice, InvoiceCategoryFilter, InvoiceStatusFilter } from '@/api/invoices';
 import {
     InvoiceDataTable,
     InvoiceEmptyListing,
     InvoiceTableSkeleton,
     UploadDialog,
     invoiceColumns,
+    useInvoiceFilters,
     useInvoices,
 } from '@/features/invoices';
 import { ErrorState } from '@/components/common';
 
 export const Route = createFileRoute('/(app)/$teamId/invoices/')({
+    validateSearch: (search: Record<string, unknown>) => {
+        return {
+            vendorName: (search.vendorName as string) || undefined,
+            status: (search.status as InvoiceStatusFilter) || undefined,
+            category: (search.category as InvoiceCategoryFilter) || undefined,
+            duplicateFlag:
+                search.duplicateFlag === 'true' || search.duplicateFlag === true ? true : undefined,
+            anomalyFlag:
+                search.anomalyFlag === 'true' || search.anomalyFlag === true ? true : undefined,
+        };
+    },
     component: InvoicesList,
 });
 
 export function InvoicesList() {
     const { teamId } = useParams({ from: '/(app)/$teamId/invoices/' });
     const navigate = useNavigate();
-
-    const { data, isLoading, isError } = useInvoices(teamId, {});
+    const { filters, activeCount, clear } = useInvoiceFilters();
+    const { data, isLoading, isError } = useInvoices(teamId, filters);
 
     const invoices: Array<Invoice> = data?.invoices ?? [];
+    const hasFilters = activeCount > 0 || !!filters.vendorName;
 
     const handleRowClick = (invoice: Invoice) => {
         navigate({
@@ -55,8 +68,8 @@ export function InvoicesList() {
                 )}
                 {!isLoading && !isError && invoices.length === 0 && (
                     <InvoiceEmptyListing
-                        hasFilters={false}
-                        onClear={() => {}}
+                        hasFilters={hasFilters}
+                        onClear={clear}
                     />
                 )}
                 {!isLoading && !isError && invoices.length > 0 && (

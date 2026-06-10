@@ -1,20 +1,15 @@
 import {
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 import { IconFilter, IconSearch, IconX } from '@tabler/icons-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type {
-    ColumnDef,
-    ColumnFiltersState,
-    SortingState,
-    VisibilityState,
-} from '@tanstack/react-table';
-import type { Invoice, InvoiceCategory, InvoiceStatus } from '@/api/invoices';
+import { useEffect, useRef, useState } from 'react';
+import { useInvoiceFilters } from '../hooks/use-invoice-filters';
+import type { ColumnDef, SortingState, VisibilityState } from '@tanstack/react-table';
+import type { Invoice } from '@/api/invoices';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -33,12 +28,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    CATEGORY_LABELS,
-    CATEGORY_OPTIONS,
-    STATUS_CONFIG,
-    STATUS_OPTIONS,
-} from '@/constants/invoice';
+import { CATEGORY_ENTRIES, STATUS_CONFIG, STATUS_OPTIONS } from '@/constants/invoice';
 
 interface InvoiceDataTableProps {
     columns: Array<ColumnDef<Invoice>>;
@@ -47,65 +37,38 @@ interface InvoiceDataTableProps {
 }
 
 export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTableProps) {
+    const { filters, setters, activeCount, clear } = useInvoiceFilters();
     const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-    const [vendorSearch, setVendorSearch] = useState('');
-    const [debouncedVendor, setDebouncedVendor] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState<InvoiceStatus | undefined>();
-    const [selectedCategory, setSelectedCategory] = useState<InvoiceCategory | undefined>();
-    const [duplicateOnly, setDuplicateOnly] = useState(false);
-    const [anomalyOnly, setAnomalyOnly] = useState(false);
+    const [vendorSearch, setVendorSearch] = useState(filters.vendorName ?? '');
+
+    // Sync input field value when URL changes
+    useEffect(() => {
+        setVendorSearch(filters.vendorName ?? '');
+    }, [filters.vendorName]);
+
     const vendorDebounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     const handleVendorChange = (value: string) => {
         setVendorSearch(value);
         clearTimeout(vendorDebounceRef.current);
-        vendorDebounceRef.current = setTimeout(() => setDebouncedVendor(value), 300);
+        vendorDebounceRef.current = setTimeout(() => {
+            setters.setVendorName(value || undefined);
+        }, 300);
     };
-
-    // Apply filters
-    useEffect(() => {
-        const filters: ColumnFiltersState = [];
-
-        if (debouncedVendor) {
-            filters.push({ id: 'vendorName', value: debouncedVendor });
-        }
-        if (selectedStatus) {
-            filters.push({ id: 'status', value: [selectedStatus] });
-        }
-        if (selectedCategory) {
-            filters.push({ id: 'category', value: [selectedCategory] });
-        }
-
-        setColumnFilters(filters);
-    }, [debouncedVendor, selectedStatus, selectedCategory]);
 
     const table = useReactTable({
         data,
         columns,
         onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         state: {
             sorting,
-            columnFilters,
             columnVisibility,
-        },
-        globalFilterFn: (row, columnId, filterValue) => {
-            const vendorName = row.original.vendorName?.toLowerCase() ?? '';
-            return vendorName.includes(filterValue.toLowerCase());
-        },
-        filterFns: {
-            vendorNameFilter: (row, columnId, filterValue) => {
-                const vendorName = row.original.vendorName?.toLowerCase() ?? '';
-                return vendorName.includes(filterValue.toLowerCase());
-            },
         },
         initialState: {
             pagination: {
@@ -114,34 +77,11 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
         },
     });
 
-    // Apply client-side flag filters
-    const filteredRows = useMemo(() => {
-        let rows = table.getRowModel().rows;
+    const rows = table.getRowModel().rows;
 
-        if (duplicateOnly) {
-            rows = rows.filter((row) => row.original.duplicateFlag);
-        }
-        if (anomalyOnly) {
-            rows = rows.filter((row) => row.original.anomalyFlag);
-        }
-
-        return rows;
-    }, [table.getRowModel().rows, duplicateOnly, anomalyOnly]);
-
-    const activeFilterCount =
-        (selectedStatus ? 1 : 0) +
-        (selectedCategory ? 1 : 0) +
-        (duplicateOnly ? 1 : 0) +
-        (anomalyOnly ? 1 : 0);
-
-    const clearFilters = () => {
-        setSelectedStatus(undefined);
-        setSelectedCategory(undefined);
-        setDuplicateOnly(false);
-        setAnomalyOnly(false);
+    const handleClearFilters = () => {
+        clear();
         setVendorSearch('');
-        setDebouncedVendor('');
-        table.resetColumnFilters();
     };
 
     return (
@@ -163,7 +103,7 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
                         <button
                             onClick={() => {
                                 setVendorSearch('');
-                                setDebouncedVendor('');
+                                setters.setVendorName(undefined);
                             }}
                             className='absolute top-1/2 right-2 -translate-y-1/2 text-ink-faint hover:text-ink'
                         >
@@ -181,9 +121,9 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
                         >
                             <IconFilter size={13} />
                             Filters
-                            {activeFilterCount > 0 && (
+                            {activeCount > 0 && (
                                 <span className='flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground'>
-                                    {activeFilterCount}
+                                    {activeCount}
                                 </span>
                             )}
                         </Button>
@@ -196,9 +136,9 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
                         {STATUS_OPTIONS.map((s) => (
                             <DropdownMenuCheckboxItem
                                 key={s}
-                                checked={selectedStatus === s}
+                                checked={filters.status === s}
                                 onCheckedChange={(checked) =>
-                                    setSelectedStatus(checked ? s : undefined)
+                                    setters.setStatus(checked ? s : undefined)
                                 }
                             >
                                 {STATUS_CONFIG[s].label}
@@ -206,39 +146,43 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
                         ))}
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel>Category</DropdownMenuLabel>
-                        {CATEGORY_OPTIONS.map((c) => (
+                        {CATEGORY_ENTRIES.map(([c, label]) => (
                             <DropdownMenuCheckboxItem
                                 key={c}
-                                checked={selectedCategory === c}
+                                checked={filters.category === c}
                                 onCheckedChange={(checked) =>
-                                    setSelectedCategory(checked ? c : undefined)
+                                    setters.setCategory(checked ? c : undefined)
                                 }
                             >
-                                {CATEGORY_LABELS[c]}
+                                {label}
                             </DropdownMenuCheckboxItem>
                         ))}
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel>Flags</DropdownMenuLabel>
                         <DropdownMenuCheckboxItem
-                            checked={duplicateOnly}
-                            onCheckedChange={setDuplicateOnly}
+                            checked={filters.duplicateFlag === true}
+                            onCheckedChange={(checked) =>
+                                setters.setDuplicateFlag(checked || undefined)
+                            }
                         >
                             Duplicates only
                         </DropdownMenuCheckboxItem>
                         <DropdownMenuCheckboxItem
-                            checked={anomalyOnly}
-                            onCheckedChange={setAnomalyOnly}
+                            checked={filters.anomalyFlag === true}
+                            onCheckedChange={(checked) =>
+                                setters.setAnomalyFlag(checked || undefined)
+                            }
                         >
                             Anomalies only
                         </DropdownMenuCheckboxItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                {activeFilterCount > 0 && (
+                {activeCount > 0 && (
                     <Button
                         variant='ghost'
                         size='sm'
-                        onClick={clearFilters}
+                        onClick={handleClearFilters}
                     >
                         Clear
                     </Button>
@@ -267,8 +211,8 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {filteredRows.length ? (
-                            filteredRows.map((row) => (
+                        {rows.length ? (
+                            rows.map((row) => (
                                 <TableRow
                                     key={row.id}
                                     className='cursor-pointer'
@@ -299,10 +243,10 @@ export function InvoiceDataTable({ columns, data, onRowClick }: InvoiceDataTable
             </div>
 
             {/* Pagination */}
-            {filteredRows.length > 0 && (
+            {rows.length > 0 && (
                 <div className='flex items-center justify-between'>
                     <div className='text-sm text-muted-foreground'>
-                        Showing {filteredRows.length} of {data.length} invoice(s)
+                        Showing {rows.length} of {data.length} invoice(s)
                     </div>
                     <div className='flex items-center space-x-2'>
                         <Button

@@ -1,7 +1,8 @@
-import { apiClient } from '#/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+// Core status values
 export type InvoiceStatus =
     | 'UPLOADED'
     | 'PROCESSING'
@@ -14,8 +15,12 @@ export type InvoiceStatus =
     | 'FAILED_AI'
     | 'FAILED_INTERNAL';
 
+// Filter types (include undefined for "no filter")
+export type InvoiceStatusFilter = InvoiceStatus | undefined;
+
 export type ExportStatus = 'NOT_EXPORTED' | 'EXPORTED';
 
+// Core category values
 export type InvoiceCategory =
     | 'software'
     | 'hardware'
@@ -25,6 +30,9 @@ export type InvoiceCategory =
     | 'utilities'
     | 'consulting'
     | 'other';
+
+// Filter type (includes undefined for "no filter")
+export type InvoiceCategoryFilter = InvoiceCategory | undefined;
 
 export type AllowedContentType = 'application/pdf' | 'image/jpeg' | 'image/png';
 
@@ -56,9 +64,9 @@ export interface Invoice {
 }
 
 export interface ListInvoicesQuery {
-    status?: InvoiceStatus;
+    status?: InvoiceStatusFilter;
     exportStatus?: ExportStatus;
-    category?: InvoiceCategory;
+    category?: InvoiceCategoryFilter;
     vendorName?: string;
     dateFrom?: string;
     dateTo?: string;

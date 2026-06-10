@@ -21,6 +21,13 @@ export function InvoiceEmptyDetail({ teamId }: InvoiceEmptyDetailProps) {
                     <Link
                         to='/$teamId/invoices'
                         params={{ teamId }}
+                        search={{
+                            vendorName: undefined,
+                            status: undefined,
+                            category: undefined,
+                            duplicateFlag: undefined,
+                            anomalyFlag: undefined,
+                        }}
                     >
                         Back to invoices
                     </Link>

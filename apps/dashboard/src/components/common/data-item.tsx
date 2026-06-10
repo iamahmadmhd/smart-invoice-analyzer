@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { Item, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 
-interface DataRowProps {
+interface DataItemProps {
     label: string;
     children: ReactNode;
 }
 
-export function DataRow({ label, children }: DataRowProps) {
+export function DataItem({ label, children }: DataItemProps) {
     return (
         <Item className='border-0 px-0 py-0.5'>
             <ItemContent className='flex-row items-center justify-between gap-4'>

@@ -10,3 +10,4 @@ export { InvoiceDataTable } from './components/invoice-data-table';
 export { invoiceColumns } from './components/invoice-columns';
 export { UploadDialog } from './components/upload-dialog';
 export { useInvoices } from './hooks/use-invoices';
+export { useInvoiceFilters } from './hooks/use-invoice-filters';

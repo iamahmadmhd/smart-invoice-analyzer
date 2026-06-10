@@ -8,8 +8,7 @@ import {
     IconUsers,
 } from '@tabler/icons-react';
 import { Link, Outlet, useNavigate, useParams } from '@tanstack/react-router';
-import { useEffect } from 'react';
-
+import { useQuery } from '@tanstack/react-query';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,7 +17,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 import {
     Sidebar,
     SidebarContent,
@@ -33,11 +31,10 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { TeamSwitcher, useBootstrap } from '@/features/teams';
+import { listTeams } from '@/api/teams';
+import { TeamSwitcher } from '@/features/teams';
 import { useTeamStore } from '@/stores/team';
 import { useAuthStore } from '@/stores/auth';
-import { PageLoader } from '@/components/layouts/page-loader';
-import { ErrorState } from '@/components/common';
 
 const NAV = [
     { to: 'invoices', label: 'Invoices', icon: IconReceipt },
@@ -48,34 +45,15 @@ const NAV = [
 export function AppShell() {
     const navigate = useNavigate();
     const { teamId } = useParams({ from: '/(app)/$teamId' });
-    const { isReady, isError, teams } = useBootstrap();
-    const { setActiveTeamId, getActiveTeam } = useTeamStore();
     const { user, signOut } = useAuthStore();
+    const { setActiveTeamId } = useTeamStore();
 
-    useEffect(() => {
-        if (!isReady) return;
-        const valid = teams.some((t) => t.teamId === teamId);
-        if (!valid) {
-            navigate({ to: '/', replace: true });
-            return;
-        }
-        setActiveTeamId(teamId);
-    }, [isReady, teams, teamId, navigate, setActiveTeamId]);
+    const { data: teams = [] } = useQuery({
+        queryKey: ['teams'],
+        queryFn: listTeams,
+    });
 
-    if (!isReady) {
-        return <PageLoader message='Loading your workspace' />;
-    }
-
-    if (isError) {
-        return (
-            <ErrorState
-                message='Failed to load workspace'
-                className='min-h-svh'
-            />
-        );
-    }
-
-    const activeTeam = getActiveTeam();
+    const activeTeam = teams.find((t) => t.teamId === teamId) ?? null;
 
     return (
         <SidebarProvider>
@@ -100,7 +78,17 @@ export function AppShell() {
                         activeTeam={activeTeam}
                         onSelect={(id) => {
                             setActiveTeamId(id);
-                            navigate({ to: '/$teamId/invoices', params: { teamId: id } });
+                            navigate({
+                                to: '/$teamId/invoices',
+                                params: { teamId: id },
+                                search: {
+                                    vendorName: undefined,
+                                    status: undefined,
+                                    category: undefined,
+                                    duplicateFlag: undefined,
+                                    anomalyFlag: undefined,
+                                },
+                            });
                         }}
                     />
                 </SidebarHeader>
@@ -177,7 +165,6 @@ export function AppShell() {
                                     side='right'
                                     sideOffset={12}
                                     align='end'
-                                    className='w-52'
                                 >
                                     <DropdownMenuLabel className='truncate'>
                                         {user?.email}

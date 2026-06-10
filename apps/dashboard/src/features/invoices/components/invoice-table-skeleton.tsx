@@ -14,8 +14,8 @@ export function InvoiceTableSkeleton() {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>#</TableHead>
                         <TableHead>Vendor</TableHead>
-                        <TableHead>Invoice #</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead className='text-right'>Total</TableHead>

@@ -27,6 +27,8 @@ export const CATEGORY_LABELS: Record<InvoiceCategory, string> = {
     other: 'Other',
 } as const;
 
+export const CATEGORY_ENTRIES = Object.entries(CATEGORY_LABELS) as Array<[InvoiceCategory, string]>;
+
 export const STATUS_OPTIONS: Array<InvoiceStatus> = [
     'COMPLETED',
     'REVIEW_READY',

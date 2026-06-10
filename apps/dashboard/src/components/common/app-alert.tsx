@@ -4,12 +4,20 @@ import { Item, ItemContent, ItemDescription } from '@/components/ui/item';
 
 interface AppAlertProps extends ComponentProps<'div'> {
     title?: string;
-    description?: Array<string>;
+    description?: string | Array<string>;
     variant?: 'default' | 'danger' | 'destructive';
     icon?: ReactNode;
 }
 
-export function AppAlert({ title, description, variant = 'default', icon, ...props }: AppAlertProps) {
+export function AppAlert({
+    title,
+    description,
+    variant = 'default',
+    icon,
+    ...props
+}: AppAlertProps) {
+    const reasons = description ? (Array.isArray(description) ? description : [description]) : null;
+
     return (
         <UIAlert
             variant={variant}
@@ -17,9 +25,9 @@ export function AppAlert({ title, description, variant = 'default', icon, ...pro
         >
             {icon}
             {title && <AlertTitle>{title}</AlertTitle>}
-            {description && (
+            {reasons && (
                 <AlertDescription>
-                    {description.map((reason, i) => (
+                    {reasons.map((reason, i) => (
                         <Item
                             key={i}
                             className='p-0'

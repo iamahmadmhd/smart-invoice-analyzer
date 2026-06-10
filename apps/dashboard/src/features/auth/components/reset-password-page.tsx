@@ -96,9 +96,7 @@ export function ResetPasswordPage() {
                                     onBlur={field.handleBlur}
                                     onChange={field.handleChange}
                                 >
-                                    <InputOTPGroup
-                                        className='grid w-full grid-cols-3 *:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-full *:data-[slot=input-otp-slot]:text-xl'
-                                    >
+                                    <InputOTPGroup className='grid w-full grid-cols-3 *:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-full *:data-[slot=input-otp-slot]:text-xl'>
                                         <InputOTPSlot
                                             index={0}
                                             aria-invalid={!field.state.meta.isValid}

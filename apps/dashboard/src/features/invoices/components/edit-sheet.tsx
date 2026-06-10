@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { CATEGORY_OPTIONS } from '@/constants/invoice';
+import { CATEGORY_ENTRIES } from '@/constants/invoice';
 
 const editSchema = z.object({
     vendorName: z.string().optional(),
@@ -186,7 +186,7 @@ export function EditSheet({ open, onOpenChange, invoice, teamId }: EditSheetProp
                                         <SelectValue placeholder='No category' />
                                     </SelectTrigger>
                                     <SelectContent position='popper'>
-                                        {CATEGORY_OPTIONS.map(([value, label]) => (
+                                        {CATEGORY_ENTRIES.map(([value, label]) => (
                                             <SelectItem
                                                 key={value}
                                                 value={value}

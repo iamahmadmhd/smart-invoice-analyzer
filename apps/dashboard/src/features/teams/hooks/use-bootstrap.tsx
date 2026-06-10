@@ -12,7 +12,7 @@ import { useTeamStore } from '@/stores/team';
  * - Writes results into the team store and picks an active team.
  */
 export function useBootstrap() {
-    const { setTeams, setActiveTeamId, activeTeamId } = useTeamStore();
+    const { setActiveTeamId, activeTeamId } = useTeamStore();
 
     // Step 1 — bootstrap (creates team if needed)
     const bootstrapQuery = useQuery({
@@ -31,18 +31,16 @@ export function useBootstrap() {
         staleTime: 60_000,
     });
 
-    // Sync teams into Zustand and pick active team
+    // Sync active team selection
     useEffect(() => {
         if (!teamsQuery.data?.length) return;
-
-        setTeams(teamsQuery.data);
 
         // Keep the persisted selection if still valid; else default to first team
         const stillValid = teamsQuery.data.some((t) => t.teamId === activeTeamId);
         if (!stillValid) {
             setActiveTeamId(teamsQuery.data[0].teamId);
         }
-    }, [teamsQuery.data, activeTeamId, setTeams, setActiveTeamId]);
+    }, [teamsQuery.data, activeTeamId, setActiveTeamId]);
 
     return {
         isLoading: bootstrapQuery.isPending || teamsQuery.isPending,

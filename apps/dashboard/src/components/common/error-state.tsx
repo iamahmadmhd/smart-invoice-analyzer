@@ -15,8 +15,8 @@ export function ErrorState({ message, onRetry, className }: ErrorStateProps) {
                 <EmptyTitle className='text-destructive'>{message}</EmptyTitle>
             </EmptyHeader>
             <EmptyContent>
-                <Button 
-                    variant='outline' 
+                <Button
+                    variant='outline'
                     size='sm'
                     onClick={onRetry || (() => window.location.reload())}
                 >

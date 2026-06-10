@@ -27,7 +27,17 @@ export function DeleteDialog({ open, onOpenChange, invoice, teamId }: DeleteDial
         mutationFn: () => deleteInvoice(teamId, invoice.invoiceId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['invoices', teamId] });
-            navigate({ to: '/$teamId/invoices', params: { teamId } });
+            navigate({
+                to: '/$teamId/invoices',
+                params: { teamId },
+                search: {
+                    vendorName: undefined,
+                    status: undefined,
+                    category: undefined,
+                    duplicateFlag: undefined,
+                    anomalyFlag: undefined,
+                },
+            });
         },
     });
 

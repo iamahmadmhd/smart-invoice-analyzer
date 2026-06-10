@@ -8,6 +8,15 @@ import { formatters } from '@/lib/formatters';
 
 export const invoiceColumns: Array<ColumnDef<Invoice>> = [
     {
+        accessorKey: 'invoiceNumber',
+        header: '#',
+        cell: ({ row }) => {
+            return (
+                <span className='text-sm text-ink-muted'>{row.original.invoiceNumber ?? '—'}</span>
+            );
+        },
+    },
+    {
         accessorKey: 'vendorName',
         header: ({ column }) => {
             return (
@@ -52,15 +61,6 @@ export const invoiceColumns: Array<ColumnDef<Invoice>> = [
                         )}
                     </div>
                 </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'invoiceNumber',
-        header: 'Invoice #',
-        cell: ({ row }) => {
-            return (
-                <span className='text-sm text-ink-muted'>{row.original.invoiceNumber ?? '—'}</span>
             );
         },
     },

@@ -17,7 +17,7 @@ import { InvoiceEmptyDetail } from './invoice-empty-detail';
 import type { AnomalyPayload, DuplicatePayload, SummaryPayload } from '@/api/insights';
 import { getInsights } from '@/api/insights';
 import { getInvoice } from '@/api/invoices';
-import { AppAlert, DataRow } from '@/components/common';
+import { AppAlert, DataItem } from '@/components/common';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,6 +71,13 @@ export function InvoiceDetail() {
                     <Link
                         to='/$teamId/invoices'
                         params={{ teamId }}
+                        search={{
+                            vendorName: undefined,
+                            status: undefined,
+                            category: undefined,
+                            duplicateFlag: undefined,
+                            anomalyFlag: undefined,
+                        }}
                     >
                         <IconArrowLeft />
                         Back to invoices
@@ -118,7 +125,7 @@ export function InvoiceDetail() {
             {isExported && (
                 <AppAlert
                     title='Already exported'
-                    description={['This invoice has been exported and cannot be edited.']}
+                    description='This invoice has been exported and cannot be edited.'
                 />
             )}
 
@@ -128,7 +135,7 @@ export function InvoiceDetail() {
                     {summary && (
                         <AppAlert
                             title='AI Summary'
-                            description={[(summary.payload as unknown as SummaryPayload).summary]}
+                            description={(summary.payload as unknown as SummaryPayload).summary}
                             icon={<IconSparkles />}
                         />
                     )}
@@ -172,17 +179,17 @@ export function InvoiceDetail() {
                             </span>
                         </div>
                         <Separator className='my-1' />
-                        <DataRow label='Net amount'>
+                        <DataItem label='Net amount'>
                             {formatters.amount(invoice.netAmount, invoice.currency)}
-                        </DataRow>
-                        <DataRow
+                        </DataItem>
+                        <DataItem
                             label={
                                 invoice.taxRate !== undefined ? `Tax (${invoice.taxRate}%)` : 'Tax'
                             }
                         >
                             {formatters.amount(invoice.taxAmount, invoice.currency)}
-                        </DataRow>
-                        <DataRow label='Currency'>{invoice.currency}</DataRow>
+                        </DataItem>
+                        <DataItem label='Currency'>{invoice.currency}</DataItem>
                     </CardContent>
                 </Card>
 
@@ -192,11 +199,11 @@ export function InvoiceDetail() {
                         <CardTitle className='text-sm font-semibold'>Invoice Details</CardTitle>
                     </CardHeader>
                     <CardContent className='flex flex-col gap-1'>
-                        <DataRow label='Invoice date'>
+                        <DataItem label='Invoice date'>
                             {formatters.date(invoice.invoiceDate)}
-                        </DataRow>
-                        <DataRow label='Due date'>{formatters.date(invoice.dueDate)}</DataRow>
-                        <DataRow label='Category'>
+                        </DataItem>
+                        <DataItem label='Due date'>{formatters.date(invoice.dueDate)}</DataItem>
+                        <DataItem label='Category'>
                             {invoice.category ? (
                                 <span className='rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-medium text-brand capitalize'>
                                     {CATEGORY_LABELS[invoice.category]}
@@ -204,9 +211,9 @@ export function InvoiceDetail() {
                             ) : (
                                 '—'
                             )}
-                        </DataRow>
+                        </DataItem>
                         {invoice.vatIdOrTaxNumber && (
-                            <DataRow label='VAT / Tax ID'>{invoice.vatIdOrTaxNumber}</DataRow>
+                            <DataItem label='VAT / Tax ID'>{invoice.vatIdOrTaxNumber}</DataItem>
                         )}
                         {invoice.confidenceScore !== undefined && (
                             <>

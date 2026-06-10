@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useBootstrap } from '@/features/teams';
 import { useTeamStore } from '@/stores/team';
-import { PageLoader } from '@/components/layouts';
+import { PageLoader } from '@/components/ui/page-loader';
 import { ErrorState } from '@/components/common';
 
 export const Route = createFileRoute('/(app)/')({ component: AppIndex });
@@ -14,7 +14,18 @@ function AppIndex() {
 
     useEffect(() => {
         if (isReady && activeTeamId) {
-            navigate({ to: '/$teamId/invoices', params: { teamId: activeTeamId }, replace: true });
+            navigate({
+                to: '/$teamId/invoices',
+                params: { teamId: activeTeamId },
+                search: {
+                    vendorName: undefined,
+                    status: undefined,
+                    category: undefined,
+                    duplicateFlag: undefined,
+                    anomalyFlag: undefined,
+                },
+                replace: true,
+            });
         }
     }, [isReady, activeTeamId, navigate]);
 
