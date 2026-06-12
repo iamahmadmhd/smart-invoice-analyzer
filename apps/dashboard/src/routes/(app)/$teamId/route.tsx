@@ -2,8 +2,8 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { AppShell } from '@/components/layouts';
 import { queryClient } from '@/lib/query-client';
 import { bootstrap, listTeams } from '@/api/teams';
-import { useTeamStore } from '@/stores/team';
 import { ErrorState } from '@/components/common';
+import { lastTeam } from '@/lib/last-team';
 
 export const Route = createFileRoute('/(app)/$teamId')({
     beforeLoad: async ({ context, params }) => {
@@ -33,7 +33,7 @@ export const Route = createFileRoute('/(app)/$teamId')({
             }
 
             // Step 4: Set active team ID
-            useTeamStore.getState().setActiveTeamId(params.teamId);
+            lastTeam.set(params.teamId);
         } catch (error) {
             // Rethrow redirects (which are thrown by TanStack Router under the hood)
             if (error && (error as any).status === 307) {

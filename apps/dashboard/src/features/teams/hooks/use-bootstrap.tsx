@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { bootstrap, listTeams } from '@/api/teams';
-import { useTeamStore } from '@/stores/team';
+import { lastTeam } from '@/lib/last-team';
 
 /**
  * Runs the bootstrap → list-teams sequence once on app entry.
@@ -12,8 +12,6 @@ import { useTeamStore } from '@/stores/team';
  * - Writes results into the team store and picks an active team.
  */
 export function useBootstrap() {
-    const { setActiveTeamId, activeTeamId } = useTeamStore();
-
     // Step 1 — bootstrap (creates team if needed)
     const bootstrapQuery = useQuery({
         queryKey: ['bootstrap'],
@@ -36,11 +34,11 @@ export function useBootstrap() {
         if (!teamsQuery.data?.length) return;
 
         // Keep the persisted selection if still valid; else default to first team
-        const stillValid = teamsQuery.data.some((t) => t.teamId === activeTeamId);
+        const stillValid = teamsQuery.data.some((t) => t.teamId === lastTeam.get());
         if (!stillValid) {
-            setActiveTeamId(teamsQuery.data[0].teamId);
+            lastTeam.set(teamsQuery.data[0].teamId);
         }
-    }, [teamsQuery.data, activeTeamId, setActiveTeamId]);
+    }, [teamsQuery.data, lastTeam]);
 
     return {
         isLoading: bootstrapQuery.isPending || teamsQuery.isPending,

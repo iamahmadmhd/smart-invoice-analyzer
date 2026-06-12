@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/stores/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +36,8 @@ async function apiFetch<T>(
     }
 
     // Inject Cognito token
-    const token = await useAuthStore.getState().getToken();
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken;
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...(init.headers as Record<string, string> | undefined),

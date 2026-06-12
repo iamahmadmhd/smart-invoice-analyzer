@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
-import { fetchAuthSession, getCurrentUser, signIn } from 'aws-amplify/auth';
+import { signIn } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import { InputPassword } from '@/components/ui/input-password';
 import { Label } from '@/components/ui/label';
 import { Link } from '@/components/ui/link';
 import { Loader } from '@/components/ui/loader';
-import { useAuthStore } from '@/stores/auth';
+import { queryClient } from '@/lib/query-client';
+import { authQueryOptions } from '@/lib/auth-query';
 
 const schema = z.object({
     email: z.email('Enter a valid email'),
@@ -19,7 +20,6 @@ const schema = z.object({
 
 export function SignInPage() {
     const navigate = useNavigate();
-    const { setUser } = useAuthStore();
     const [error, setError] = useState<{ message: string | undefined } | undefined>(undefined);
 
     const form = useForm({
@@ -31,14 +31,7 @@ export function SignInPage() {
             setError(undefined);
             try {
                 await signIn({ username: value.email, password: value.password });
-                const cognitoUser = await getCurrentUser();
-                const session = await fetchAuthSession();
-                const claims = session.tokens?.idToken?.payload;
-                setUser({
-                    userId: cognitoUser.userId,
-                    email: claims?.['email'] as string,
-                    username: cognitoUser.username,
-                });
+                await queryClient.invalidateQueries(authQueryOptions);
                 navigate({ to: '/' });
             } catch (e) {
                 if (e instanceof Error) {

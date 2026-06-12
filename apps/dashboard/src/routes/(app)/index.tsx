@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useBootstrap } from '@/features/teams';
-import { useTeamStore } from '@/stores/team';
 import { PageLoader } from '@/components/ui/page-loader';
 import { ErrorState } from '@/components/common';
+import { lastTeam } from '@/lib/last-team';
 
 export const Route = createFileRoute('/(app)/')({ component: AppIndex });
 
 function AppIndex() {
     const navigate = useNavigate();
-    const activeTeamId = useTeamStore((s) => s.activeTeamId);
+    const activeTeamId = lastTeam.get();
     const { isError, error, isReady } = useBootstrap();
 
     useEffect(() => {

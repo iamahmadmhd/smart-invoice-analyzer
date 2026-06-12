@@ -9,6 +9,7 @@ import {
 } from '@tabler/icons-react';
 import { Link, Outlet, useNavigate, useParams } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
+import { signOut } from 'aws-amplify/auth';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,8 +34,10 @@ import {
 } from '@/components/ui/sidebar';
 import { listTeams } from '@/api/teams';
 import { TeamSwitcher } from '@/features/teams';
-import { useTeamStore } from '@/stores/team';
-import { useAuthStore } from '@/stores/auth';
+import { queryClient } from '@/lib/query-client';
+import { router } from '@/router';
+import { authQueryOptions } from '@/lib/auth-query';
+import { lastTeam } from '@/lib/last-team';
 
 const NAV = [
     { to: 'invoices', label: 'Invoices', icon: IconReceipt },
@@ -45,13 +48,19 @@ const NAV = [
 export function AppShell() {
     const navigate = useNavigate();
     const { teamId } = useParams({ from: '/(app)/$teamId' });
-    const { user, signOut } = useAuthStore();
-    const { setActiveTeamId } = useTeamStore();
 
+    const { data: user } = useQuery(authQueryOptions);
     const { data: teams = [] } = useQuery({
         queryKey: ['teams'],
         queryFn: listTeams,
     });
+
+    const handleSignOut = async () => {
+        await signOut();
+        queryClient.setQueryData(authQueryOptions.queryKey, undefined);
+        router.update({ context: { isAuthenticated: false } });
+        await router.invalidate();
+    };
 
     const activeTeam = teams.find((t) => t.teamId === teamId) ?? null;
 
@@ -77,7 +86,7 @@ export function AppShell() {
                         teams={teams}
                         activeTeam={activeTeam}
                         onSelect={(id) => {
-                            setActiveTeamId(id);
+                            lastTeam.set(id);
                             navigate({
                                 to: '/$teamId/invoices',
                                 params: { teamId: id },
@@ -171,7 +180,7 @@ export function AppShell() {
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
-                                        onClick={signOut}
+                                        onClick={handleSignOut}
                                         variant='destructive'
                                         asChild
                                     >

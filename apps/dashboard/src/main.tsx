@@ -1,35 +1,33 @@
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { router } from './router';
 import { configureAmplify } from '@/lib/amplify';
-import { useAuthStore } from '@/stores/auth';
 import { PageLoader } from '@/components/ui/page-loader';
 import { queryClient } from '@/lib/query-client';
+import { authQueryOptions } from '@/lib/auth-query';
 import './styles.css';
 
 configureAmplify();
 
-function App() {
-    const initialize = useAuthStore((s) => s.initialize);
-    const isInitialized = useAuthStore((s) => s.isInitialized);
-    const user = useAuthStore((s) => s.user);
+function AuthGate() {
+    const { data: user, isLoading } = useQuery(authQueryOptions);
 
-    useEffect(() => {
-        initialize();
-    }, [initialize]);
-
-    if (!isInitialized) {
-        return <PageLoader />;
-    }
+    if (isLoading) return <PageLoader />;
 
     return (
+        <RouterProvider
+            router={router}
+            context={{ isAuthenticated: !!user }}
+        />
+    );
+}
+
+function App() {
+    return (
         <QueryClientProvider client={queryClient}>
-            <RouterProvider
-                router={router}
-                context={{ isAuthenticated: !!user }}
-            />
+            <AuthGate />
         </QueryClientProvider>
     );
 }
