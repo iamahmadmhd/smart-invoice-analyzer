@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import { useNavigate } from '@tanstack/react-router';
-import { signUp } from 'aws-amplify/auth';
+import { signIn, signUp } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,9 @@ import { InputPassword } from '@/components/ui/input-password';
 import { Label } from '@/components/ui/label';
 import { Loader } from '@/components/ui/loader';
 import { Link } from '@/components/ui/link';
+import { authQueryOptions } from '@/lib/auth-query';
+import { queryClient } from '@/lib/query-client';
+import { router } from '@/router';
 
 const schema = z
     .object({
@@ -49,8 +52,15 @@ export function SignUpPage() {
                 });
                 if (result.nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
                     navigate({ to: '/confirm', search: { email: value.email } });
-                } else {
+                } else if (result.nextStep.signUpStep === 'DONE') {
+                    // Auto-confirmed — sign them in immediately
+                    await signIn({ username: value.email, password: value.password });
+                    await queryClient.refetchQueries(authQueryOptions);
+                    router.update({ context: { isAuthenticated: true } });
+                    await router.invalidate();
                     navigate({ to: '/' });
+                } else {
+                    setError({ message: `Unexpected step: ${result.nextStep.signUpStep}` });
                 }
             } catch (e) {
                 if (e instanceof Error) {

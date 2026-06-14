@@ -1,5 +1,5 @@
 import { useForm } from '@tanstack/react-form';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { signIn } from 'aws-amplify/auth';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -12,6 +12,7 @@ import { Link } from '@/components/ui/link';
 import { Loader } from '@/components/ui/loader';
 import { queryClient } from '@/lib/query-client';
 import { authQueryOptions } from '@/lib/auth-query';
+import { router } from '@/router';
 
 const schema = z.object({
     email: z.email('Enter a valid email'),
@@ -20,6 +21,7 @@ const schema = z.object({
 
 export function SignInPage() {
     const navigate = useNavigate();
+    const { redirect } = useSearch({ from: '/(auth)/signin' });
     const [error, setError] = useState<{ message: string | undefined } | undefined>(undefined);
 
     const form = useForm({
@@ -31,8 +33,10 @@ export function SignInPage() {
             setError(undefined);
             try {
                 await signIn({ username: value.email, password: value.password });
-                await queryClient.invalidateQueries(authQueryOptions);
-                navigate({ to: '/' });
+                await queryClient.refetchQueries(authQueryOptions);
+                router.update({ context: { isAuthenticated: true } });
+                await router.invalidate();
+                navigate({ to: redirect ?? '/' });
             } catch (e) {
                 if (e instanceof Error) {
                     setError({ message: e.message });

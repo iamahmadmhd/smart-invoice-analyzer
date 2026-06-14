@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router';
 import { AppShell } from '@/components/layouts';
 import { queryClient } from '@/lib/query-client';
 import { bootstrap, listTeams } from '@/api/teams';
@@ -35,10 +35,7 @@ export const Route = createFileRoute('/(app)/$teamId')({
             // Step 4: Set active team ID
             lastTeam.set(params.teamId);
         } catch (error) {
-            // Rethrow redirects (which are thrown by TanStack Router under the hood)
-            if (error && (error as any).status === 307) {
-                throw error;
-            }
+            if (isRedirect(error)) throw error;
             console.error('Bootstrap / validation error:', error);
             throw redirect({ to: '/signin' });
         }

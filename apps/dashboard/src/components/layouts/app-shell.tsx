@@ -57,7 +57,7 @@ export function AppShell() {
 
     const handleSignOut = async () => {
         await signOut();
-        queryClient.setQueryData(authQueryOptions.queryKey, undefined);
+        queryClient.removeQueries({ queryKey: authQueryOptions.queryKey });
         router.update({ context: { isAuthenticated: false } });
         await router.invalidate();
     };

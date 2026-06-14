@@ -12,9 +12,17 @@ import './styles.css';
 configureAmplify();
 
 function AuthGate() {
-    const { data: user, isLoading } = useQuery(authQueryOptions);
+    const { data: user, isLoading, isError } = useQuery(authQueryOptions);
 
     if (isLoading) return <PageLoader />;
+    if (isError) {
+        return (
+            <RouterProvider
+                router={router}
+                context={{ isAuthenticated: false }}
+            />
+        );
+    }
 
     return (
         <RouterProvider
