@@ -1,12 +1,12 @@
-import { getUserContext } from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
+import { getUserContext } from '@vault/auth';
+import { getConfig } from '@vault/config';
 import {
     ExportRepository,
     InsightRepository,
     InvoiceRepository,
     MembershipRepository,
     ProcessingJobRepository,
-} from '@smart-invoice-analyzer/data-access';
+} from '@vault/data-access';
 import { ApiResponse, createHandler, logger, ParsedApiEvent } from '../powertools';
 import { noContent } from '../utils/response';
 

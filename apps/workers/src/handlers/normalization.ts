@@ -1,11 +1,7 @@
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { NormalizationEventSchema } from '@smart-invoice-analyzer/contracts';
-import {
-    InvoiceRepository,
-    ProcessingJobRepository,
-    S3Repository,
-} from '@smart-invoice-analyzer/data-access';
-import { mergeOcrParseIntoInvoice, parseOcrText } from '@smart-invoice-analyzer/domain';
+import { getConfig } from '@vault/config';
+import { NormalizationEventSchema } from '@vault/contracts';
+import { InvoiceRepository, ProcessingJobRepository, S3Repository } from '@vault/data-access';
+import { mergeOcrParseIntoInvoice, parseOcrText } from '@vault/domain';
 import type { SQSRecord } from 'aws-lambda';
 import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';

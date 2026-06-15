@@ -1,9 +1,9 @@
 import { Logger } from '@aws-lambda-powertools/logger';
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import { z } from 'zod';
 import { callBedrock } from './bedrock-client';
 
-const logger = new Logger({ serviceName: 'smart-invoice-analyzer-ai' });
+const logger = new Logger({ serviceName: 'vault-ai' });
 
 const EnrichmentResultSchema = z.object({
     vendorName: z.string().nullable().optional(),

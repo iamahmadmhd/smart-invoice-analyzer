@@ -1,12 +1,12 @@
-# Smart Invoice Analyzer - Infrastructure
+# Vault - Infrastructure
 
-AWS CDK infrastructure for the Smart Invoice Analyzer application.
+AWS CDK infrastructure for the Vault application.
 
 ## Stack Names
 
-- **SmartInvoiceAnalyzer-Dev** - Development environment
-- **SmartInvoiceAnalyzer-Pipeline** - CI/CD pipeline for production
-- **SmartInvoiceAnalyzer-Production-AppStack** - Production environment (deployed via pipeline)
+- **Vault-Dev** - Development environment
+- **Vault-Pipeline** - CI/CD pipeline for production
+- **Vault-Production-AppStack** - Production environment (deployed via pipeline)
 
 ## Quick Start
 
@@ -97,7 +97,7 @@ After deployment, access the CloudWatch dashboard:
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name SmartInvoiceAnalyzer-Dev \
+  --stack-name Vault-Dev \
   --query 'Stacks[0].Outputs[?OutputKey==`DashboardUrl`].OutputValue' \
   --output text
 ```
@@ -161,6 +161,6 @@ Access outputs:
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name SmartInvoiceAnalyzer-Dev \
+  --stack-name Vault-Dev \
   --query 'Stacks[0].Outputs'
 ```

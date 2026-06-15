@@ -1,4 +1,4 @@
-import { Invoice, UpdateInvoiceRequest } from '@smart-invoice-analyzer/contracts';
+import { Invoice, UpdateInvoiceRequest } from '@vault/contracts';
 
 export type InvoiceDraftFields = {
     vendorName: string;

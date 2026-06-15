@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/infra",
+    "name": "@vault/infra",
     "version": "0.1.0",
     "private": true,
     "main": "bin/app.js",
@@ -8,12 +8,12 @@
         "watch": "tsc -w",
         "lint": "echo 'No lint for infra'",
         "typecheck": "tsc --noEmit",
-        "dev:synth": "cdk synth SmartInvoiceAnalyzer-Dev",
-        "dev:diff": "cdk diff SmartInvoiceAnalyzer-Dev",
-        "dev:deploy": "cdk deploy SmartInvoiceAnalyzer-Dev --require-approval never",
-        "prod:synth": "cdk synth SmartInvoiceAnalyzer-Prod",
-        "prod:diff": "cdk diff SmartInvoiceAnalyzer-Prod",
-        "prod:deploy": "cdk deploy SmartInvoiceAnalyzer-Prod --require-approval never"
+        "dev:synth": "cdk synth Vault-Dev",
+        "dev:diff": "cdk diff Vault-Dev",
+        "dev:deploy": "cdk deploy Vault-Dev --require-approval never",
+        "prod:synth": "cdk synth Vault-Prod",
+        "prod:diff": "cdk diff Vault-Prod",
+        "prod:deploy": "cdk deploy Vault-Prod --require-approval never"
     },
     "devDependencies": {
         "@types/jest": "^30",

@@ -3,10 +3,10 @@ import {
     requirePathParam,
     requireRole,
     resolveRawTeamRequest,
-} from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { MembershipRepository } from '@smart-invoice-analyzer/data-access';
-import { assertNotLastOwner } from '@smart-invoice-analyzer/domain';
+} from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { MembershipRepository } from '@vault/data-access';
+import { assertNotLastOwner } from '@vault/domain';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { noContent } from '../utils/response';
 

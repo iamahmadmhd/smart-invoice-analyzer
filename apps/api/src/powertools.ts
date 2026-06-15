@@ -7,17 +7,17 @@ import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schema
 import { Tracer } from '@aws-lambda-powertools/tracer';
 import { captureLambdaHandler } from '@aws-lambda-powertools/tracer/middleware';
 import middy from '@middy/core';
-import { AppError } from '@smart-invoice-analyzer/errors';
+import { AppError } from '@vault/errors';
 import type { Context } from 'aws-lambda';
 import { z } from 'zod';
 
 // ── Shared Powertools instances ───────────────────────────────────────────────
 
-export const logger = new Logger({ serviceName: 'smart-invoice-analyzer-api' });
-export const tracer = new Tracer({ serviceName: 'smart-invoice-analyzer-api' });
+export const logger = new Logger({ serviceName: 'vault-api' });
+export const tracer = new Tracer({ serviceName: 'vault-api' });
 export const metrics = new Metrics({
-    namespace: 'SmartInvoiceAnalyzer',
-    serviceName: 'smart-invoice-analyzer-api',
+    namespace: 'Vault',
+    serviceName: 'vault-api',
 });
 
 // ── Types ─────────────────────────────────────────────────────────────────────

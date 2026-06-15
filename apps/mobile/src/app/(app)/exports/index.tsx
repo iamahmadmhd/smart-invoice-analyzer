@@ -4,7 +4,7 @@ import { InvoiceCardSkeleton } from '@/components/atoms/skeleton';
 import { AlertBanner } from '@/components/molecules/alert-banner';
 import { ExportCard } from '@/components/molecules/export-card';
 import { useExports } from '@/hooks/use-exports';
-import { ExportBatch } from '@smart-invoice-analyzer/contracts';
+import { ExportBatch } from '@vault/contracts';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { FlatList, Platform, Pressable, RefreshControl, View } from 'react-native';

@@ -1,13 +1,6 @@
 import { randomBytes } from 'crypto';
-import {
-    Invitation,
-    MemberRole,
-    Membership,
-    ROLE_ORDER,
-    Team,
-    TeamPlan,
-} from '@smart-invoice-analyzer/contracts';
-import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { Invitation, MemberRole, Membership, ROLE_ORDER, Team, TeamPlan } from '@vault/contracts';
+import { ConflictError } from '@vault/errors';
 import { addDays } from 'date-fns';
 import { generateInvitationId, generateTeamId } from './invoice-id';
 

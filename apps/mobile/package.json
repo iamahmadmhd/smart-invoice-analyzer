@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/mobile",
+    "name": "@vault/mobile",
     "main": "index.js",
     "version": "0.1.0",
     "scripts": {

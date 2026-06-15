@@ -4,7 +4,7 @@ import {
     ListInvoicesQuery,
     ListInvoicesResponse,
     UpdateInvoiceRequest,
-} from '@smart-invoice-analyzer/contracts';
+} from '@vault/contracts';
 import { apiRequest } from './client';
 
 export async function listInvoices(

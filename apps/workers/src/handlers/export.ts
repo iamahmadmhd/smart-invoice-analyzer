@@ -1,12 +1,8 @@
-import { getConfig, getS3Config } from '@smart-invoice-analyzer/config';
-import { ExportWorkerEventSchema } from '@smart-invoice-analyzer/contracts';
-import {
-    ExportRepository,
-    InvoiceRepository,
-    S3Repository,
-} from '@smart-invoice-analyzer/data-access';
-import { validateInvoicesForExport } from '@smart-invoice-analyzer/domain';
-import { generateCsv, generateZipArchive } from '@smart-invoice-analyzer/export';
+import { getConfig, getS3Config } from '@vault/config';
+import { ExportWorkerEventSchema } from '@vault/contracts';
+import { ExportRepository, InvoiceRepository, S3Repository } from '@vault/data-access';
+import { validateInvoicesForExport } from '@vault/domain';
+import { generateCsv, generateZipArchive } from '@vault/export';
 import type { SQSRecord } from 'aws-lambda';
 import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 

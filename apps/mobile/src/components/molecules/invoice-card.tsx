@@ -1,6 +1,6 @@
 import { formatAmount, formatDateShort } from '@/lib/formatters';
 import { mapInvoiceStatus } from '@/lib/invoice-utils';
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { InvoiceStatusBadge } from '../atoms/badge';

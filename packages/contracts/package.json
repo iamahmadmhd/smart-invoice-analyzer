@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/contracts",
+    "name": "@vault/contracts",
     "version": "0.1.0",
     "private": true,
     "main": "./dist/index.js",
@@ -9,7 +9,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@smart-invoice-analyzer/config": "*",
+        "@vault/config": "*",
         "zod": "^4.3.6"
     },
     "devDependencies": {

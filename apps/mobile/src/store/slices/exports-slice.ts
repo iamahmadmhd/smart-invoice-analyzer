@@ -1,11 +1,6 @@
 import { createExport, getExport, listExports, validateExport } from '@/lib/api/exports';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {
-    CreateExportRequest,
-    ExportBatch,
-    ExportPeriod,
-    ValidationReport,
-} from '@smart-invoice-analyzer/contracts';
+import { CreateExportRequest, ExportBatch, ExportPeriod, ValidationReport } from '@vault/contracts';
 
 // ── Wizard state ──────────────────────────────────────────────────────────────
 

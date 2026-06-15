@@ -76,9 +76,7 @@ export function AppShell() {
                                 className='text-primary-foreground'
                             />
                         </div>
-                        <span className='text-sm font-semibold tracking-tight'>
-                            Invoice Analyzer
-                        </span>
+                        <span className='text-sm font-semibold tracking-tight'>Vault</span>
                     </div>
 
                     {/* Team switcher */}

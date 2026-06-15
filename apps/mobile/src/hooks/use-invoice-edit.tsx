@@ -1,6 +1,6 @@
 import { useAppDispatch } from '@/store';
 import { updateInvoiceThunk } from '@/store/slices/invoices-slice';
-import { UpdateInvoiceRequest } from '@smart-invoice-analyzer/contracts';
+import { UpdateInvoiceRequest } from '@vault/contracts';
 import { useCallback, useState } from 'react';
 
 export function useInvoiceEdit(invoiceId: string) {

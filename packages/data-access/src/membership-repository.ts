@@ -5,8 +5,8 @@ import {
     QueryCommand,
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { MemberRole, Membership, MembershipStatus } from '@smart-invoice-analyzer/contracts';
-import { NotFoundError } from '@smart-invoice-analyzer/errors';
+import { MemberRole, Membership, MembershipStatus } from '@vault/contracts';
+import { NotFoundError } from '@vault/errors';
 import { dbClient } from './dynamodb-client';
 
 export class MembershipRepository {

@@ -1,9 +1,9 @@
 import { randomUUID } from 'crypto';
 import { HeadObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { ProcessingJob } from '@smart-invoice-analyzer/contracts';
-import { InvoiceRepository, ProcessingJobRepository } from '@smart-invoice-analyzer/data-access';
-import { generateJobId } from '@smart-invoice-analyzer/domain';
+import { getConfig } from '@vault/config';
+import { ProcessingJob } from '@vault/contracts';
+import { InvoiceRepository, ProcessingJobRepository } from '@vault/data-access';
+import { generateJobId } from '@vault/domain';
 import { logger, S3Event } from '../powertools';
 import { sendToQueue } from '../utils/sqs';
 

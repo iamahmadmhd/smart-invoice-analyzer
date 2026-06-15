@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/api",
+    "name": "@vault/api",
     "version": "0.1.0",
     "private": true,
     "scripts": {
@@ -14,13 +14,13 @@
         "@aws-lambda-powertools/tracer": "^2.33.0",
         "@aws-sdk/client-sqs": "^3.1037.0",
         "@middy/core": "^7.5.0",
-        "@smart-invoice-analyzer/ai": "*",
-        "@smart-invoice-analyzer/auth": "*",
-        "@smart-invoice-analyzer/config": "*",
-        "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/data-access": "*",
-        "@smart-invoice-analyzer/domain": "*",
-        "@smart-invoice-analyzer/errors": "*"
+        "@vault/ai": "*",
+        "@vault/auth": "*",
+        "@vault/config": "*",
+        "@vault/contracts": "*",
+        "@vault/data-access": "*",
+        "@vault/domain": "*",
+        "@vault/errors": "*"
     },
     "devDependencies": {
         "esbuild": "^0.24.0",

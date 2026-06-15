@@ -1,6 +1,6 @@
 import { deleteInvoice, listInvoices, updateInvoice } from '@/lib/api/invoices';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Invoice, InvoiceStatus, UpdateInvoiceRequest } from '@smart-invoice-analyzer/contracts';
+import { Invoice, InvoiceStatus, UpdateInvoiceRequest } from '@vault/contracts';
 
 export interface InvoiceFilters {
     status?: InvoiceStatus;

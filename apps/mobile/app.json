@@ -1,15 +1,15 @@
 {
     "expo": {
-        "name": "Smart Invoice Analyzer",
-        "slug": "smart-invoice-analyzer",
+        "name": "Vault",
+        "slug": "vault",
         "version": "0.1.0",
         "orientation": "portrait",
         "icon": "./assets/images/icon.png",
-        "scheme": "smart-invoice-analyzer",
+        "scheme": "vault",
         "userInterfaceStyle": "automatic",
         "ios": {
             "icon": "./assets/expo.icon",
-            "bundleIdentifier": "com.iamahmadmhd.smartinvoiceanalyzer"
+            "bundleIdentifier": "com.iamahmadmhd.vault"
         },
         "android": {
             "adaptiveIcon": {
@@ -19,7 +19,7 @@
                 "monochromeImage": "./assets/images/android-icon-monochrome.png"
             },
             "predictiveBackGestureEnabled": false,
-            "package": "com.iamahmadmhd.smartinvoiceanalyzer",
+            "package": "com.iamahmadmhd.vault",
             "permissions": ["android.permission.RECORD_AUDIO"]
         },
         "web": {

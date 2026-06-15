@@ -1,5 +1,5 @@
 import { DeleteCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { Insight, InsightType } from '@smart-invoice-analyzer/contracts';
+import { Insight, InsightType } from '@vault/contracts';
 import { dbClient } from './dynamodb-client';
 
 export class InsightRepository {

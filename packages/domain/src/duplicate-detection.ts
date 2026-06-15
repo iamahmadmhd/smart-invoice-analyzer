@@ -1,4 +1,4 @@
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import { differenceInDays } from 'date-fns/fp';
 
 const AMOUNT_TOLERANCE_PERCENT = 0.01;

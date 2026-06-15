@@ -1,6 +1,6 @@
-# Smart Invoice Analyzer
+# Vault
 
-Smart Invoice Analyzer is a full-stack, cloud-native invoice processing platform that helps small businesses and finance teams upload invoices, extract structured data, detect duplicates and anomalies, ask natural-language questions about spending, and generate export-ready accounting batches.
+Vault is a full-stack, cloud-native invoice processing platform that helps small businesses and finance teams upload invoices, extract structured data, detect duplicates and anomalies, ask natural-language questions about spending, and generate export-ready accounting batches.
 
 This project is written as a portfolio-grade product: it demonstrates mobile UX, serverless backend design, event-driven processing, typed domain modeling, AWS infrastructure, and AI-assisted document intelligence in one cohesive TypeScript monorepo.
 
@@ -28,7 +28,7 @@ https://github.com/user-attachments/assets/f45dcf5b-a6d2-41ee-9e04-65fcb011fe2d
 
 ## Why this project matters
 
-Manual invoice review is slow, repetitive, and easy to get wrong. Smart Invoice Analyzer turns unstructured invoice documents into searchable, validated, exportable financial records through an automated pipeline:
+Manual invoice review is slow, repetitive, and easy to get wrong. Vault turns unstructured invoice documents into searchable, validated, exportable financial records through an automated pipeline:
 
 1. Users upload PDF, JPEG, or PNG invoices from the mobile/web app.
 2. The backend creates a tracked invoice record and stores the source document.
@@ -95,7 +95,7 @@ Manual invoice review is slow, repetitive, and easy to get wrong. Smart Invoice 
 
 ## Architecture overview
 
-Smart Invoice Analyzer is implemented as a TypeScript monorepo using npm workspaces and Turborepo.
+Vault is implemented as a TypeScript monorepo using npm workspaces and Turborepo.
 
 ```text
 Mobile/Web App (Expo React Native)
@@ -344,15 +344,15 @@ The `update-invoice` handler re-triggers the enrichment pipeline (clearing SUMMA
 - Lambda functions with X-Ray tracing, structured logging (Powertools), and per-function error alarms.
 - Processing jobs auto-expire after 90 days via DynamoDB TTL.
 - Production CI/CD pipeline with self-mutation, type-checking, linting, CDK synth, **manual approval gate before production deploy**, and web app deploy steps.
-- SSM parameters under `/sia/prod/` for pipeline-to-app configuration handoff.
+- SSM parameters under `/vault/prod/` for pipeline-to-app configuration handoff.
 - Environment-specific removal policies (RETAIN for prod, DESTROY for dev).
 
 Stack names:
 
 ```text
-SmartInvoiceAnalyzer-Dev
-SmartInvoiceAnalyzer-Pipeline
-SmartInvoiceAnalyzer-Production-AppStack
+Vault-Dev
+Vault-Pipeline
+Vault-Production-AppStack
 ```
 
 ## Getting started
@@ -404,7 +404,7 @@ EXPO_PUBLIC_API_URL=https://your-api-id.execute-api.eu-central-1.amazonaws.com/v
 Start the development server:
 
 ```bash
-npm run dev -- --filter=@smart-invoice-analyzer/mobile
+npm run dev -- --filter=@vault/mobile
 # or
 cd apps/mobile && npm run start
 ```
@@ -434,20 +434,20 @@ cd apps/mobile && npm run build:android:apk
 Build API handlers:
 
 ```bash
-npm run build -- --filter=@smart-invoice-analyzer/api
+npm run build -- --filter=@vault/api
 ```
 
 Build worker handlers:
 
 ```bash
-npm run build -- --filter=@smart-invoice-analyzer/workers
+npm run build -- --filter=@vault/workers
 ```
 
 Type-check API or workers:
 
 ```bash
-npm run typecheck -- --filter=@smart-invoice-analyzer/api
-npm run typecheck -- --filter=@smart-invoice-analyzer/workers
+npm run typecheck -- --filter=@vault/api
+npm run typecheck -- --filter=@vault/workers
 ```
 
 ## Infrastructure commands
@@ -466,7 +466,7 @@ Access CloudWatch dashboard URL after deployment:
 
 ```bash
 aws cloudformation describe-stacks \
-  --stack-name SmartInvoiceAnalyzer-Dev \
+  --stack-name Vault-Dev \
   --query 'Stacks[0].Outputs[?OutputKey==`DashboardUrl`].OutputValue' \
   --output text
 ```
@@ -486,7 +486,7 @@ Runtime configuration is centralized in `packages/config` and validated with Zod
 | `BEDROCK_REGION`       | Bedrock region (default: `eu-central-1`)                               |
 | `*_QUEUE_URL`          | SQS queue URLs for each pipeline stage                                 |
 
-Production values are written to SSM under `/sia/prod/` and consumed by the deploy pipeline.
+Production values are written to SSM under `/vault/prod/` and consumed by the deploy pipeline.
 
 ## Data model highlights
 

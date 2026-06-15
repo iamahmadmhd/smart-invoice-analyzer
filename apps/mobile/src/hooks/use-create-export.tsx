@@ -8,7 +8,7 @@ import {
     updateWizardDraft,
     WizardStep,
 } from '@/store/slices/exports-slice';
-import { CreateExportRequest } from '@smart-invoice-analyzer/contracts';
+import { CreateExportRequest } from '@vault/contracts';
 import { useCallback } from 'react';
 
 export type { WizardStep };

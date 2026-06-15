@@ -1,5 +1,5 @@
-import { MemberRole, Membership, ROLE_ORDER } from '@smart-invoice-analyzer/contracts';
-import { NotFoundError } from '@smart-invoice-analyzer/errors';
+import { MemberRole, Membership, ROLE_ORDER } from '@vault/contracts';
+import { NotFoundError } from '@vault/errors';
 import { getUserContext, ParsedApiEvent, requirePathParam, UnauthorizedError } from './cognito';
 
 export interface TeamContext {

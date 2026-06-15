@@ -1,9 +1,9 @@
 import { Logger } from '@aws-lambda-powertools/logger';
-import { Export } from '@smart-invoice-analyzer/contracts';
+import { Export } from '@vault/contracts';
 import JSZip from 'jszip';
 import { GeneratedCsv } from './csv-generator';
 
-const logger = new Logger({ serviceName: 'smart-invoice-analyzer-export' });
+const logger = new Logger({ serviceName: 'vault-export' });
 
 export interface GeneratedZip {
     buffer: Buffer;

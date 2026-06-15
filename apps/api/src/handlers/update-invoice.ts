@@ -4,17 +4,17 @@ import {
     parseBody,
     requirePathParam,
     resolveRawTeamRequest,
-} from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { UpdateInvoiceRequestSchema } from '@smart-invoice-analyzer/contracts';
+} from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { UpdateInvoiceRequestSchema } from '@vault/contracts';
 import {
     InsightRepository,
     InvoiceRepository,
     MembershipRepository,
     ProcessingJobRepository,
-} from '@smart-invoice-analyzer/data-access';
-import { generateJobId } from '@smart-invoice-analyzer/domain';
-import { ConflictError } from '@smart-invoice-analyzer/errors';
+} from '@vault/data-access';
+import { generateJobId } from '@vault/domain';
+import { ConflictError } from '@vault/errors';
 import { ApiResponse, createHandler, logger, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 import { sendToQueue } from '../utils/sqs';

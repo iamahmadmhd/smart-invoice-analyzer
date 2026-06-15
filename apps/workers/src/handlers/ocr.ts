@@ -4,13 +4,9 @@ import {
     DetectDocumentTextCommand,
     TextractClient,
 } from '@aws-sdk/client-textract';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { OcrEventSchema } from '@smart-invoice-analyzer/contracts';
-import {
-    InvoiceRepository,
-    ProcessingJobRepository,
-    S3Repository,
-} from '@smart-invoice-analyzer/data-access';
+import { getConfig } from '@vault/config';
+import { OcrEventSchema } from '@vault/contracts';
+import { InvoiceRepository, ProcessingJobRepository, S3Repository } from '@vault/data-access';
 import type { SQSRecord } from 'aws-lambda';
 import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';

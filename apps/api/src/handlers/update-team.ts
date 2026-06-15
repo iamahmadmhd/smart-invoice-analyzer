@@ -1,12 +1,7 @@
-import {
-    assertActiveMembership,
-    parseBody,
-    requireRole,
-    resolveRawTeamRequest,
-} from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { UpdateTeamRequestSchema } from '@smart-invoice-analyzer/contracts';
-import { MembershipRepository, TeamRepository } from '@smart-invoice-analyzer/data-access';
+import { assertActiveMembership, parseBody, requireRole, resolveRawTeamRequest } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { UpdateTeamRequestSchema } from '@vault/contracts';
+import { MembershipRepository, TeamRepository } from '@vault/data-access';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 

@@ -4,12 +4,12 @@ import { Metrics } from '@aws-lambda-powertools/metrics';
 import { Tracer } from '@aws-lambda-powertools/tracer';
 import { z } from 'zod';
 
-export const logger = new Logger({ serviceName: 'smart-invoice-analyzer-workers' });
+export const logger = new Logger({ serviceName: 'vault-workers' });
 export const metrics = new Metrics({
-    namespace: 'SmartInvoiceAnalyzer',
-    serviceName: 'smart-invoice-analyzer-workers',
+    namespace: 'Vault',
+    serviceName: 'vault-workers',
 });
-export const tracer = new Tracer({ serviceName: 'smart-invoice-analyzer-workers' });
+export const tracer = new Tracer({ serviceName: 'vault-workers' });
 
 export { processPartialResponse };
 export const processor = new BatchProcessor(EventType.SQS);

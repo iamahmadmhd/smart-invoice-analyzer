@@ -11,17 +11,17 @@ const env = {
 };
 
 // Development stack
-new AppStack(app, 'SmartInvoiceAnalyzer-Dev', {
+new AppStack(app, 'Vault-Dev', {
     env,
     stage: 'dev',
-    stackName: 'SmartInvoiceAnalyzer-Dev',
-    description: 'Smart Invoice Analyzer - Development Environment',
+    stackName: 'Vault-Dev',
+    description: 'Vault - Development Environment',
 });
 
 // Production stack
-new AppStack(app, 'SmartInvoiceAnalyzer-Prod', {
+new AppStack(app, 'Vault-Prod', {
     env,
     stage: 'prod',
-    stackName: 'SmartInvoiceAnalyzer-Prod',
-    description: 'Smart Invoice Analyzer - Production Environment',
+    stackName: 'Vault-Prod',
+    description: 'Vault - Production Environment',
 });

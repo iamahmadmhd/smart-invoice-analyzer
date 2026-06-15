@@ -1,5 +1,5 @@
-import { ExportPeriod } from '@smart-invoice-analyzer/contracts';
-import { ValidationError } from '@smart-invoice-analyzer/errors';
+import { ExportPeriod } from '@vault/contracts';
+import { ValidationError } from '@vault/errors';
 import {
     endOfMonth,
     endOfQuarter,

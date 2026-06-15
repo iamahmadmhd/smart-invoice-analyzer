@@ -1,15 +1,7 @@
-import {
-    assertActiveMembership,
-    requirePathParam,
-    resolveRawTeamRequest,
-} from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import {
-    ExportRepository,
-    MembershipRepository,
-    S3Repository,
-} from '@smart-invoice-analyzer/data-access';
-import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { assertActiveMembership, requirePathParam, resolveRawTeamRequest } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { ExportRepository, MembershipRepository, S3Repository } from '@vault/data-access';
+import { ConflictError } from '@vault/errors';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 

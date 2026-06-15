@@ -6,7 +6,7 @@ import { FilterSheet } from '@/components/organisms/filter-sheet';
 import { InvoiceList } from '@/components/organisms/invoice-list';
 import { useInvoices } from '@/hooks/use-invoices';
 import { buildActiveFilters } from '@/lib/invoice-filters';
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';

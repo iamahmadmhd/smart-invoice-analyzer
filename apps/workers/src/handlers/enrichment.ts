@@ -1,13 +1,13 @@
-import { enrichInvoice, mergeEnrichmentIntoInvoice } from '@smart-invoice-analyzer/ai';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { EnrichmentEventSchema, Insight } from '@smart-invoice-analyzer/contracts';
+import { enrichInvoice, mergeEnrichmentIntoInvoice } from '@vault/ai';
+import { getConfig } from '@vault/config';
+import { EnrichmentEventSchema, Insight } from '@vault/contracts';
 import {
     InsightRepository,
     InvoiceRepository,
     ProcessingJobRepository,
     S3Repository,
-} from '@smart-invoice-analyzer/data-access';
-import { generateInsightId } from '@smart-invoice-analyzer/domain';
+} from '@vault/data-access';
+import { generateInsightId } from '@vault/domain';
 import type { SQSRecord } from 'aws-lambda';
 import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';

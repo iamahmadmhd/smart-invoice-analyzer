@@ -5,8 +5,8 @@ import {
     QueryCommand,
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { Invitation, InvitationStatus } from '@smart-invoice-analyzer/contracts';
-import { NotFoundError } from '@smart-invoice-analyzer/errors';
+import { Invitation, InvitationStatus } from '@vault/contracts';
+import { NotFoundError } from '@vault/errors';
 import { dbClient } from './dynamodb-client';
 
 export class InvitationRepository {

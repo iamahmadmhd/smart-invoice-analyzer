@@ -1,4 +1,4 @@
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import React from 'react';
 import { FlatList, RefreshControl, View } from 'react-native';
 import { InvoiceCardSkeleton } from '../atoms/skeleton';

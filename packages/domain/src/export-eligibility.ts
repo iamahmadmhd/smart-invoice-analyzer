@@ -1,4 +1,4 @@
-import { Invoice, ValidationReport, ValidationWarning } from '@smart-invoice-analyzer/contracts';
+import { Invoice, ValidationReport, ValidationWarning } from '@vault/contracts';
 
 export function validateInvoicesForExport(invoices: Invoice[]): ValidationReport {
     const warnings: ValidationWarning[] = [];

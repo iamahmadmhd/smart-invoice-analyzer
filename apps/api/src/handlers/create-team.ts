@@ -1,8 +1,8 @@
-import { getUserContext, parseBody } from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { CreateTeamRequestSchema } from '@smart-invoice-analyzer/contracts';
-import { MembershipRepository, TeamRepository } from '@smart-invoice-analyzer/data-access';
-import { buildOwnerMembership, buildTeam } from '@smart-invoice-analyzer/domain';
+import { getUserContext, parseBody } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { CreateTeamRequestSchema } from '@vault/contracts';
+import { MembershipRepository, TeamRepository } from '@vault/data-access';
+import { buildOwnerMembership, buildTeam } from '@vault/domain';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { created } from '../utils/response';
 

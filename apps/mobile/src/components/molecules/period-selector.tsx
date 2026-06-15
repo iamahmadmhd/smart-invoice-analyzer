@@ -1,4 +1,4 @@
-import { ExportPeriod } from '@smart-invoice-analyzer/contracts';
+import { ExportPeriod } from '@vault/contracts';
 import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Chip } from '../atoms/chip';

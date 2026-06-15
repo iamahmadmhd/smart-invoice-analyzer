@@ -1,4 +1,4 @@
-import { Insight } from '@smart-invoice-analyzer/contracts';
+import { Insight } from '@vault/contracts';
 import React from 'react';
 import { View } from 'react-native';
 import { Icon, IconName } from '../atoms/icon';

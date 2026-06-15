@@ -1,5 +1,5 @@
-import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
-import { ValidationError } from '@smart-invoice-analyzer/errors';
+import { InvoiceStatus } from '@vault/contracts';
+import { ValidationError } from '@vault/errors';
 
 const TRANSITIONS: Record<InvoiceStatus, InvoiceStatus[]> = {
     UPLOADED: ['PROCESSING', 'FAILED_INTERNAL'],

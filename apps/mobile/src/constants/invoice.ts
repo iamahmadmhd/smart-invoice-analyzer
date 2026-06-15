@@ -1,4 +1,4 @@
-import { InvoiceStatus } from '@smart-invoice-analyzer/contracts';
+import { InvoiceStatus } from '@vault/contracts';
 
 export const STATUS_OPTIONS: { value: InvoiceStatus; label: string }[] = [
     { value: 'COMPLETED', label: 'Completed' },

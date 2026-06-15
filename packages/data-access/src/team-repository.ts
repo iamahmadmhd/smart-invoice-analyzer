@@ -5,8 +5,8 @@ import {
     QueryCommand,
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { Team } from '@smart-invoice-analyzer/contracts';
-import { ConflictError, NotFoundError } from '@smart-invoice-analyzer/errors';
+import { Team } from '@vault/contracts';
+import { ConflictError, NotFoundError } from '@vault/errors';
 import { dbClient } from './dynamodb-client';
 
 export class TeamRepository {

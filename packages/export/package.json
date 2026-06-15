@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/export",
+    "name": "@vault/export",
     "version": "0.1.0",
     "private": true,
     "main": "./dist/index.js",
@@ -10,8 +10,8 @@
     },
     "dependencies": {
         "@aws-lambda-powertools/logger": "^2.18.0",
-        "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/domain": "*",
+        "@vault/contracts": "*",
+        "@vault/domain": "*",
         "jszip": "^3.10.1"
     },
     "devDependencies": {

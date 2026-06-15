@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/workers",
+    "name": "@vault/workers",
     "version": "0.1.0",
     "private": true,
     "scripts": {
@@ -15,13 +15,13 @@
         "@aws-sdk/client-s3": "^3.1037.0",
         "@aws-sdk/client-sqs": "^3.1037.0",
         "@aws-sdk/client-textract": "^3.1037.0",
-        "@smart-invoice-analyzer/ai": "*",
-        "@smart-invoice-analyzer/config": "*",
-        "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/data-access": "*",
-        "@smart-invoice-analyzer/domain": "*",
-        "@smart-invoice-analyzer/errors": "*",
-        "@smart-invoice-analyzer/export": "*",
+        "@vault/ai": "*",
+        "@vault/config": "*",
+        "@vault/contracts": "*",
+        "@vault/data-access": "*",
+        "@vault/domain": "*",
+        "@vault/errors": "*",
+        "@vault/export": "*",
         "zod": "^4.3.6"
     },
     "devDependencies": {

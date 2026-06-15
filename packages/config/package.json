@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/config",
+    "name": "@vault/config",
     "version": "0.1.0",
     "private": true,
     "main": "./dist/index.js",

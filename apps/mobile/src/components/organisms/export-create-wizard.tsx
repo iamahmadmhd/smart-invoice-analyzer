@@ -1,5 +1,5 @@
 import { useCreateExport } from '@/hooks/use-create-export';
-import { ExportPeriod } from '@smart-invoice-analyzer/contracts';
+import { ExportPeriod } from '@vault/contracts';
 import React from 'react';
 import { View } from 'react-native';
 import { Button } from '../atoms/button';

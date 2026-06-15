@@ -1,7 +1,7 @@
-import { getUserContext } from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { MembershipRepository, TeamRepository } from '@smart-invoice-analyzer/data-access';
-import { buildOwnerMembership, buildTeam } from '@smart-invoice-analyzer/domain';
+import { getUserContext } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { MembershipRepository, TeamRepository } from '@vault/data-access';
+import { buildOwnerMembership, buildTeam } from '@vault/domain';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 

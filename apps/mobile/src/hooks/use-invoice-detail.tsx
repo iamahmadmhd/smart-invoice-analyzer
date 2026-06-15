@@ -1,5 +1,5 @@
 import { getInsights, getInvoice } from '@/lib/api/invoices';
-import { Insight, Invoice } from '@smart-invoice-analyzer/contracts';
+import { Insight, Invoice } from '@vault/contracts';
 import { useCallback, useEffect, useState } from 'react';
 
 interface InvoiceDetailState {

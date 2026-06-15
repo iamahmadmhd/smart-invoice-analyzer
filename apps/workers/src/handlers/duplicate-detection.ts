@@ -1,11 +1,7 @@
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { DuplicateEventSchema, Insight } from '@smart-invoice-analyzer/contracts';
-import {
-    InsightRepository,
-    InvoiceRepository,
-    ProcessingJobRepository,
-} from '@smart-invoice-analyzer/data-access';
-import { checkForDuplicate, generateInsightId } from '@smart-invoice-analyzer/domain';
+import { getConfig } from '@vault/config';
+import { DuplicateEventSchema, Insight } from '@vault/contracts';
+import { InsightRepository, InvoiceRepository, ProcessingJobRepository } from '@vault/data-access';
+import { checkForDuplicate, generateInsightId } from '@vault/domain';
 import type { SQSRecord } from 'aws-lambda';
 import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 import { sendToQueue } from '../utils/sqs';

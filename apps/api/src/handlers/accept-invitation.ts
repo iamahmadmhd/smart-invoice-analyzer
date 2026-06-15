@@ -1,8 +1,8 @@
-import { getUserContext, parseBody } from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { InvitationRepository, MembershipRepository } from '@smart-invoice-analyzer/data-access';
-import { buildMembership, isInvitationExpired } from '@smart-invoice-analyzer/domain';
-import { ConflictError, NotFoundError } from '@smart-invoice-analyzer/errors';
+import { getUserContext, parseBody } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { InvitationRepository, MembershipRepository } from '@vault/data-access';
+import { buildMembership, isInvitationExpired } from '@vault/domain';
+import { ConflictError, NotFoundError } from '@vault/errors';
 import { z } from 'zod';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';

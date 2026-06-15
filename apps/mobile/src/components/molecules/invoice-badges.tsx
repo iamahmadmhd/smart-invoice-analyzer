@@ -1,5 +1,5 @@
 import { mapInvoiceStatus } from '@/lib/invoice-utils';
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import React from 'react';
 import { View } from 'react-native';
 import { Badge, InvoiceStatusBadge } from '../atoms/badge';

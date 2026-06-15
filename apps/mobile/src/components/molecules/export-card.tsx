@@ -1,5 +1,5 @@
 import { formatDate } from '@/lib/formatters';
-import { ExportBatch, ExportBatchStatus } from '@smart-invoice-analyzer/contracts';
+import { ExportBatch, ExportBatchStatus } from '@vault/contracts';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { Badge, BadgeVariant } from '../atoms/badge';

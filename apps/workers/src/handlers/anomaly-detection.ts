@@ -1,11 +1,7 @@
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { AnomalyEventSchema, Insight } from '@smart-invoice-analyzer/contracts';
-import {
-    InsightRepository,
-    InvoiceRepository,
-    ProcessingJobRepository,
-} from '@smart-invoice-analyzer/data-access';
-import { checkForAnomalies, generateInsightId } from '@smart-invoice-analyzer/domain';
+import { getConfig } from '@vault/config';
+import { AnomalyEventSchema, Insight } from '@vault/contracts';
+import { InsightRepository, InvoiceRepository, ProcessingJobRepository } from '@vault/data-access';
+import { checkForAnomalies, generateInsightId } from '@vault/domain';
 import type { SQSRecord } from 'aws-lambda';
 import { logger, parseRecord, processor, processPartialResponse } from '../powertools';
 

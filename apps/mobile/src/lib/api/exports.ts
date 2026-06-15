@@ -3,7 +3,7 @@ import {
     ExportBatch,
     ExportDownloadResponse,
     ValidationReport,
-} from '@smart-invoice-analyzer/contracts';
+} from '@vault/contracts';
 import { apiRequest } from './client';
 
 export interface ListExportsResponse {

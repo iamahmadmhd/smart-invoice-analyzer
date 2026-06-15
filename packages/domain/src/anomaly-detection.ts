@@ -1,4 +1,4 @@
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import { isAfter, startOfDay } from 'date-fns';
 
 const VALID_GERMAN_VAT_RATES = [0, 7, 19];

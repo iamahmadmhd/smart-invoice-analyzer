@@ -4,9 +4,9 @@ import {
     ConverseCommand,
     type Message,
 } from '@aws-sdk/client-bedrock-runtime';
-import { getBedrockConfig, getConfig } from '@smart-invoice-analyzer/config';
+import { getBedrockConfig, getConfig } from '@vault/config';
 
-const logger = new Logger({ serviceName: 'smart-invoice-analyzer-ai' });
+const logger = new Logger({ serviceName: 'vault-ai' });
 
 let _client: BedrockRuntimeClient | undefined;
 

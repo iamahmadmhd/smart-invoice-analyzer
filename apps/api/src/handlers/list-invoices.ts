@@ -1,11 +1,7 @@
-import {
-    assertActiveMembership,
-    getQueryParam,
-    resolveRawTeamRequest,
-} from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import { ListInvoicesQuerySchema } from '@smart-invoice-analyzer/contracts';
-import { InvoiceRepository, MembershipRepository } from '@smart-invoice-analyzer/data-access';
+import { assertActiveMembership, getQueryParam, resolveRawTeamRequest } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { ListInvoicesQuerySchema } from '@vault/contracts';
+import { InvoiceRepository, MembershipRepository } from '@vault/data-access';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { ok } from '../utils/response';
 

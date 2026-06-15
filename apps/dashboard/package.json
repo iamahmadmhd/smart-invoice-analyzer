@@ -1,5 +1,5 @@
 {
-    "name": "dashboard",
+    "name": "@vault/dashboard",
     "private": true,
     "type": "module",
     "scripts": {

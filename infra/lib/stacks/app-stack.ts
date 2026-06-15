@@ -19,7 +19,7 @@ export class AppStack extends cdk.Stack {
 
         const { stage } = props;
         const prod = stage === 'prod';
-        const prefix = `sia-${stage}`;
+        const prefix = `vault-${stage}`;
 
         const auth = new Auth(this, 'Auth', { prefix, prod });
         const database = new Database(this, 'Database', { prefix, prod });
@@ -98,7 +98,7 @@ export class AppStack extends cdk.Stack {
 
     private putParameter(id: string, name: string, value: string) {
         new ssm.StringParameter(this, id, {
-            parameterName: `/sia/prod/${name}`,
+            parameterName: `/vault/prod/${name}`,
             stringValue: value,
         });
     }

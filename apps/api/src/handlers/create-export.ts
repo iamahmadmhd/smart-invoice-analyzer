@@ -1,27 +1,10 @@
 import { randomUUID } from 'crypto';
-import {
-    assertActiveMembership,
-    parseBody,
-    requireRole,
-    resolveRawTeamRequest,
-} from '@smart-invoice-analyzer/auth';
-import { getConfig } from '@smart-invoice-analyzer/config';
-import {
-    CreateExportRequestSchema,
-    Export,
-    ExportWorkerEvent,
-} from '@smart-invoice-analyzer/contracts';
-import {
-    ExportRepository,
-    InvoiceRepository,
-    MembershipRepository,
-} from '@smart-invoice-analyzer/data-access';
-import {
-    generateExportId,
-    resolvePeriod,
-    validateInvoicesForExport,
-} from '@smart-invoice-analyzer/domain';
-import { ConflictError } from '@smart-invoice-analyzer/errors';
+import { assertActiveMembership, parseBody, requireRole, resolveRawTeamRequest } from '@vault/auth';
+import { getConfig } from '@vault/config';
+import { CreateExportRequestSchema, Export, ExportWorkerEvent } from '@vault/contracts';
+import { ExportRepository, InvoiceRepository, MembershipRepository } from '@vault/data-access';
+import { generateExportId, resolvePeriod, validateInvoicesForExport } from '@vault/domain';
+import { ConflictError } from '@vault/errors';
 import { ApiResponse, createHandler, ParsedApiEvent } from '../powertools';
 import { created } from '../utils/response';
 import { sendToQueue } from '../utils/sqs';

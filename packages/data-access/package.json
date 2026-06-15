@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/data-access",
+    "name": "@vault/data-access",
     "version": "0.1.0",
     "private": true,
     "main": "./dist/index.js",
@@ -13,8 +13,8 @@
         "@aws-sdk/client-s3": "^3.0.0",
         "@aws-sdk/lib-dynamodb": "^3.0.0",
         "@aws-sdk/s3-request-presigner": "^3.0.0",
-        "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/errors": "*"
+        "@vault/contracts": "*",
+        "@vault/errors": "*"
     },
     "devDependencies": {
         "typescript": "^6.0.3"

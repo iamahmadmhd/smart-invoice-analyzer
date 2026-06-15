@@ -26,7 +26,7 @@ export class WebAppHosting extends Construct {
         // SigV4, supports SSE-KMS buckets, and requires no bucket policy
         // principal like the legacy CanonicalUser approach.
         const oac = new cloudfront.S3OriginAccessControl(this, 'OAC', {
-            description: 'Smart Invoice Analyzer web app OAC',
+            description: 'Vault web app OAC',
             signing: cloudfront.Signing.SIGV4_NO_OVERRIDE,
         });
 
@@ -37,7 +37,7 @@ export class WebAppHosting extends Construct {
             this,
             'SecurityHeadersPolicy',
             {
-                comment: 'Smart Invoice Analyzer security headers',
+                comment: 'Vault security headers',
                 securityHeadersBehavior: {
                     contentTypeOptions: { override: true },
                     frameOptions: {
@@ -105,7 +105,7 @@ export class WebAppHosting extends Construct {
 
         // ── Distribution ───────────────────────────────────────────────────
         this.distribution = new cloudfront.Distribution(this, 'Distribution', {
-            comment: `Smart Invoice Analyzer web app (${prod ? 'prod' : 'dev'})`,
+            comment: `Vault web app (${prod ? 'prod' : 'dev'})`,
             defaultRootObject: 'index.html',
 
             // Default behaviour: all requests go to the S3 origin.
@@ -179,7 +179,7 @@ export class WebAppHosting extends Construct {
 
         new cdk.CfnOutput(scope, 'WebAppUrl', {
             value: this.distributionUrl,
-            description: 'CloudFront URL for the Smart Invoice Analyzer web app',
+            description: 'CloudFront URL for the Vault web app',
         });
 
         new cdk.CfnOutput(scope, 'DistributionId', {

@@ -1,7 +1,7 @@
 import { Logger } from '@aws-lambda-powertools/logger';
-import { Export, Invoice } from '@smart-invoice-analyzer/contracts';
+import { Export, Invoice } from '@vault/contracts';
 
-const logger = new Logger({ serviceName: 'smart-invoice-analyzer-export' });
+const logger = new Logger({ serviceName: 'vault-export' });
 
 export interface CsvGeneratorOptions {
     includeDocumentReferences: boolean;

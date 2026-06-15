@@ -1,4 +1,4 @@
-import { ValidationReport, ValidationWarning } from '@smart-invoice-analyzer/contracts';
+import { ValidationReport, ValidationWarning } from '@vault/contracts';
 import React from 'react';
 import { View } from 'react-native';
 import { Icon } from '../atoms/icon';

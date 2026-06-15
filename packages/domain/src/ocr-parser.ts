@@ -1,4 +1,4 @@
-import { Invoice } from '@smart-invoice-analyzer/contracts';
+import { Invoice } from '@vault/contracts';
 import { parseToIsoDate } from './date-utils';
 
 export interface OcrParseResult {

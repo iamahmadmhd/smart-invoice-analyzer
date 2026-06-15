@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/ai",
+    "name": "@vault/ai",
     "version": "0.1.0",
     "private": true,
     "main": "./dist/index.js",
@@ -11,8 +11,8 @@
     "dependencies": {
         "@aws-lambda-powertools/logger": "^2.33.0",
         "@aws-sdk/client-bedrock-runtime": "^3.0.0",
-        "@smart-invoice-analyzer/config": "*",
-        "@smart-invoice-analyzer/contracts": "*",
+        "@vault/config": "*",
+        "@vault/contracts": "*",
         "zod": "^4.3.6"
     },
     "devDependencies": {

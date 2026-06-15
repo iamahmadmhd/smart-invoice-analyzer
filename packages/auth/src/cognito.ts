@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventSchema } from '@aws-lambda-powertools/parser/schemas';
-import { AppError } from '@smart-invoice-analyzer/errors';
+import { AppError } from '@vault/errors';
 import { z } from 'zod';
 
 // ── Event type ────────────────────────────────────────────────────────────────

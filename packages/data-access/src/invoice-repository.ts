@@ -6,13 +6,8 @@ import {
     QueryCommandInput,
     UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import {
-    ExportStatus,
-    Invoice,
-    InvoiceStatus,
-    ListInvoicesQuery,
-} from '@smart-invoice-analyzer/contracts';
-import { NotFoundError } from '@smart-invoice-analyzer/errors';
+import { ExportStatus, Invoice, InvoiceStatus, ListInvoicesQuery } from '@vault/contracts';
+import { NotFoundError } from '@vault/errors';
 import { dbClient } from './dynamodb-client';
 
 export class InvoiceRepository {

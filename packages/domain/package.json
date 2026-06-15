@@ -1,5 +1,5 @@
 {
-    "name": "@smart-invoice-analyzer/domain",
+    "name": "@vault/domain",
     "version": "0.1.0",
     "private": true,
     "main": "./dist/index.js",
@@ -9,9 +9,9 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@smart-invoice-analyzer/contracts": "*",
-        "@smart-invoice-analyzer/data-access": "*",
-        "@smart-invoice-analyzer/errors": "*",
+        "@vault/contracts": "*",
+        "@vault/data-access": "*",
+        "@vault/errors": "*",
         "date-fns": "^4.1.0"
     },
     "devDependencies": {
